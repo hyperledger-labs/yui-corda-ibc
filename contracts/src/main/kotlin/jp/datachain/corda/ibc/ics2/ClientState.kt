@@ -9,9 +9,8 @@ import jp.datachain.corda.ibc.ics4.NextRecvSequence
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Identifier
-import net.corda.core.contracts.ContractState
 
-interface ClientState : ContractState {
+interface ClientState {
     fun checkValidityAndUpdateState(header: Header) : ClientState
     fun checkMisbehaviourAndUpdateState(evidence: Evidence) : ClientState
 

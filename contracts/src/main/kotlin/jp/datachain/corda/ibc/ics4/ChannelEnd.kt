@@ -1,21 +1,12 @@
 package jp.datachain.corda.ibc.ics4
 
-import jp.datachain.corda.ibc.contracts.Tao
 import jp.datachain.corda.ibc.types.Identifier
-import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.ContractState
-import net.corda.core.identity.AbstractParty
 
-@BelongsToContract(Tao::class)
-data class ChannelEnd(
-        val portIdentifier: Identifier,
-        val channelIdentifier: Identifier,
-        val state: ChannelState,
-        val ordering: ChannelOrder,
-        val counterpartyPortIdentifier: Identifier,
-        val counterpartyChannelIdentifier: Identifier,
-        val connectionHops: Array<Identifier>,
+interface ChannelEnd {
+        val state: ChannelState
+        val ordering: ChannelOrder
+        val counterpartyPortIdentifier: Identifier
+        val counterpartyChannelIdentifier: Identifier
+        val connectionHops: Array<Identifier>
         val version: String
-) : ContractState {
-    override val participants: List<AbstractParty> = listOf()
 }

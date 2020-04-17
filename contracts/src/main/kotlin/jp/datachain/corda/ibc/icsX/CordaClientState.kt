@@ -15,11 +15,12 @@ import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Identifier
 import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 import java.security.PublicKey
 
 @BelongsToContract(Tao::class)
-data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
+data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState, ContractState {
     override val participants: List<AbstractParty> = listOf()
 
     init {
@@ -52,6 +53,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
         assert(proof is CordaCommitmentProof)
         val proof = proof as CordaCommitmentProof
 
+        assert(consensusState is CordaConsensusState)
+        val consensusState = consensusState as CordaConsensusState
+
         return prefix.stx.coreTransaction.outputStates.contains(consensusState) &&
                 height.height <= latestClientHeight().height &&
                 proof.signature.by.equals(notaryKeys[height.height]) &&
@@ -64,6 +68,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
 
         assert(proof is CordaCommitmentProof)
         val proof = proof as CordaCommitmentProof
+
+        assert(connectionEnd is CordaConnectionEnd)
+        val connectionEnd = connectionEnd as CordaConnectionEnd
 
         return prefix.stx.coreTransaction.outputStates.contains(connectionEnd) &&
                 height.height <= latestClientHeight().height &&
@@ -79,6 +86,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
         assert(proof is CordaCommitmentProof)
         val proof = proof as CordaCommitmentProof
 
+        assert(channelEnd is CordaChannelEnd)
+        val channelEnd = channelEnd as CordaChannelEnd
+
         return prefix.stx.coreTransaction.outputStates.contains(channelEnd) &&
                 height.height <= latestClientHeight().height &&
                 proof.signature.by.equals(notaryKeys[height.height]) &&
@@ -93,6 +103,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
 
         assert(proof is CordaCommitmentProof)
         val proof = proof as CordaCommitmentProof
+
+        assert(packet is CordaPacket)
+        val packet = packet as CordaPacket
 
         return prefix.stx.coreTransaction.outputStates.contains(packet) &&
                 height.height <= latestClientHeight().height &&
@@ -110,6 +123,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
         assert(proof is CordaCommitmentProof)
         val proof = proof as CordaCommitmentProof
 
+        assert(acknowledgement is CordaAcknowledgement)
+        val acknowledgement = acknowledgement as CordaAcknowledgement
+
         return prefix.stx.coreTransaction.outputStates.contains(acknowledgement) &&
                 height.height <= latestClientHeight().height &&
                 proof.signature.by.equals(notaryKeys[height.height]) &&
@@ -119,7 +135,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
                 acknowledgement.sequence == sequence
     }
 
-    override fun verifyPacketAcknowledgementAbsence(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int) = false
+    override fun verifyPacketAcknowledgementAbsence(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int): Boolean {
+        throw NotImplementedError()
+    }
 
     override fun verifyNextSequenceRecv(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: NextRecvSequence): Boolean {
         assert(prefix is CordaCommitmentPrefix)
@@ -127,6 +145,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState {
 
         assert(proof is CordaCommitmentProof)
         val proof = proof as CordaCommitmentProof
+
+        assert(nextSequenceRecv is CordaNextRecvSequence)
+        val nextSequenceRecv = nextSequenceRecv as CordaNextRecvSequence
 
         return prefix.stx.coreTransaction.outputStates.contains(nextSequenceRecv) &&
                 height.height <= latestClientHeight().height &&
