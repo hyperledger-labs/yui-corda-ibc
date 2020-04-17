@@ -1,10 +1,7 @@
 package jp.datachain.corda.ibc.icsX
 
 import jp.datachain.corda.ibc.contracts.Tao
-import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics2.ConsensusState
-import jp.datachain.corda.ibc.ics2.Evidence
-import jp.datachain.corda.ibc.ics2.Header
+import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics3.ConnectionEnd
@@ -20,7 +17,12 @@ import net.corda.core.identity.AbstractParty
 import java.security.PublicKey
 
 @BelongsToContract(Tao::class)
-data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState, ContractState {
+data class CordaClientState(
+        val clientIdentifier: Identifier,
+        val notaryKeys: Array<PublicKey>,
+        val clientType: ClientType,
+        val connectionIdentifiers: Collection<Identifier>
+) : ClientState, ContractState {
     override val participants: List<AbstractParty> = listOf()
 
     init {
@@ -28,7 +30,15 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState, Con
     }
 
     companion object {
-        fun initialise(consensusState: CordaConsensusState) = CordaClientState(arrayOf(consensusState.notaryKey))
+        fun initialise(
+                clientIdentifier: Identifier,
+                consensusState: CordaConsensusState
+        ) = CordaClientState(
+                clientIdentifier,
+                arrayOf(consensusState.notaryKey),
+                ClientType.CordaClient,
+                setOf()
+        )
     }
 
     override fun latestClientHeight() = Height(notaryKeys.size - 1)
