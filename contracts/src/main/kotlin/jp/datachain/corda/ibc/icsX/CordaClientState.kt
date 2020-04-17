@@ -59,7 +59,9 @@ data class CordaClientState(val notaryKeys: Array<PublicKey>) : ClientState, Con
         return prefix.stx.coreTransaction.outputStates.contains(consensusState) &&
                 height.height <= latestClientHeight().height &&
                 proof.signature.by.equals(notaryKeys[height.height]) &&
-                proof.signature.verify(prefix.stx.id)
+                proof.signature.verify(prefix.stx.id) &&
+                consensusState.clientIdentifier == clientIdentifier &&
+                consensusState.consensusStateHeight == consensusStateHeight
     }
 
     override fun verifyConnectionState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, connectionIdentifier: Identifier, connectionEnd: ConnectionEnd): Boolean {
