@@ -1,5 +1,3 @@
 package jp.datachain.corda.ibc.ics4
 
-interface Acknowledgement {
-        val data: ByteArray
-}
+data class Acknowledgement(val data: ByteArray)
