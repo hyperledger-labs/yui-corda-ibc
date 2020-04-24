@@ -1,5 +1,3 @@
 package jp.datachain.corda.ibc.ics4
 
-interface Packet {
-    val data: ByteArray
-}
+data class Packet(val data: ByteArray)

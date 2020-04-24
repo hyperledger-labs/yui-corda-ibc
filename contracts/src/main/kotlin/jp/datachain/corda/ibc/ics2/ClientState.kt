@@ -4,13 +4,13 @@ import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics3.ConnectionEnd
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.NextRecvSequence
 import jp.datachain.corda.ibc.ics4.Packet
+import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
-import jp.datachain.corda.ibc.types.Identifier
 
-interface ClientState {
+interface ClientState : IbcState {
     fun checkValidityAndUpdateState(header: Header) : ClientState
     fun checkMisbehaviourAndUpdateState(evidence: Evidence) : ClientState
 
@@ -71,5 +71,5 @@ interface ClientState {
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            nextSequenceRecv: NextRecvSequence) : Boolean
+            nextSequenceRecv: Int) : Boolean
 }
