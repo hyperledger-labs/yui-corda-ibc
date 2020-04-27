@@ -1,17 +1,20 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics24.HostSeed
+import jp.datachain.corda.ibc.ics25.Handler.createClient
+import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import java.util.*
 
-object IbcHostCreateFlow {
+object IbcClientCreateFlow {
     @StartableByRPC
     @InitiatingFlow
     class Initiator : FlowLogic<SignedTransaction>() {
@@ -21,15 +24,19 @@ object IbcHostCreateFlow {
 
             val builder = TransactionBuilder(notary)
 
-            val seed = serviceHub.vaultService.queryBy<HostSeed>().states.first() // queryBy returns all unconsumed states by default
-            val participants = seed.state.data.participants.map{it as Party}
+            val host = serviceHub.vaultService.queryBy<Host>().states.first() // queryBy returns all unconsumed states by default
+            val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
-            val uuid = UUID.randomUUID()
-            val host = Host(seed, uuid)
 
-            builder.addCommand(Ibc.Commands.HostCreate(uuid), ourIdentity.owningKey)
-                    .addInputState(seed)
-                    .addOutputState(host)
+            val clientId = host.state.data.generateIdentifier()
+            val clientType = ClientType.CordaClient
+            val consensusState = CordaConsensusState(Timestamp(123), Height(456), notary.owningKey)
+            val (newHost, newClient) = host.state.data.createClient(clientId, clientType, consensusState)
+
+            builder.addCommand(Ibc.Commands.ClientCreate(clientId, clientType, consensusState), ourIdentity.owningKey)
+                    .addInputState(host)
+                    .addOutputState(newHost)
+                    .addOutputState(newClient)
 
             val tx = serviceHub.signInitialTransaction(builder)
 
