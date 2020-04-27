@@ -27,7 +27,7 @@ class Ibc : Contract {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
-                val seed= tx.inRefsOfType<HostSeed>().single()
+                val seed = tx.inRefsOfType<HostSeed>().single()
                 val newHost = tx.outputsOfType<Host>().single()
                 val expected = Host(seed, uuid)
                 "Output should be expected state" using (newHost == expected)
