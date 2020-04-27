@@ -2,7 +2,9 @@ package jp.datachain.corda.ibc.ics24
 
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.states.IbcState
-import net.corda.core.contracts.*
+import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import java.util.*
 
@@ -10,16 +12,16 @@ import java.util.*
 data class Host private constructor (
         override val participants: List<AbstractParty>,
         override val linearId: UniqueIdentifier,
-        val clientIds: Collection<Identifier>,
-        val connIds: Collection<Identifier>,
-        val portIds: Collection<Identifier>
+        val clientIds: List<Identifier>,
+        val connIds: List<Identifier>,
+        val portIds: List<Identifier>
 ) : IbcState {
     constructor(seedAndRef: StateAndRef<HostSeed>, uuid: UUID) : this(
             seedAndRef.state.data.participants,
             UniqueIdentifier(externalId = seedAndRef.ref.toString(), id = uuid),
-            setOf(),
-            setOf(),
-            setOf()
+            emptyList(),
+            emptyList(),
+            emptyList()
     )
 
     fun addClient(id: Identifier) : Host {
