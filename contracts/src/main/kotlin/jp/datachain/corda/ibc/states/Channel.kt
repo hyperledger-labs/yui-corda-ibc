@@ -14,7 +14,7 @@ data class Channel(
         override val participants: List<AbstractParty>,
         override val linearId: UniqueIdentifier,
         val portId: Identifier,
-        val channelEnd: ChannelEnd,
+        val end: ChannelEnd,
         val nextSequenceSend: Int,
         val nextSequenceRecv: Int,
         val nextSequenceAck: Int,

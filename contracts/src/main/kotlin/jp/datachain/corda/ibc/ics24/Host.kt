@@ -1,17 +1,27 @@
 package jp.datachain.corda.ibc.ics24
 
+import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.ics2.ConsensusState
+import jp.datachain.corda.ibc.ics23.CommitmentPath
+import jp.datachain.corda.ibc.ics23.CommitmentPrefix
+import jp.datachain.corda.ibc.ics23.Path
 import jp.datachain.corda.ibc.states.IbcState
+import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Timestamp
+import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import java.util.*
 
 @BelongsToContract(Ibc::class)
 data class Host private constructor (
         override val participants: List<AbstractParty>,
         override val linearId: UniqueIdentifier,
+        val notary: Party,
         val clientIds: List<Identifier>,
         val connIds: List<Identifier>,
         val portIds: List<Identifier>
@@ -19,10 +29,29 @@ data class Host private constructor (
     constructor(seedAndRef: StateAndRef<HostSeed>, uuid: UUID) : this(
             seedAndRef.state.data.participants,
             UniqueIdentifier(externalId = seedAndRef.ref.toString(), id = uuid),
+            seedAndRef.state.data.notary,
             emptyList(),
             emptyList(),
             emptyList()
     )
+
+    fun getCurrentHeight() = Height(0)
+
+    fun getStoredRecentConsensusStateCount() = 1
+
+    fun getConsensusState(height: Height) : ConsensusState {
+        require(height.height == 0)
+        return CordaConsensusState(Timestamp(0), Height(0), notary.owningKey)
+    }
+
+    fun getCommitmentPrefix() = object: CommitmentPrefix {
+        override fun applyPrefix(path: Path): CommitmentPath = throw NotImplementedError()
+    }
+
+    fun currentTimestamp() = Timestamp(0)
+
+    fun getCompatibleVersions() = Version.Multiple(listOf(""))
+    fun pickVersion(versions: Version.Multiple) = Version.Single(versions.versions.single())
 
     fun addClient(id: Identifier) : Host {
         require(validateIdentifier(id))

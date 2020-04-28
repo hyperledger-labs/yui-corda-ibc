@@ -11,6 +11,11 @@ import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 
 interface ClientState : IbcState {
+    val consensusStates: Map<Height, ConsensusState>
+    val connIds: List<Identifier>
+
+    fun addConnection(id: Identifier) : ClientState
+
     fun checkValidityAndUpdateState(header: Header) : ClientState
     fun checkMisbehaviourAndUpdateState(evidence: Evidence) : ClientState
 
