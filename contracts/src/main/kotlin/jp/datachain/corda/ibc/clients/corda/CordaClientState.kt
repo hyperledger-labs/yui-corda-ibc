@@ -21,12 +21,19 @@ import net.corda.core.identity.AbstractParty
 data class CordaClientState private constructor(
         override val participants: List<AbstractParty>,
         override val linearId: UniqueIdentifier,
-        val consensusStates: Map<Height, CordaConsensusState>
+        override val consensusStates: Map<Height, CordaConsensusState>,
+        override val connIds: List<Identifier>
 ) : ClientState {
     constructor(host: Host, id: Identifier, consensusState: CordaConsensusState)
-            : this(host.participants, id.toUniqueIdentifier(), mapOf(consensusState.height to consensusState))
+            : this(host.participants, id.toUniqueIdentifier(), mapOf(consensusState.height to consensusState), emptyList())
 
     private fun notaryKeyOf(height: Height) = consensusStates.get(height)?.notaryKey
+
+    override fun addConnection(id: Identifier): ClientState {
+        require(validateIdentifier(id))
+        require(!connIds.contains(id))
+        return copy(connIds = connIds + id)
+    }
 
     override fun latestClientHeight() = consensusStates.keys.single()
 
@@ -60,7 +67,7 @@ data class CordaClientState private constructor(
                 proof.sig.verify(proof.tx.id) &&
                 validateIdentifier(connectionIdentifier) &&
                 conn.id == connectionIdentifier &&
-                conn.connectionEnd == connectionEnd
+                conn.end == connectionEnd
     }
 
     override fun verifyChannelState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelEnd): Boolean {
@@ -74,7 +81,7 @@ data class CordaClientState private constructor(
                 validateIdentifier(channelIdentifier) &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
-                chan.channelEnd == channelEnd
+                chan.end == channelEnd
     }
 
     override fun verifyPacketData(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int, packet: Packet): Boolean {

@@ -24,10 +24,9 @@ object IbcHostCreateFlow {
             val seed = serviceHub.vaultService.queryBy<HostSeed>().states.first() // queryBy returns all unconsumed states by default
             val participants = seed.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
-            val uuid = UUID.randomUUID()
-            val host = Host(seed, uuid)
+            val host = Host(seed, UUID.randomUUID())
 
-            builder.addCommand(Ibc.Commands.HostCreate(uuid), ourIdentity.owningKey)
+            builder.addCommand(Ibc.Commands.HostCreate(), ourIdentity.owningKey)
                     .addInputState(seed)
                     .addOutputState(host)
 

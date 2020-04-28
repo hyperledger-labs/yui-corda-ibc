@@ -21,7 +21,7 @@ object IbcHostSeedCreateFlow {
             val builder = TransactionBuilder(notary)
 
             builder.addCommand(Ibc.Commands.HostSeedCreate(), ourIdentity.owningKey)
-                    .addOutputState(HostSeed(participants))
+                    .addOutputState(HostSeed(participants, notary))
 
             val tx = serviceHub.signInitialTransaction(builder)
 
