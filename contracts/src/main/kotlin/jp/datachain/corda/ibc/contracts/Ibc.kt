@@ -2,12 +2,18 @@ package jp.datachain.corda.ibc.contracts
 
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
+import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.HostSeed
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics25.Handler.connOpenAck
+import jp.datachain.corda.ibc.ics25.Handler.connOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.connOpenInit
+import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
 import jp.datachain.corda.ibc.ics25.Handler.createClient
 import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 
@@ -85,14 +91,95 @@ class Ibc : Contract {
                 val newClient = tx.outputsOfType<ClientState>().single()
                 val newConn = tx.outputsOfType<Connection>().single()
                 val expected = Pair(host, client).connOpenInit(newConn.id, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier)
-                "Outputs should be expected states" using (Triple(newHost, newClient, newClient) ==  expected)
+                "Outputs should be expected states" using (Triple(newHost, newClient, newConn) ==  expected)
             }
         }
-        /*
-        class ConnOpenTry : TypeOnlyCommandData(), Commands
-        class ConnOpenAck : TypeOnlyCommandData(), Commands
-        class ConnOpenConfirm : TypeOnlyCommandData(), Commands
-         */
+
+        data class ConnOpenTry(
+                val desiredIdentifier: Identifier,
+                val counterpartyConnectionIdentifier: Identifier,
+                val counterpartyPrefix: CommitmentPrefix,
+                val counterpartyClientIdentifier: Identifier,
+                val clientIdentifier: Identifier,
+                val counterpartyVersions: Version.Multiple,
+                val proofInit: CommitmentProof,
+                val proofConsensus: CommitmentProof,
+                val proofHeight: Height,
+                val consensusHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Two or three states should be consumed" using (tx.inputs.size == 2 || tx.inputs.size == 3)
+                "Exactly three states should be created" using (tx.outputs.size == 3)
+                val host = tx.inputsOfType<Host>().single()
+                val client = tx.inputsOfType<ClientState>().single()
+                val conn = if (tx.inputs.size == 3) {
+                    tx.inputsOfType<Connection>().single()
+                } else {
+                    null
+                }
+                val newHost = tx.outputsOfType<Host>().single()
+                val newClient = tx.outputsOfType<ClientState>().single()
+                val newConn = tx.outputsOfType<Connection>().single()
+                val expected = Triple(host, client, conn).connOpenTry(
+                        desiredIdentifier,
+                        counterpartyConnectionIdentifier,
+                        counterpartyPrefix,
+                        counterpartyClientIdentifier,
+                        clientIdentifier,
+                        counterpartyVersions,
+                        proofInit,
+                        proofConsensus,
+                        proofHeight,
+                        consensusHeight)
+                "Outputs should be expected states" using (Triple(newHost, newClient, newConn) ==  expected)
+            }
+        }
+
+        data class ConnOpenAck(
+                val identifier: Identifier,
+                val version: Version.Single,
+                val proofTry: CommitmentProof,
+                val proofConsensus: CommitmentProof,
+                val proofHeight: Height,
+                val consensusHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be consumed" using (tx.inputs.size == 3)
+                "Exactly three states should be created" using (tx.outputs.size == 1)
+                val host = tx.inputsOfType<Host>().single()
+                val client = tx.inputsOfType<ClientState>().single()
+                val conn = tx.inputsOfType<Connection>().single()
+                val newConn = tx.outputsOfType<Connection>().single()
+                val expected = Triple(host, client, conn).connOpenAck(
+                        identifier,
+                        version,
+                        proofTry,
+                        proofConsensus,
+                        proofHeight,
+                        consensusHeight)
+                "Output should be expected state" using (newConn ==  expected)
+            }
+        }
+
+        data class ConnOpenConfirm(
+                val identifier: Identifier,
+                val proofAck: CommitmentProof,
+                val proofHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be consumed" using (tx.inputs.size == 3)
+                "Exactly three states should be created" using (tx.outputs.size == 1)
+                val host = tx.inputsOfType<Host>().single()
+                val client = tx.inputsOfType<ClientState>().single()
+                val conn = tx.inputsOfType<Connection>().single()
+                val newConn = tx.outputsOfType<Connection>().single()
+                val expected = Triple(host, client, conn).connOpenConfirm(
+                        identifier,
+                        proofAck,
+                        proofHeight)
+                "Output should be expected state" using (newConn ==  expected)
+            }
+        }
 
         /*
         class ChanOpenInit : TypeOnlyCommandData(), Commands
