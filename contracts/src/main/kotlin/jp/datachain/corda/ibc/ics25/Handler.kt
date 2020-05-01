@@ -42,8 +42,8 @@ object Handler {
         val host = this.first.addConnection(identifier)
         val client = this.second.addConnection(identifier)
 
-        require(host.clientIds.contains(client.id))
-        require(clientIdentifier == client.id)
+        require(host.clientIds.contains(client.id)){"unknown client"}
+        require(clientIdentifier == client.id){"mismatch client"}
 
         val end = ConnectionEnd(
                 ConnectionState.INIT,
@@ -73,13 +73,13 @@ object Handler {
         val (host, client) = if (previous == null) {
             Pair(this.first.addConnection(desiredIdentifier), this.second.addConnection(desiredIdentifier))
         } else {
-            require(this.second.connIds.contains(desiredIdentifier))
-            require(previous.id == desiredIdentifier)
+            require(this.second.connIds.contains(desiredIdentifier)){"unknown connection"}
+            require(previous.id == desiredIdentifier){"mismatch connection"}
             Pair(this.first, this.second)
         }
 
-        require(host.clientIds.contains(client.id))
-        require(clientIdentifier == client.id)
+        require(host.clientIds.contains(client.id)){"unknown client"}
+        require(clientIdentifier == client.id){"mismatch client"}
 
         val expected = ConnectionEnd(
                 ConnectionState.INIT,
@@ -93,7 +93,7 @@ object Handler {
                 counterpartyPrefix,
                 proofInit,
                 counterpartyConnectionIdentifier,
-                expected))
+                expected)){"connection verification failure"}
 
         val expectedConsensusState = host.getConsensusState(consensusHeight)
         require(client.verifyClientConsensusState(
@@ -102,7 +102,7 @@ object Handler {
                 proofConsensus,
                 counterpartyClientIdentifier,
                 consensusHeight,
-                expectedConsensusState))
+                expectedConsensusState)){"client consensus verification failure"}
 
         val version = host.pickVersion(counterpartyVersions)
         val connectionEnd = ConnectionEnd(
@@ -118,7 +118,7 @@ object Handler {
                         previous.end.counterpartyPrefix == counterpartyPrefix &&
                         previous.end.clientIdentifier == clientIdentifier &&
                         previous.end.counterpartyClientIdentifier == counterpartyClientIdentifier &&
-                        previous.end.version == version))
+                        previous.end.version == version)){"invalid previous state"}
 
         return Triple(host, client, Connection(host, desiredIdentifier, connectionEnd))
     }
@@ -135,13 +135,13 @@ object Handler {
         val client = this.second
         val conn = this.third
 
-        require(host.clientIds.contains(client.id))
-        require(host.connIds.contains(conn.id))
-        require(client.connIds.contains(conn.id))
-        require(conn.id == identifier)
+        require(host.clientIds.contains(client.id)){"unknown client"}
+        require(host.connIds.contains(conn.id)){"unknown connection in host"}
+        require(client.connIds.contains(conn.id)){"unknown connection in client"}
+        require(conn.id == identifier){"mismatch connection"}
 
-        require(consensusHeight.height <= host.getCurrentHeight().height)
-        require(conn.end.state == ConnectionState.INIT || conn.end.state == ConnectionState.TRYOPEN)
+        require(consensusHeight.height <= host.getCurrentHeight().height){"unknown height"}
+        require(conn.end.state == ConnectionState.INIT || conn.end.state == ConnectionState.TRYOPEN){"invalid connection state"}
 
         val expected = ConnectionEnd(
                 ConnectionState.TRYOPEN,
@@ -155,7 +155,7 @@ object Handler {
                 conn.end.counterpartyPrefix,
                 proofTry,
                 conn.end.counterpartyConnectionIdentifier,
-                expected))
+                expected)){"connection verification failure"}
 
         val expectedConsensusState = host.getConsensusState(consensusHeight)
         require(client.verifyClientConsensusState(
@@ -164,9 +164,9 @@ object Handler {
                 proofConsensus,
                 conn.end.counterpartyClientIdentifier,
                 consensusHeight,
-                expectedConsensusState))
+                expectedConsensusState)){"client consensus verification failure"}
 
-        require(host.getCompatibleVersions().versions.contains(version.version))
+        require(host.getCompatibleVersions().versions.contains(version.version)){"incompatible version"}
 
         return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  version = version))
     }
@@ -180,12 +180,12 @@ object Handler {
         val client = this.second
         val conn = this.third
 
-        require(host.clientIds.contains(client.id))
-        require(host.connIds.contains(conn.id))
-        require(client.connIds.contains(conn.id))
-        require(conn.id == identifier)
+        require(host.clientIds.contains(client.id)){"unknown client"}
+        require(host.connIds.contains(conn.id)){"unknown connection in host"}
+        require(client.connIds.contains(conn.id)){"unknown connection in client"}
+        require(conn.id == identifier){"mismatch connection"}
 
-        require(conn.end.state == ConnectionState.TRYOPEN)
+        require(conn.end.state == ConnectionState.TRYOPEN){"invalid connection state"}
         val expected = ConnectionEnd(
                 ConnectionState.OPEN,
                 identifier,
@@ -198,7 +198,7 @@ object Handler {
                 conn.end.counterpartyPrefix,
                 proofAck,
                 conn.end.counterpartyConnectionIdentifier,
-                expected))
+                expected)){"connection verification failure"}
 
         return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN))
     }

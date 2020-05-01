@@ -2,6 +2,6 @@ package jp.datachain.corda.ibc.clients.corda
 
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import net.corda.core.crypto.TransactionSignature
-import net.corda.core.transactions.BaseTransaction
+import net.corda.core.transactions.CoreTransaction
 
-data class CordaCommitmentProof(val tx: BaseTransaction, val sig: TransactionSignature) : CommitmentProof
+data class CordaCommitmentProof(val tx: CoreTransaction, val sig: TransactionSignature) : CommitmentProof
