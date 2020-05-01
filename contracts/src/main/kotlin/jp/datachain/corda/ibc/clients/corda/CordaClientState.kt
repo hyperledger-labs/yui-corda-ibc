@@ -16,6 +16,7 @@ import jp.datachain.corda.ibc.states.Connection
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
+import java.lang.IllegalArgumentException
 
 @BelongsToContract(Ibc::class)
 data class CordaClientState private constructor(
@@ -27,6 +28,7 @@ data class CordaClientState private constructor(
     constructor(host: Host, id: Identifier, consensusState: CordaConsensusState)
             : this(host.participants, id.toUniqueIdentifier(), mapOf(consensusState.height to consensusState), emptyList())
 
+    private fun hostIdOf(height: Height) = consensusStates.get(height)?.hostId
     private fun notaryKeyOf(height: Height) = consensusStates.get(height)?.notaryKey
 
     override fun addConnection(id: Identifier): ClientState {
@@ -46,67 +48,72 @@ data class CordaClientState private constructor(
     }
 
     override fun verifyClientConsensusState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, clientIdentifier: Identifier, consensusStateHeight: Height, consensusState: ConsensusState): Boolean {
-        val notaryKey = notaryKeyOf(height)
+        val hostId = hostIdOf(height) ?: return false
+        val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
         val consensusState = consensusState as CordaConsensusState
         val client = proof.tx.outputsOfType<CordaClientState>().singleOrNull() ?: return false
 
         return proof.sig.by == notaryKey &&
                 proof.sig.verify(proof.tx.id) &&
-                validateIdentifier(clientIdentifier) &&
+                clientIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
                 client.id == clientIdentifier &&
                 client.consensusStates.get(consensusStateHeight) == consensusState
     }
 
     override fun verifyConnectionState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, connectionIdentifier: Identifier, connectionEnd: ConnectionEnd): Boolean {
+        val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
         val conn = proof.tx.outputsOfType<Connection>().singleOrNull() ?: return false
 
         return proof.sig.by == notaryKey &&
                 proof.sig.verify(proof.tx.id) &&
-                validateIdentifier(connectionIdentifier) &&
+                connectionIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
                 conn.id == connectionIdentifier &&
                 conn.end == connectionEnd
     }
 
     override fun verifyChannelState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelEnd): Boolean {
+        val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
         val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
         return proof.sig.by == notaryKey &&
                 proof.sig.verify(proof.tx.id) &&
-                validateIdentifier(portIdentifier) &&
-                validateIdentifier(channelIdentifier) &&
+                portIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
+                channelIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
                 chan.end == channelEnd
     }
 
     override fun verifyPacketData(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int, packet: Packet): Boolean {
+        val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
         val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
         return proof.sig.by == notaryKey &&
                 proof.sig.verify(proof.tx.id) &&
-                validateIdentifier(portIdentifier) &&
-                validateIdentifier(channelIdentifier) &&
+                portIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
+                channelIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
                 chan.packets.get(sequence) == packet
     }
 
     override fun verifyPacketAcknowledgement(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int, acknowledgement: Acknowledgement): Boolean {
+        val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
         val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
         return proof.sig.by == notaryKey &&
                 proof.sig.verify(proof.tx.id) &&
-                validateIdentifier(portIdentifier) &&
-                validateIdentifier(channelIdentifier) &&
+                portIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
+                channelIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
                 chan.acknowledgements.get(sequence) == acknowledgement
@@ -117,14 +124,15 @@ data class CordaClientState private constructor(
     }
 
     override fun verifyNextSequenceRecv(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: Int): Boolean {
+        val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
         val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
         return proof.sig.by == notaryKey &&
                 proof.sig.verify(proof.tx.id) &&
-                validateIdentifier(portIdentifier) &&
-                validateIdentifier(channelIdentifier) &&
+                portIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
+                channelIdentifier.toUniqueIdentifier().externalId == hostId.toUniqueIdentifier().externalId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
                 chan.nextSequenceRecv == nextSequenceRecv

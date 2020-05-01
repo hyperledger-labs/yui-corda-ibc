@@ -1,11 +1,9 @@
 package jp.datachain.corda.ibc.ics24
 
+import jp.datachain.corda.ibc.clients.corda.CordaCommitmentPrefix
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ConsensusState
-import jp.datachain.corda.ibc.ics23.CommitmentPath
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
-import jp.datachain.corda.ibc.ics23.Path
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
@@ -41,12 +39,10 @@ data class Host private constructor (
 
     fun getConsensusState(height: Height) : ConsensusState {
         require(height.height == 0)
-        return CordaConsensusState(Timestamp(0), Height(0), notary.owningKey)
+        return CordaConsensusState(Timestamp(0), Height(0), id, notary.owningKey)
     }
 
-    fun getCommitmentPrefix() = object: CommitmentPrefix {
-        override fun applyPrefix(path: Path): CommitmentPath = throw NotImplementedError()
-    }
+    fun getCommitmentPrefix() = CordaCommitmentPrefix()
 
     fun currentTimestamp() = Timestamp(0)
 

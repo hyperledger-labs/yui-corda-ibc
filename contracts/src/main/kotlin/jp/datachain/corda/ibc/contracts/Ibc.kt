@@ -91,7 +91,7 @@ class Ibc : Contract {
                 val newClient = tx.outputsOfType<ClientState>().single()
                 val newConn = tx.outputsOfType<Connection>().single()
                 val expected = Pair(host, client).connOpenInit(newConn.id, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier)
-                "Outputs should be expected states" using (Triple(newHost, newClient, newConn) ==  expected)
+                "Outputs should be expected states" using (Triple(newHost, newClient, newConn) == expected)
             }
         }
 
@@ -144,10 +144,11 @@ class Ibc : Contract {
                 val consensusHeight: Height
         ) : Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly three states should be consumed" using (tx.inputs.size == 3)
-                "Exactly three states should be created" using (tx.outputs.size == 1)
-                val host = tx.inputsOfType<Host>().single()
-                val client = tx.inputsOfType<ClientState>().single()
+                "Exactly two states should be referenced" using (tx.references.size == 2)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
                 val conn = tx.inputsOfType<Connection>().single()
                 val newConn = tx.outputsOfType<Connection>().single()
                 val expected = Triple(host, client, conn).connOpenAck(
@@ -167,10 +168,11 @@ class Ibc : Contract {
                 val proofHeight: Height
         ) : Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly three states should be consumed" using (tx.inputs.size == 3)
-                "Exactly three states should be created" using (tx.outputs.size == 1)
-                val host = tx.inputsOfType<Host>().single()
-                val client = tx.inputsOfType<ClientState>().single()
+                "Exactly two states should be referenced" using (tx.references.size == 2)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
                 val conn = tx.inputsOfType<Connection>().single()
                 val newConn = tx.outputsOfType<Connection>().single()
                 val expected = Triple(host, client, conn).connOpenConfirm(

@@ -22,6 +22,7 @@ object IbcConnOpenTryFlow {
     @StartableByRPC
     @InitiatingFlow
     class Initiator(
+            val hostIdentifier: Identifier,
             val desiredIdentifier: Identifier,
             val counterpartyConnectionIdentifier: Identifier,
             val counterpartyPrefix: CommitmentPrefix,
@@ -39,12 +40,15 @@ object IbcConnOpenTryFlow {
 
             val builder = TransactionBuilder(notary)
 
-            val host = serviceHub.vaultService.queryBy<Host>().states.single() // assuming there's only one host
+            val host = serviceHub.vaultService.queryBy<Host>(
+                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(hostIdentifier.toUniqueIdentifier()))
+            ).states.single()
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 
             val client = serviceHub.vaultService.queryBy<ClientState>(
-                    QueryCriteria.LinearStateQueryCriteria(participants, listOf(clientIdentifier.toUniqueIdentifier()))).states.single()
+                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientIdentifier.toUniqueIdentifier()))
+            ).states.single()
 
             val conns = serviceHub.vaultService.queryBy<Connection>(
                     QueryCriteria.LinearStateQueryCriteria(participants, listOf(desiredIdentifier.toUniqueIdentifier()))).states

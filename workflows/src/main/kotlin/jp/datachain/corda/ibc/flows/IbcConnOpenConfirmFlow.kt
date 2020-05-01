@@ -9,6 +9,7 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.connOpenConfirm
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
+import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
@@ -20,6 +21,7 @@ object IbcConnOpenConfirmFlow {
     @StartableByRPC
     @InitiatingFlow
     class Initiator(
+            val hostIdentifier: Identifier,
             val identifier: Identifier,
             val proofAck: CommitmentProof,
             val proofHeight: Height
@@ -30,15 +32,19 @@ object IbcConnOpenConfirmFlow {
 
             val builder = TransactionBuilder(notary)
 
-            val host = serviceHub.vaultService.queryBy<Host>().states.single() // assuming there's only one host
+            val host = serviceHub.vaultService.queryBy<Host>(
+                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(hostIdentifier.toUniqueIdentifier()))
+            ).states.single()
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 
             val conn = serviceHub.vaultService.queryBy<Connection>(
-                    QueryCriteria.LinearStateQueryCriteria(participants, listOf(identifier.toUniqueIdentifier()))).states.single()
+                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(identifier.toUniqueIdentifier()))
+            ).states.single()
 
             val client = serviceHub.vaultService.queryBy<ClientState>(
-                    QueryCriteria.LinearStateQueryCriteria(participants, listOf(conn.state.data.end.clientIdentifier.toUniqueIdentifier()))).states.single()
+                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(conn.state.data.end.clientIdentifier.toUniqueIdentifier()))
+            ).states.single()
 
             val newConn = Triple(host.state.data, client.state.data, conn.state.data).connOpenConfirm(
                     identifier,
@@ -50,8 +56,8 @@ object IbcConnOpenConfirmFlow {
                     proofAck,
                     proofHeight
             ), ourIdentity.owningKey)
-                    .addInputState(host)
-                    .addInputState(client)
+                    .addReferenceState(ReferencedStateAndRef(host))
+                    .addReferenceState(ReferencedStateAndRef(client))
                     .addInputState(conn)
                     .addOutputState(newConn)
 

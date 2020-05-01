@@ -1,0 +1,20 @@
+apply plugin: 'kotlin'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
+    compile "$corda_release_group:corda-rpc:$corda_release_version"
+
+    compile project(":contracts")
+    compile project(":workflows")
+}
+
+task runRelayer(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jp.datachain.corda.ibc.relayer.Relayer'
+}
+
