@@ -22,7 +22,7 @@ data class Host private constructor (
         val notary: Party,
         val clientIds: List<Identifier>,
         val connIds: List<Identifier>,
-        val portIds: List<Identifier>
+        val portChanIds: List<Pair<Identifier, Identifier>>
 ) : IbcState {
     constructor(seedAndRef: StateAndRef<HostSeed>, uuid: UUID) : this(
             seedAndRef.state.data.participants,
@@ -61,9 +61,11 @@ data class Host private constructor (
         return copy(connIds = connIds + id)
     }
 
-    fun addPort(id: Identifier) : Host {
-        require(validateIdentifier(id))
-        require(!portIds.contains(id))
-        return copy(portIds = portIds + id)
+    fun addPortChannel(portId: Identifier, chanId: Identifier) : Host {
+        require(validateIdentifier(portId))
+        require(validateIdentifier(chanId))
+        val portChanId = Pair(portId, chanId)
+        require(!portChanIds.contains(portChanId))
+        return copy(portChanIds = portChanIds + portChanId)
     }
 }

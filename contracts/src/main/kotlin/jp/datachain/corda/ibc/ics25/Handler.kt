@@ -11,8 +11,11 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics3.ConnectionEnd
 import jp.datachain.corda.ibc.ics3.ConnectionState
+import jp.datachain.corda.ibc.ics4.*
+import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 
 object Handler {
@@ -73,7 +76,8 @@ object Handler {
         val (host, client) = if (previous == null) {
             Pair(this.first.addConnection(desiredIdentifier), this.second.addConnection(desiredIdentifier))
         } else {
-            require(this.second.connIds.contains(desiredIdentifier)){"unknown connection"}
+            require(this.first.connIds.contains(desiredIdentifier)){"unknown connection in host"}
+            require(this.second.connIds.contains(desiredIdentifier)){"unknown connection in client"}
             require(previous.id == desiredIdentifier){"mismatch connection"}
             Pair(this.first, this.second)
         }
@@ -201,5 +205,261 @@ object Handler {
                 expected)){"connection verification failure"}
 
         return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN))
+    }
+
+    fun Pair<Host, Connection>.chanOpenInit(
+            order: ChannelOrder,
+            connectionHops: Array<Identifier>,
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            counterpartyPortIdentifier: Identifier,
+            counterpartyChannelIdentifier: Identifier,
+            version: Version.Single
+    ) : Pair<Host, Channel> {
+        // TODO: port authentication should be added somehow
+
+        val host = this.first.addPortChannel(portIdentifier, channelIdentifier)
+        val conn = this.second
+
+        require(host.connIds.contains(conn.id))
+
+        require(conn.id == connectionHops.single())
+
+        val end = ChannelEnd(
+                ChannelState.INIT,
+                order,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                connectionHops,
+                version)
+
+        return Pair(host, Channel(host, portIdentifier, channelIdentifier, end))
+    }
+
+    fun Quadruple<Host, ClientState, Connection, Channel?>.chanOpenTry(
+            order: ChannelOrder,
+            connectionHops: Array<Identifier>,
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            counterpartyPortIdentifier: Identifier,
+            counterpartyChannelIdentifier: Identifier,
+            version: Version.Single,
+            counterpartyVersion: Version.Single,
+            proofInit: CommitmentProof,
+            proofHeight: Height
+    ) : Pair<Host, Channel> {
+        val previous = this.fourth
+        val host = if (previous == null) {
+            this.first.addPortChannel(portIdentifier, channelIdentifier)
+        } else {
+            require(this.first.portChanIds.contains(Pair(portIdentifier, channelIdentifier)))
+            require(previous.portId == portIdentifier)
+            require(previous.id == channelIdentifier)
+            this.first
+        }
+        val client = this.second
+        val conn = this.third
+
+        require(host.clientIds.contains(client.id))
+        require(host.connIds.contains(conn.id))
+        require(client.connIds.contains(conn.id))
+        require(conn.id == connectionHops.single())
+
+        require(previous == null ||
+                ( previous.end.state == ChannelState.INIT &&
+                        previous.end.ordering == order &&
+                        previous.end.counterpartyPortIdentifier == counterpartyPortIdentifier &&
+                        previous.end.counterpartyChannelIdentifier == counterpartyChannelIdentifier &&
+                        previous.end.connectionHops.contentEquals(connectionHops) &&
+                        previous.end.version == version))
+
+        require(conn.end.state == ConnectionState.OPEN)
+
+        val expected = ChannelEnd(
+                ChannelState.INIT,
+                order,
+                portIdentifier,
+                channelIdentifier,
+                arrayOf(conn.end.counterpartyConnectionIdentifier),
+                counterpartyVersion)
+        require(client.verifyChannelState(
+                proofHeight,
+                conn.end.counterpartyPrefix,
+                proofInit,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                expected))
+
+        val end = ChannelEnd(
+                ChannelState.TRYOPEN,
+                order,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                connectionHops,
+                version)
+
+        return Pair(host, Channel(host, portIdentifier, channelIdentifier, end))
+    }
+
+    fun Quadruple<Host, ClientState, Connection, Channel>.chanOpenAck(
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            counterpartyVersion: Version.Single,
+            proofTry: CommitmentProof,
+            proofHeight: Height
+    ) : Channel {
+        val host = this.first
+        val client = this.second
+        val conn = this.third
+        val chan = this.fourth
+
+        require(host.clientIds.contains(client.id))
+        require(host.connIds.contains(conn.id))
+        require(client.connIds.contains(conn.id))
+        require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
+
+        require(chan.end.state == ChannelState.INIT || chan.end.state == ChannelState.TRYOPEN)
+
+        require(conn.id == chan.end.connectionHops.single())
+
+        require(conn.end.state == ConnectionState.OPEN)
+
+        val expected = ChannelEnd(
+                ChannelState.TRYOPEN,
+                chan.end.ordering,
+                portIdentifier,
+                channelIdentifier,
+                arrayOf(conn.end.counterpartyConnectionIdentifier),
+                counterpartyVersion)
+        require(client.verifyChannelState(
+                proofHeight,
+                conn.end.counterpartyPrefix,
+                proofTry,
+                chan.end.counterpartyPortIdentifier,
+                chan.end.counterpartyChannelIdentifier,
+                expected))
+
+        return chan.copy(end = chan.end.copy(state = ChannelState.OPEN, version = counterpartyVersion))
+    }
+
+    fun Quadruple<Host, ClientState, Connection, Channel>.chanOpenConfirm(
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            proofAck: CommitmentProof,
+            proofHeight: Height
+    ) : Channel {
+        val host = this.first
+        val client = this.second
+        val conn = this.third
+        val chan = this.fourth
+
+        require(host.clientIds.contains(client.id))
+        require(host.connIds.contains(conn.id))
+        require(client.connIds.contains(conn.id))
+        require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
+
+        require(chan.end.state == ChannelState.TRYOPEN)
+
+        require(conn.id == chan.end.connectionHops.single())
+
+        require(conn.end.state == ConnectionState.OPEN)
+
+        val expected = ChannelEnd(
+                ChannelState.OPEN,
+                chan.end.ordering,
+                portIdentifier,
+                channelIdentifier,
+                arrayOf(conn.end.counterpartyConnectionIdentifier),
+                chan.end.version)
+        require(client.verifyChannelState(
+                proofHeight,
+                conn.end.counterpartyPrefix,
+                proofAck,
+                chan.end.counterpartyPortIdentifier,
+                chan.end.counterpartyChannelIdentifier,
+                expected))
+
+        return chan.copy(end = chan.end.copy(state = ChannelState.OPEN))
+    }
+
+    fun Quadruple<Host, ClientState, Connection, Channel>.sendPacket(packet: Packet) : Channel {
+        val host = this.first
+        val client = this.second
+        val conn = this.third
+        val chan = this.fourth
+
+        require(host.clientIds.contains(client.id))
+        require(host.connIds.contains(conn.id))
+        require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
+        require(client.connIds.contains(conn.id))
+
+        require(chan.end.state != ChannelState.CLOSED)
+
+        require(packet.sourcePort == chan.portId)
+        require(packet.sourceChannel == chan.id)
+        require(packet.destPort == chan.end.counterpartyPortIdentifier)
+        require(packet.destChannel == chan.end.counterpartyChannelIdentifier)
+
+        require(conn.id == chan.end.connectionHops.single())
+
+        require(conn.end.clientIdentifier == client.id)
+        val latestClientHeight = client.latestClientHeight()
+        require(packet.timeoutHeight.height == 0 || latestClientHeight.height < packet.timeoutHeight.height)
+
+        require(packet.sequence == chan.nextSequenceSend)
+
+        return chan.copy(
+                nextSequenceSend = chan.nextSequenceSend + 1,
+                packets = chan.packets + mapOf(packet.sequence to packet))
+    }
+
+    fun Quadruple<Host, ClientState, Connection, Channel>.recvPacket(
+            packet: Packet,
+            proof: CommitmentProof,
+            proofHeight: Height,
+            acknowledgement: Acknowledgement
+    ) : Channel {
+        val host = this.first
+        val client = this.second
+        val conn = this.third
+        var chan = this.fourth
+
+        require(host.clientIds.contains(client.id))
+        require(host.connIds.contains(conn.id))
+        require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
+        require(client.connIds.contains(conn.id))
+
+        require(packet.destPort == chan.portId)
+        require(packet.destChannel == chan.id)
+
+        require(chan.end.state == ChannelState.OPEN)
+        require(packet.sourcePort == chan.end.counterpartyPortIdentifier)
+        require(packet.sourceChannel == chan.end.counterpartyChannelIdentifier)
+
+        require(conn.id == chan.end.connectionHops.single())
+        require(conn.end.state == ConnectionState.OPEN)
+
+        require(packet.timeoutHeight.height == 0 || host.getCurrentHeight().height < packet.timeoutHeight.height)
+        require(packet.timeoutTimestamp.timestamp == 0 || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
+
+        require(client.verifyPacketData(
+                proofHeight,
+                conn.end.counterpartyPrefix,
+                proof,
+                packet.sourcePort,
+                packet.sourceChannel,
+                packet.sequence,
+                packet))
+
+        if (acknowledgement.data.size > 0 || chan.end.ordering == ChannelOrder.UNORDERED) {
+            chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
+        }
+
+        if (chan.end.ordering == ChannelOrder.ORDERED) {
+            require(packet.sequence == chan.nextSequenceRecv)
+            chan = chan.copy(nextSequenceRecv = chan.nextSequenceRecv + 1)
+        }
+
+        return chan
     }
 }
