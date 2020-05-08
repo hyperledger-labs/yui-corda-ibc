@@ -9,6 +9,9 @@ import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics4.Acknowledgement
+import jp.datachain.corda.ibc.ics4.ChannelOrder
+import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
@@ -28,6 +31,7 @@ object Relayer {
 
             val participants = listOf("PartyA", "PartyB")
                     .map{ops.partiesFromName(it, false).single()}
+
             val hostA = createHost(ops, participants).tx.outputsOfType<Host>().single()
             val hostB = createHost(ops, participants).tx.outputsOfType<Host>().single()
 
@@ -170,4 +174,104 @@ object Relayer {
             identifier,
             proofAck,
             proofHeight).returnValue.get()
+
+    fun chanOpenInit(
+            ops: CordaRPCOps,
+            hostIdentifier: Identifier,
+            order: ChannelOrder,
+            connectionHops: Array<Identifier>,
+            counterpartyPortIdentifier: Identifier,
+            counterpartyChannelIdentifier: Identifier,
+            version: Version.Single
+    ) = ops.startFlowDynamic(
+            IbcChanOpenInitFlow.Initiator::class.java,
+            hostIdentifier,
+            order,
+            connectionHops,
+            counterpartyPortIdentifier,
+            counterpartyChannelIdentifier,
+            version).returnValue.get()
+
+    fun chanOpenTry(
+            ops: CordaRPCOps,
+            hostIdentifier: Identifier,
+            order: ChannelOrder,
+            connectionHops: Array<Identifier>,
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            counterpartyPortIdentifier: Identifier,
+            counterpartyChannelIdentifier: Identifier,
+            version: Version.Single,
+            counterpartyVersion: Version.Single,
+            proofInit: CommitmentProof,
+            proofHeight: Height
+    ) = ops.startFlowDynamic(
+            IbcChanOpenTryFlow.Initiator::class.java,
+            hostIdentifier,
+            order,
+            connectionHops,
+            portIdentifier,
+            channelIdentifier,
+            counterpartyPortIdentifier,
+            counterpartyChannelIdentifier,
+            version,
+            counterpartyVersion,
+            proofInit,
+            proofHeight).returnValue.get()
+
+    fun chanOpenAck(
+            ops: CordaRPCOps,
+            hostIdentifier: Identifier,
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            counterpartyVersion: Version.Single,
+            proofTry: CommitmentProof,
+            proofHeight: Height
+    ) = ops.startFlowDynamic(
+            IbcChanOpenAckFlow.Initiator::class.java,
+            hostIdentifier,
+            portIdentifier,
+            channelIdentifier,
+            counterpartyVersion,
+            proofTry,
+            proofHeight).returnValue.get()
+
+    fun chanOpenConfirm(
+            ops: CordaRPCOps,
+            hostIdentifier: Identifier,
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            proofAck: CommitmentProof,
+            proofHeight: Height
+    ) = ops.startFlowDynamic(
+            IbcChanOpenConfirmFlow.Initiator::class.java,
+            hostIdentifier,
+            portIdentifier,
+            channelIdentifier,
+            proofAck,
+            proofHeight).returnValue.get()
+
+    fun sendPacket(
+            ops: CordaRPCOps,
+            hostIdentifier: Identifier,
+            packet: Packet
+    ) = ops.startFlowDynamic(
+            IbcSendPacketFlow.Initiator::class.java,
+            hostIdentifier,
+            packet).returnValue.get()
+
+    fun recvPacket(
+            ops: CordaRPCOps,
+            hostIdentifier: Identifier,
+            packet: Packet,
+            proof: CommitmentProof,
+            proofHeight: Height,
+            acknowledgement: Acknowledgement
+    ) = ops.startFlowDynamic(
+            IbcRecvPacketFlow.Initiator::class.java,
+            hostIdentifier,
+            packet,
+            proof,
+            proofHeight,
+            acknowledgement).returnValue.get()
 }
