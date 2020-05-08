@@ -6,13 +6,24 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.HostSeed
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics25.Handler.chanOpenAck
+import jp.datachain.corda.ibc.ics25.Handler.chanOpenConfirm
+import jp.datachain.corda.ibc.ics25.Handler.chanOpenInit
+import jp.datachain.corda.ibc.ics25.Handler.chanOpenTry
 import jp.datachain.corda.ibc.ics25.Handler.connOpenAck
 import jp.datachain.corda.ibc.ics25.Handler.connOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.connOpenInit
 import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
 import jp.datachain.corda.ibc.ics25.Handler.createClient
+import jp.datachain.corda.ibc.ics25.Handler.recvPacket
+import jp.datachain.corda.ibc.ics25.Handler.sendPacket
+import jp.datachain.corda.ibc.ics4.Acknowledgement
+import jp.datachain.corda.ibc.ics4.ChannelOrder
+import jp.datachain.corda.ibc.ics4.Packet
+import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
@@ -183,13 +194,162 @@ class Ibc : Contract {
             }
         }
 
-        /*
-        class ChanOpenInit : TypeOnlyCommandData(), Commands
-        class ChanOpenTry : TypeOnlyCommandData(), Commands
-        class ChanOpenAck : TypeOnlyCommandData(), Commands
-        class ChanOpenConfirm : TypeOnlyCommandData(), Commands
-        class ChanCloseInit : TypeOnlyCommandData(), Commands
-        class ChanCloseConfirm : TypeOnlyCommandData(), Commands
-        */
+        data class ChanOpenInit(
+                val order: ChannelOrder,
+                val connectionHops: Array<Identifier>,
+                val portIdentifier: Identifier,
+                val channelIdentifier: Identifier,
+                val counterpartyPortIdentifier: Identifier,
+                val counterpartyChannelIdentifier: Identifier,
+                val version: Version.Single
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly one state should be referenced" using (tx.references.size == 1)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly two states should be created" using (tx.outputs.size == 2)
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val host = tx.inputsOfType<Host>().single()
+                val newHost = tx.outputsOfType<Host>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Pair(host, conn).chanOpenInit(
+                        order,
+                        connectionHops,
+                        portIdentifier,
+                        channelIdentifier,
+                        counterpartyPortIdentifier,
+                        counterpartyChannelIdentifier,
+                        version)
+                "Outputs should be expected states" using (Pair(newHost, newChan) == expected)
+            }
+        }
+
+        data class ChanOpenTry(
+                val order: ChannelOrder,
+                val connectionHops: Array<Identifier>,
+                val portIdentifier: Identifier,
+                val channelIdentifier: Identifier,
+                val counterpartyPortIdentifier: Identifier,
+                val counterpartyChannelIdentifier: Identifier,
+                val version: Version.Single,
+                val counterpartyVersion: Version.Single,
+                val proofInit: CommitmentProof,
+                val proofHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly two state should be referenced" using (tx.references.size == 2)
+                "One or two states should be consumed" using (tx.inputs.size == 1 || tx.inputs.size == 2)
+                "Exactly two states should be created" using (tx.outputs.size == 2)
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val host = tx.inputsOfType<Host>().single()
+                val chan = tx.inputsOfType<Channel>().singleOrNull()
+                val newHost = tx.outputsOfType<Host>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).chanOpenTry(
+                        order,
+                        connectionHops,
+                        portIdentifier,
+                        channelIdentifier,
+                        counterpartyPortIdentifier,
+                        counterpartyChannelIdentifier,
+                        version,
+                        counterpartyVersion,
+                        proofInit,
+                        proofHeight)
+                "Outputs should be expected states" using (Pair(newHost, newChan) == expected)
+            }
+        }
+
+        data class ChanOpenAck(
+                val portIdentifier: Identifier,
+                val channelIdentifier: Identifier,
+                val counterpartyVersion: Version.Single,
+                val proofTry: CommitmentProof,
+                val proofHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be referenced" using (tx.references.size == 3)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).chanOpenAck(
+                        portIdentifier,
+                        channelIdentifier,
+                        counterpartyVersion,
+                        proofTry,
+                        proofHeight)
+                "Output should be expected state" using (newChan == expected)
+            }
+        }
+
+        data class ChanOpenConfirm(
+                val portIdentifier: Identifier,
+                val channelIdentifier: Identifier,
+                val proofAck: CommitmentProof,
+                val proofHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be referenced" using (tx.references.size == 3)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).chanOpenConfirm(
+                        portIdentifier,
+                        channelIdentifier,
+                        proofAck,
+                        proofHeight)
+                "Output should be expected state" using (newChan == expected)
+            }
+        }
+
+        // data class ChanCloseInit() : Commands
+        // data class ChanCloseConfirm() : Commands
+
+        data class SendPacket(val packet: Packet) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be referenced" using (tx.references.size == 3)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).sendPacket(packet)
+                "Output should be expected state" using (newChan == expected)
+            }
+        }
+
+        data class RecvPacket(
+                val packet: Packet,
+                val proof: CommitmentProof,
+                val proofHeight: Height,
+                val acknowledgement: Acknowledgement
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be referenced" using (tx.references.size == 3)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).recvPacket(
+                        packet,
+                        proof,
+                        proofHeight,
+                        acknowledgement)
+                "Output should be expected state" using (newChan == expected)
+            }
+        }
     }
 }
