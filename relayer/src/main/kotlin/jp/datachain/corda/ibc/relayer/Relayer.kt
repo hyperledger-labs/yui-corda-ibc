@@ -23,6 +23,7 @@ import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.utilities.OpaqueBytes
+import java.util.*
 
 object Relayer {
     @JvmStatic
@@ -35,18 +36,26 @@ object Relayer {
             val participants = listOf("PartyA", "PartyB")
                     .map{ops.partiesFromName(it, false).single()}
 
-            val hostA = createHost(ops, participants).tx.outputsOfType<Host>().single()
-            val hostB = createHost(ops, participants).tx.outputsOfType<Host>().single()
+            val hostUuidA = UUID.randomUUID()
+            val hostA = createHost(ops, participants, hostUuidA).tx.outputsOfType<Host>().single()
+
+            val hostUuidB = UUID.randomUUID()
+            val hostB = createHost(ops, participants, hostUuidB).tx.outputsOfType<Host>().single()
 
             val cordaConsensusStateA = hostA.getConsensusState(Height(0)) as CordaConsensusState
             val cordaConsensusStateB = hostB.getConsensusState(Height(0)) as CordaConsensusState
 
-            val clientA = createClient(ops, hostA.id, cordaConsensusStateB).tx.outputsOfType<ClientState>().single()
-            val clientB = createClient(ops, hostB.id, cordaConsensusStateA).tx.outputsOfType<ClientState>().single()
+            val clientIdA = hostA.generateIdentifier()
+            val clientA = createClient(ops, hostA.id, clientIdA, ClientType.CordaClient, cordaConsensusStateB).tx.outputsOfType<ClientState>().single()
 
-            val connIdB = clientB.generateIdentifier()
+            val clientIdB = hostB.generateIdentifier()
+            val clientB = createClient(ops, hostB.id, clientIdB, ClientType.CordaClient, cordaConsensusStateA).tx.outputsOfType<ClientState>().single()
+
+            val connIdA = hostA.generateIdentifier()
+            val connIdB = hostB.generateIdentifier()
             var stxA = connOpenInit(ops,
                     hostA.id,
+                    connIdA,
                     connIdB,
                     hostB.getCommitmentPrefix(),
                     clientA.id,
@@ -89,12 +98,16 @@ object Relayer {
             connB = stxB.tx.outputsOfType<Connection>().single()
             println("connConfirm: ${connB}")
 
+            val portIdA = hostA.generateIdentifier()
+            val chanIdA = hostA.generateIdentifier()
             val portIdB = hostB.generateIdentifier()
             val chanIdB = hostB.generateIdentifier()
             stxA = chanOpenInit(ops,
                     hostA.id,
                     ChannelOrder.ORDERED,
                     listOf(connA.id),
+                    portIdA,
+                    chanIdA,
                     portIdB,
                     chanIdB,
                     connA.end.version as Version.Single)
@@ -189,23 +202,25 @@ object Relayer {
         }
     }
 
-    fun createHost(ops: CordaRPCOps, participants: List<Party>) : SignedTransaction {
+    fun createHost(ops: CordaRPCOps, participants: List<Party>, uuid: UUID) : SignedTransaction {
         ops.startFlowDynamic(
                 IbcHostSeedCreateFlow.Initiator::class.java,
                 participants
         ).returnValue.get()
-        return ops.startFlowDynamic(IbcHostCreateFlow.Initiator::class.java).returnValue.get()
+        return ops.startFlowDynamic(IbcHostCreateFlow.Initiator::class.java, uuid).returnValue.get()
     }
 
-    fun createClient(ops: CordaRPCOps, hostId: Identifier, cordaConsensusState: CordaConsensusState) = ops.startFlowDynamic(
+    fun createClient(ops: CordaRPCOps, hostId: Identifier, id: Identifier, clientType: ClientType, cordaConsensusState: CordaConsensusState) = ops.startFlowDynamic(
             IbcClientCreateFlow.Initiator::class.java,
             hostId,
-            ClientType.CordaClient,
+            id,
+            clientType,
             cordaConsensusState ).returnValue.get()
 
     fun connOpenInit(
             ops: CordaRPCOps,
             hostId: Identifier,
+            identifier: Identifier,
             desiredConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
@@ -213,6 +228,7 @@ object Relayer {
     ) = ops.startFlowDynamic(
             IbcConnOpenInitFlow.Initiator::class.java,
             hostId,
+            identifier,
             desiredConnectionIdentifier,
             counterpartyPrefix,
             clientIdentifier,
@@ -282,6 +298,8 @@ object Relayer {
             hostIdentifier: Identifier,
             order: ChannelOrder,
             connectionHops: List<Identifier>,
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
             version: Version.Single
@@ -290,6 +308,8 @@ object Relayer {
             hostIdentifier,
             order,
             connectionHops,
+            portIdentifier,
+            channelIdentifier,
             counterpartyPortIdentifier,
             counterpartyChannelIdentifier,
             version).returnValue.get()

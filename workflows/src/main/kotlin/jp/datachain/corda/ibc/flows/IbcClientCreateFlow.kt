@@ -17,7 +17,7 @@ import net.corda.core.transactions.TransactionBuilder
 object IbcClientCreateFlow {
     @StartableByRPC
     @InitiatingFlow
-    class Initiator(val hostIdentifier: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
+    class Initiator(val hostIdentifier: Identifier, val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call() : SignedTransaction {
             val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -30,8 +30,7 @@ object IbcClientCreateFlow {
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 
-            val clientId = host.state.data.generateIdentifier()
-            val (newHost, newClient) = host.state.data.createClient(clientId, clientType, consensusState)
+            val (newHost, newClient) = host.state.data.createClient(id, clientType, consensusState)
 
             builder.addCommand(Ibc.Commands.ClientCreate(clientType, consensusState), ourIdentity.owningKey)
                     .addInputState(host)
