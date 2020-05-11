@@ -12,14 +12,17 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
+import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.identity.Party
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NetworkHostAndPort
+import net.corda.core.utilities.OpaqueBytes
 
 object Relayer {
     @JvmStatic
@@ -42,48 +45,147 @@ object Relayer {
             val clientB = createClient(ops, hostB.id, cordaConsensusStateA).tx.outputsOfType<ClientState>().single()
 
             val connIdB = clientB.generateIdentifier()
-            val stxInit = connOpenInit(ops,
+            var stxA = connOpenInit(ops,
                     hostA.id,
                     connIdB,
                     hostB.getCommitmentPrefix(),
                     clientA.id,
                     clientB.id)
-            val connInit = stxInit.tx.outputsOfType<Connection>().single()
-            println("connInit: ${connInit}")
+            var connA = stxA.tx.outputsOfType<Connection>().single()
+            println("connInit: ${connA}")
 
-            val stxTry = connOpenTry(ops,
+            var stxB = connOpenTry(ops,
                     hostB.id,
                     connIdB,
-                    connInit.id,
+                    connA.id,
                     hostA.getCommitmentPrefix(),
                     clientA.id,
                     clientB.id,
                     hostA.getCompatibleVersions(),
-                    CordaCommitmentProof(stxInit.coreTransaction, stxInit.sigs.filter{it.by == hostA.notary.owningKey}.single()),
-                    CordaCommitmentProof(stxInit.coreTransaction, stxInit.sigs.filter{it.by == hostA.notary.owningKey}.single()),
+                    CordaCommitmentProof(stxA.coreTransaction, stxA.sigs.filter{it.by == hostA.notary.owningKey}.single()),
+                    CordaCommitmentProof(stxA.coreTransaction, stxA.sigs.filter{it.by == hostA.notary.owningKey}.single()),
                     hostA.getCurrentHeight(),
                     hostB.getCurrentHeight())
-            val connTry = stxTry.tx.outputsOfType<Connection>().single()
-            println("connTry: ${connTry}")
+            var connB = stxB.tx.outputsOfType<Connection>().single()
+            assert(connB.id == connIdB)
+            println("connTry: ${connB}")
 
-            val stxAck = connOpenAck(ops,
+            stxA = connOpenAck(ops,
                     hostA.id,
-                    connInit.id,
-                    connTry.end.version as Version.Single,
-                    CordaCommitmentProof(stxTry.coreTransaction, stxTry.sigs.filter{it.by == hostB.notary.owningKey}.single()),
-                    CordaCommitmentProof(stxTry.coreTransaction, stxTry.sigs.filter{it.by == hostB.notary.owningKey}.single()),
+                    connA.id,
+                    connB.end.version as Version.Single,
+                    CordaCommitmentProof(stxB.coreTransaction, stxB.sigs.filter{it.by == hostB.notary.owningKey}.single()),
+                    CordaCommitmentProof(stxB.coreTransaction, stxB.sigs.filter{it.by == hostB.notary.owningKey}.single()),
                     hostB.getCurrentHeight(),
                     hostA.getCurrentHeight())
-            val connAck = stxAck.tx.outputsOfType<Connection>().single()
-            println("connAck: ${connAck}")
+            connA = stxA.tx.outputsOfType<Connection>().single()
+            println("connAck: ${connA}")
 
-            val stxConfirm = connOpenConfirm(ops,
+            stxB = connOpenConfirm(ops,
                     hostB.id,
-                    connTry.id,
-                    CordaCommitmentProof(stxAck.coreTransaction, stxAck.sigs.filter{it.by == hostA.notary.owningKey}.single()),
+                    connB.id,
+                    CordaCommitmentProof(stxA.coreTransaction, stxA.sigs.filter{it.by == hostA.notary.owningKey}.single()),
                     hostA.getCurrentHeight())
-            val connConfirm = stxConfirm.tx.outputsOfType<Connection>().single()
-            println("connConfirm: ${connConfirm}")
+            connB = stxB.tx.outputsOfType<Connection>().single()
+            println("connConfirm: ${connB}")
+
+            val portIdB = hostB.generateIdentifier()
+            val chanIdB = hostB.generateIdentifier()
+            stxA = chanOpenInit(ops,
+                    hostA.id,
+                    ChannelOrder.ORDERED,
+                    listOf(connA.id),
+                    portIdB,
+                    chanIdB,
+                    connA.end.version as Version.Single)
+            var chanA = stxA.tx.outputsOfType<Channel>().single()
+            println("chanInit: ${chanA}")
+
+            stxB = chanOpenTry(ops,
+                    hostB.id,
+                    ChannelOrder.ORDERED,
+                    listOf(connB.id),
+                    portIdB,
+                    chanIdB,
+                    chanA.portId,
+                    chanA.id,
+                    connB.end.version as Version.Single,
+                    chanA.end.version,
+                    CordaCommitmentProof(stxA.coreTransaction, stxA.sigs.filter{it.by == hostA.notary.owningKey}.single()),
+                    hostA.getCurrentHeight())
+            var chanB = stxB.tx.outputsOfType<Channel>().single()
+            println("chanTry: ${chanB}")
+
+            stxA = chanOpenAck(ops,
+                    hostA.id,
+                    chanA.portId,
+                    chanA.id,
+                    chanB.end.version,
+                    CordaCommitmentProof(stxB.coreTransaction, stxB.sigs.filter{it.by == hostA.notary.owningKey}.single()),
+                    hostB.getCurrentHeight())
+            chanA = stxA.tx.outputsOfType<Channel>().single()
+            println("chanAck: ${chanA}")
+
+            stxB = chanOpenConfirm(ops,
+                    hostB.id,
+                    chanB.portId,
+                    chanB.id,
+                    CordaCommitmentProof(stxA.coreTransaction, stxA.sigs.filter{it.by == hostA.notary.owningKey}.single()),
+                    hostA.getCurrentHeight())
+            chanB = stxB.tx.outputsOfType<Channel>().single()
+            println("chanConfirm: ${chanB}")
+
+            for (sequence in 1..10) {
+                val packet = Packet(
+                        OpaqueBytes("Hello, Bob! (${sequence})".toByteArray()),
+                        chanA.portId,
+                        chanA.id,
+                        chanB.portId,
+                        chanB.id,
+                        Height(0),
+                        Timestamp(0),
+                        sequence)
+                stxA = sendPacket(ops, hostA.id, packet)
+                chanA = stxA.tx.outputsOfType<Channel>().single()
+                println("chanSend[${sequence}](A->B): ${chanA}")
+                assert(chanA.packets[sequence] == packet)
+
+                stxB = recvPacket(ops,
+                        hostB.id,
+                        packet,
+                        CordaCommitmentProof(stxA.coreTransaction, stxA.sigs.filter { it.by == hostA.notary.owningKey }.single()),
+                        hostA.getCurrentHeight(),
+                        Acknowledgement(OpaqueBytes("Thank you, Alice! (${sequence})".toByteArray())))
+                chanB = stxB.tx.outputsOfType<Channel>().single()
+                println("chanRecv[${sequence}](A->B): ${chanB}")
+                assert(chanB.nextSequenceRecv == sequence + 1)
+            }
+
+            for (sequence in 1..10) {
+                val packet = Packet(
+                        OpaqueBytes("Hello, Alice! (${sequence})".toByteArray()),
+                        chanB.portId,
+                        chanB.id,
+                        chanA.portId,
+                        chanA.id,
+                        Height(0),
+                        Timestamp(0),
+                        sequence)
+                stxB = sendPacket(ops, hostB.id, packet)
+                chanB = stxB.tx.outputsOfType<Channel>().single()
+                println("chanSend[${sequence}](B->A): ${chanB}")
+                assert(chanB.packets[sequence] == packet)
+
+                stxA = recvPacket(ops,
+                        hostA.id,
+                        packet,
+                        CordaCommitmentProof(stxB.coreTransaction, stxB.sigs.filter { it.by == hostB.notary.owningKey }.single()),
+                        hostB.getCurrentHeight(),
+                        Acknowledgement(OpaqueBytes("Thank you, Bob! (${sequence})".toByteArray())))
+                chanA = stxA.tx.outputsOfType<Channel>().single()
+                println("chanRecv[${sequence}](B->A): ${chanA}")
+                assert(chanA.nextSequenceRecv == sequence + 1)
+            }
         }
     }
 
@@ -179,7 +281,7 @@ object Relayer {
             ops: CordaRPCOps,
             hostIdentifier: Identifier,
             order: ChannelOrder,
-            connectionHops: Array<Identifier>,
+            connectionHops: List<Identifier>,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
             version: Version.Single
@@ -196,7 +298,7 @@ object Relayer {
             ops: CordaRPCOps,
             hostIdentifier: Identifier,
             order: ChannelOrder,
-            connectionHops: Array<Identifier>,
+            connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,

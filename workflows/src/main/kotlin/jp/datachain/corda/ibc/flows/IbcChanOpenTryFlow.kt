@@ -27,7 +27,7 @@ object IbcChanOpenTryFlow {
     class Initiator(
             val hostIdentifier: Identifier,
             val order: ChannelOrder,
-            val connectionHops: Array<Identifier>,
+            val connectionHops: List<Identifier>,
             val portIdentifier: Identifier,
             val channelIdentifier: Identifier,
             val counterpartyPortIdentifier: Identifier,

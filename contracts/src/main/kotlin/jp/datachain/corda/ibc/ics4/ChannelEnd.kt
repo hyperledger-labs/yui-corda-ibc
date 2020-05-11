@@ -10,6 +10,6 @@ data class ChannelEnd(
         val ordering: ChannelOrder,
         val counterpartyPortIdentifier: Identifier,
         val counterpartyChannelIdentifier: Identifier,
-        val connectionHops: Array<Identifier>,
+        val connectionHops: List<Identifier>,
         val version: Version.Single
 )

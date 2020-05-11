@@ -196,7 +196,7 @@ class Ibc : Contract {
 
         data class ChanOpenInit(
                 val order: ChannelOrder,
-                val connectionHops: Array<Identifier>,
+                val connectionHops: List<Identifier>,
                 val portIdentifier: Identifier,
                 val channelIdentifier: Identifier,
                 val counterpartyPortIdentifier: Identifier,
@@ -219,13 +219,14 @@ class Ibc : Contract {
                         counterpartyPortIdentifier,
                         counterpartyChannelIdentifier,
                         version)
-                "Outputs should be expected states" using (Pair(newHost, newChan) == expected)
+                "Output host should be expected host state: ${newHost} != ${expected.first}" using (newHost == expected.first)
+                "Output channel should be expected channel state: ${newChan} != ${expected.second}" using (newChan == expected.second)
             }
         }
 
         data class ChanOpenTry(
                 val order: ChannelOrder,
-                val connectionHops: Array<Identifier>,
+                val connectionHops: List<Identifier>,
                 val portIdentifier: Identifier,
                 val channelIdentifier: Identifier,
                 val counterpartyPortIdentifier: Identifier,
@@ -256,7 +257,8 @@ class Ibc : Contract {
                         counterpartyVersion,
                         proofInit,
                         proofHeight)
-                "Outputs should be expected states" using (Pair(newHost, newChan) == expected)
+                "Output host should be expected host state: ${newHost} != ${expected.first}" using (newHost == expected.first)
+                "Output channel should be expected channel state: ${newChan} != ${expected.second}" using (newChan == expected.second)
             }
         }
 
@@ -282,7 +284,7 @@ class Ibc : Contract {
                         counterpartyVersion,
                         proofTry,
                         proofHeight)
-                "Output should be expected state" using (newChan == expected)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
 
@@ -306,7 +308,7 @@ class Ibc : Contract {
                         channelIdentifier,
                         proofAck,
                         proofHeight)
-                "Output should be expected state" using (newChan == expected)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
 
@@ -324,7 +326,7 @@ class Ibc : Contract {
                 val chan = tx.inputsOfType<Channel>().single()
                 val newChan = tx.outputsOfType<Channel>().single()
                 val expected = Quadruple(host, client, conn, chan).sendPacket(packet)
-                "Output should be expected state" using (newChan == expected)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
 
@@ -348,7 +350,7 @@ class Ibc : Contract {
                         proof,
                         proofHeight,
                         acknowledgement)
-                "Output should be expected state" using (newChan == expected)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
     }

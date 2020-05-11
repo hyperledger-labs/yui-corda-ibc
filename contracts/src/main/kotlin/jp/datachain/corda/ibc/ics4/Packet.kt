@@ -4,10 +4,11 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.utilities.OpaqueBytes
 
 @CordaSerializable
 data class Packet(
-        val data: ByteArray,
+        val data: OpaqueBytes,
         val sourcePort: Identifier,
         val sourceChannel: Identifier,
         val destPort: Identifier,
