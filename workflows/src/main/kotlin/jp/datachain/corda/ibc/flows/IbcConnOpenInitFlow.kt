@@ -19,6 +19,7 @@ object IbcConnOpenInitFlow {
     @InitiatingFlow
     class Initiator(
             val hostIdentifier: Identifier,
+            val identifier: Identifier,
             val desiredConnectionIdentifier: Identifier,
             val counterpartyPrefix: CommitmentPrefix,
             val clientIdentifier: Identifier,
@@ -40,15 +41,14 @@ object IbcConnOpenInitFlow {
                     QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientIdentifier.toUniqueIdentifier()))
             ).states.single()
 
-            val connId = host.state.data.generateIdentifier()
             val (newHost, newClient, conn) = Pair(host.state.data, client.state.data).connOpenInit(
-                    connId,
+                    identifier,
                     desiredConnectionIdentifier,
                     counterpartyPrefix,
                     clientIdentifier,
                     counterpartyClientIdentifier)
 
-            builder.addCommand(Ibc.Commands.ConnOpenInit(desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier), ourIdentity.owningKey)
+            builder.addCommand(Ibc.Commands.ConnOpenInit(identifier, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier), ourIdentity.owningKey)
                     .addInputState(host)
                     .addInputState(client)
                     .addOutputState(newHost)

@@ -27,6 +27,7 @@ import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
+import java.util.*
 
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) = tx.commandsOfType<Commands>().single().value.verify(tx)
@@ -42,13 +43,13 @@ class Ibc : Contract {
             }
         }
 
-        class HostCreate : TypeOnlyCommandData(), Commands {
+        data class HostCreate(val uuid: UUID) : TypeOnlyCommandData(), Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
                 val seed = tx.inRefsOfType<HostSeed>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expected = Host(seed, newHost.linearId.id)
+                val expected = Host(seed, uuid)
                 "Output should be expected state" using (newHost == expected)
             }
         }
@@ -88,6 +89,7 @@ class Ibc : Contract {
         }
 
         data class ConnOpenInit(
+                val identifier: Identifier,
                 val desiredConnectionIdentifier: Identifier,
                 val counterpartyPrefix: CommitmentPrefix,
                 val clientIdentifier: Identifier,
@@ -101,7 +103,7 @@ class Ibc : Contract {
                 val newHost = tx.outputsOfType<Host>().single()
                 val newClient = tx.outputsOfType<ClientState>().single()
                 val newConn = tx.outputsOfType<Connection>().single()
-                val expected = Pair(host, client).connOpenInit(newConn.id, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier)
+                val expected = Pair(host, client).connOpenInit(identifier, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier)
                 "Outputs should be expected states" using (Triple(newHost, newClient, newConn) == expected)
             }
         }

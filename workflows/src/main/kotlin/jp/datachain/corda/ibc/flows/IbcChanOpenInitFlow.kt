@@ -23,6 +23,8 @@ object IbcChanOpenInitFlow {
             val hostIdentifier: Identifier,
             val order: ChannelOrder,
             val connectionHops: List<Identifier>,
+            val portIdentifier: Identifier,
+            val channelIdentifier: Identifier,
             val counterpartyPortIdentifier: Identifier,
             val counterpartyChannelIdentifier: Identifier,
             val version: Version.Single
@@ -47,13 +49,11 @@ object IbcChanOpenInitFlow {
             ).states.single()
 
             // calculate a newly created channel state and an updated host state
-            val portId = host.state.data.generateIdentifier()
-            val chanId = host.state.data.generateIdentifier()
             val (newHost, newChan) = Pair(host.state.data, conn.state.data).chanOpenInit(
                     order,
                     connectionHops,
-                    portId,
-                    chanId,
+                    portIdentifier,
+                    channelIdentifier,
                     counterpartyPortIdentifier,
                     counterpartyChannelIdentifier,
                     version)
@@ -62,8 +62,8 @@ object IbcChanOpenInitFlow {
             builder.addCommand(Ibc.Commands.ChanOpenInit(
                     order,
                     connectionHops,
-                    portId,
-                    chanId,
+                    portIdentifier,
+                    channelIdentifier,
                     counterpartyPortIdentifier,
                     counterpartyChannelIdentifier,
                     version

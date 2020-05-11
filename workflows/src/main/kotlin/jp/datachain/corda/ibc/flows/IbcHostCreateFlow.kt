@@ -14,7 +14,7 @@ import java.util.*
 object IbcHostCreateFlow {
     @StartableByRPC
     @InitiatingFlow
-    class Initiator : FlowLogic<SignedTransaction>() {
+    class Initiator(val uuid: UUID) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call() : SignedTransaction {
             val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -24,9 +24,9 @@ object IbcHostCreateFlow {
             val seed = serviceHub.vaultService.queryBy<HostSeed>().states.first() // queryBy returns all unconsumed states by default
             val participants = seed.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
-            val host = Host(seed, UUID.randomUUID())
+            val host = Host(seed, uuid)
 
-            builder.addCommand(Ibc.Commands.HostCreate(), ourIdentity.owningKey)
+            builder.addCommand(Ibc.Commands.HostCreate(uuid), ourIdentity.owningKey)
                     .addInputState(seed)
                     .addOutputState(host)
 
