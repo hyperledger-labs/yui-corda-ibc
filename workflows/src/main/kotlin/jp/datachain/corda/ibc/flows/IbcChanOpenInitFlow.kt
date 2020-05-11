@@ -22,7 +22,7 @@ object IbcChanOpenInitFlow {
     class Initiator(
             val hostIdentifier: Identifier,
             val order: ChannelOrder,
-            val connectionHops: Array<Identifier>,
+            val connectionHops: List<Identifier>,
             val counterpartyPortIdentifier: Identifier,
             val counterpartyChannelIdentifier: Identifier,
             val version: Version.Single

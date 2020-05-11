@@ -209,7 +209,7 @@ object Handler {
 
     fun Pair<Host, Connection>.chanOpenInit(
             order: ChannelOrder,
-            connectionHops: Array<Identifier>,
+            connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
@@ -238,7 +238,7 @@ object Handler {
 
     fun Quadruple<Host, ClientState, Connection, Channel?>.chanOpenTry(
             order: ChannelOrder,
-            connectionHops: Array<Identifier>,
+            connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
@@ -270,7 +270,7 @@ object Handler {
                         previous.end.ordering == order &&
                         previous.end.counterpartyPortIdentifier == counterpartyPortIdentifier &&
                         previous.end.counterpartyChannelIdentifier == counterpartyChannelIdentifier &&
-                        previous.end.connectionHops.contentEquals(connectionHops) &&
+                        previous.end.connectionHops == connectionHops &&
                         previous.end.version == version))
 
         require(conn.end.state == ConnectionState.OPEN)
@@ -280,7 +280,7 @@ object Handler {
                 order,
                 portIdentifier,
                 channelIdentifier,
-                arrayOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(conn.end.counterpartyConnectionIdentifier),
                 counterpartyVersion)
         require(client.verifyChannelState(
                 proofHeight,
@@ -329,7 +329,7 @@ object Handler {
                 chan.end.ordering,
                 portIdentifier,
                 channelIdentifier,
-                arrayOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(conn.end.counterpartyConnectionIdentifier),
                 counterpartyVersion)
         require(client.verifyChannelState(
                 proofHeight,
@@ -369,7 +369,7 @@ object Handler {
                 chan.end.ordering,
                 portIdentifier,
                 channelIdentifier,
-                arrayOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(conn.end.counterpartyConnectionIdentifier),
                 chan.end.version)
         require(client.verifyChannelState(
                 proofHeight,
