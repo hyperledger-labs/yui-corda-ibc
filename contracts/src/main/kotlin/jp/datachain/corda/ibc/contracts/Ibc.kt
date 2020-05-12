@@ -6,6 +6,9 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.HostSeed
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics25.Handler.acknowledgePacket
+import jp.datachain.corda.ibc.ics25.Handler.chanCloseConfirm
+import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenAck
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenInit
@@ -314,8 +317,48 @@ class Ibc : Contract {
             }
         }
 
-        // data class ChanCloseInit() : Commands
-        // data class ChanCloseConfirm() : Commands
+        data class ChanCloseInit(
+                val portIdentifier: Identifier,
+                val channelIdentifier: Identifier
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly two states should be referenced" using (tx.references.size == 2)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Triple(host, conn, chan).chanCloseInit(
+                        portIdentifier,
+                        channelIdentifier)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
+            }
+        }
+
+        data class ChanCloseConfirm(
+                val portIdentifier: Identifier,
+                val channelIdentifier: Identifier,
+                val proofInit: CommitmentProof,
+                val proofHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be referenced" using (tx.references.size == 3)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).chanCloseConfirm(
+                        portIdentifier,
+                        channelIdentifier,
+                        proofInit,
+                        proofHeight)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
+            }
+        }
 
         data class SendPacket(val packet: Packet) : Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
@@ -352,6 +395,30 @@ class Ibc : Contract {
                         proof,
                         proofHeight,
                         acknowledgement)
+                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
+            }
+        }
+
+        data class AcknowledgePacket(
+                val packet: Packet,
+                val acknowledgement: Acknowledgement,
+                val proof: CommitmentProof,
+                val proofHeight: Height
+        ) : Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly three states should be referenced" using (tx.references.size == 3)
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val host = tx.referenceInputsOfType<Host>().single()
+                val client = tx.referenceInputsOfType<ClientState>().single()
+                val conn = tx.referenceInputsOfType<Connection>().single()
+                val chan = tx.inputsOfType<Channel>().single()
+                val newChan = tx.outputsOfType<Channel>().single()
+                val expected = Quadruple(host, client, conn, chan).acknowledgePacket(
+                        packet,
+                        acknowledgement,
+                        proof,
+                        proofHeight)
                 "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
