@@ -28,7 +28,7 @@ class CordaIbcClient(host: String, port: Int) {
     val cordaRPCClient = CordaRPCClient(NetworkHostAndPort(host, port))
     var cordaRPCConnection: CordaRPCConnection? = null
 
-    var host: Pair<Host, SignedTransaction>? = null
+    var host: Host? = null
     var client: Pair<ClientState, SignedTransaction>? = null
     val conns = mutableMapOf<Identifier, Pair<Connection, SignedTransaction>>()
     val chans = mutableMapOf<Identifier, Pair<Channel, SignedTransaction>>()
@@ -38,25 +38,30 @@ class CordaIbcClient(host: String, port: Int) {
     }
     fun ops() = cordaRPCConnection!!.proxy
 
-    fun host() = host!!.first
-    fun hostStx() = host!!.second
-    private fun setHost(v: Host, stx: SignedTransaction) { assert(host == null); host = Pair(v, stx)}
+    fun host() = host!!
+    private fun insertHost(v: Host) { assert(host == null); host = v }
+    private fun updateHost(v: Host) { assert(host != null); host = v }
+
+    private fun makeProof(stx: SignedTransaction) = CordaCommitmentProof(
+            stx.coreTransaction,
+            stx.sigs.filter{it.by == host().notary.owningKey}.single())
 
     fun client() = client!!.first
-    fun clientStx() = client!!.second
-    private fun setClient(v: ClientState, stx: SignedTransaction) { assert(client == null); client = Pair(v, stx)}
+    fun clientProof() = makeProof(client!!.second)
+    private fun insertClient(v: ClientState, stx: SignedTransaction) { assert(client == null); client = Pair(v, stx)}
+    private fun updateClient(v: ClientState, stx: SignedTransaction) { assert(client != null); client = Pair(v, stx)}
 
     fun conn(id: Identifier) = conns[id]!!.first
-    fun connStx(id: Identifier) = conns[id]!!.second
+    fun connProof(id: Identifier) = makeProof(conns[id]!!.second)
     fun conn() = conns.values.single().first
-    fun connStx() = conns.values.single().second
+    fun connProof() = makeProof(conns.values.single().second)
     fun insertConn(v: Connection, stx: SignedTransaction) { assert(!conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
     fun updateConn(v: Connection, stx: SignedTransaction) { assert(conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
 
     fun chan(id: Identifier) = chans[id]!!.first
-    fun chanStx(id: Identifier) = chans[id]!!.second
+    fun chanProof(id: Identifier) = makeProof(chans[id]!!.second)
     fun chan() = chans.values.single().first
-    fun chanStx() = chans.values.single().second
+    fun chanProof() = makeProof(chans.values.single().second)
     fun insertChan(v: Channel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
     fun updateChan(v: Channel, stx: SignedTransaction) { assert(chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
 
@@ -73,7 +78,7 @@ class CordaIbcClient(host: String, port: Int) {
                 uuid
         ).returnValue.get()
         val state = stx.tx.outputsOfType<Host>().single()
-        setHost(state, stx)
+        insertHost(state)
     }
 
     fun createClient(
@@ -87,8 +92,12 @@ class CordaIbcClient(host: String, port: Int) {
                 id,
                 clientType,
                 cordaConsensusState).returnValue.get()
-        val state = stx.tx.outputsOfType<ClientState>().single()
-        setClient(state, stx)
+
+        val hostState = stx.tx.outputsOfType<Host>().single()
+        updateHost(hostState)
+
+        val clientState = stx.tx.outputsOfType<ClientState>().single()
+        insertClient(clientState, stx)
     }
 
     fun connOpenInit(
@@ -106,9 +115,16 @@ class CordaIbcClient(host: String, port: Int) {
                 counterpartyPrefix,
                 clientIdentifier,
                 counterpartyClientIdentifier).returnValue.get()
-        val state = stx.tx.outputsOfType<Connection>().single()
-        assert(state.end.state == ConnectionState.INIT)
-        insertConn(state, stx)
+
+        val hostState = stx.tx.outputsOfType<Host>().single()
+        updateHost(hostState)
+
+        val clientState = stx.tx.outputsOfType<ClientState>().single()
+        updateClient(clientState, stx)
+
+        val connState = stx.tx.outputsOfType<Connection>().single()
+        assert(connState.end.state == ConnectionState.INIT)
+        insertConn(connState, stx)
     }
 
     fun connOpenTry(
@@ -136,9 +152,16 @@ class CordaIbcClient(host: String, port: Int) {
                 proofConsensus,
                 proofHeight,
                 consensusHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Connection>().single()
-        assert(state.end.state == ConnectionState.TRYOPEN)
-        insertConn(state, stx)
+
+        val hostState = stx.tx.outputsOfType<Host>().single()
+        updateHost(hostState)
+
+        val clientState = stx.tx.outputsOfType<ClientState>().single()
+        updateClient(clientState, stx)
+
+        val connState = stx.tx.outputsOfType<Connection>().single()
+        assert(connState.end.state == ConnectionState.TRYOPEN)
+        insertConn(connState, stx)
     }
 
     fun connOpenAck(
@@ -198,9 +221,13 @@ class CordaIbcClient(host: String, port: Int) {
                 counterpartyPortIdentifier,
                 counterpartyChannelIdentifier,
                 version).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.end.state == ChannelState.INIT)
-        insertChan(state, stx)
+
+        val hostState = stx.tx.outputsOfType<Host>().single()
+        updateHost(hostState)
+
+        val chanState = stx.tx.outputsOfType<Channel>().single()
+        assert(chanState.end.state == ChannelState.INIT)
+        insertChan(chanState, stx)
     }
 
     fun chanOpenTry(
@@ -228,9 +255,13 @@ class CordaIbcClient(host: String, port: Int) {
                 counterpartyVersion,
                 proofInit,
                 proofHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.end.state == ChannelState.TRYOPEN)
-        insertChan(state, stx)
+
+        val hostState = stx.tx.outputsOfType<Host>().single()
+        updateHost(hostState)
+
+        val chanState = stx.tx.outputsOfType<Channel>().single()
+        assert(chanState.end.state == ChannelState.TRYOPEN)
+        insertChan(chanState, stx)
     }
 
     fun chanOpenAck(
@@ -301,8 +332,4 @@ class CordaIbcClient(host: String, port: Int) {
         assert(state.nextSequenceRecv == packet.sequence + 1)
         updateChan(state, stx)
     }
-
-    fun makeProof(stx: SignedTransaction) = CordaCommitmentProof(
-            stx.coreTransaction,
-            stx.sigs.filter{it.by == host().notary.owningKey}.single())
 }
