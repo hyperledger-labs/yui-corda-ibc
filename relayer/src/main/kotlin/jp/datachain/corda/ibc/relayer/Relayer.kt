@@ -46,22 +46,22 @@ object Relayer {
                 ibcA.client().id,
                 ibcB.client().id,
                 ibcA.host().getCompatibleVersions(),
-                ibcA.makeProof(ibcA.connStx()),
-                ibcA.makeProof(ibcA.connStx()),
+                ibcA.connProof(),
+                ibcA.clientProof(),
                 ibcA.host().getCurrentHeight(),
                 ibcB.host().getCurrentHeight())
 
         ibcA.connOpenAck(
                 connAid,
                 ibcB.conn().end.version as Version.Single,
-                ibcB.makeProof(ibcB.connStx()),
-                ibcB.makeProof(ibcB.connStx()),
+                ibcB.connProof(),
+                ibcB.clientProof(),
                 ibcB.host().getCurrentHeight(),
                 ibcA.host().getCurrentHeight())
 
         ibcB.connOpenConfirm(
                 connBid,
-                ibcA.makeProof(ibcA.connStx()),
+                ibcA.connProof(),
                 ibcA.host().getCurrentHeight())
 
         val portAid = ibcA.host().generateIdentifier()
@@ -86,20 +86,20 @@ object Relayer {
                 chanAid,
                 ibcB.conn().end.version as Version.Single,
                 ibcA.conn().end.version as Version.Single,
-                ibcA.makeProof(ibcA.chanStx()),
+                ibcA.chanProof(),
                 ibcA.host().getCurrentHeight())
 
         ibcA.chanOpenAck(
                 portAid,
                 chanAid,
                 ibcB.chan().end.version,
-                ibcB.makeProof(ibcB.chanStx()),
+                ibcB.chanProof(),
                 ibcB.host().getCurrentHeight())
 
         ibcB.chanOpenConfirm(
                 portBid,
                 chanBid,
-                ibcA.makeProof(ibcA.chanStx()),
+                ibcA.chanProof(),
                 ibcA.host().getCurrentHeight())
 
         for (sequence in 1..10) {
@@ -117,7 +117,7 @@ object Relayer {
             val ack = Acknowledgement(OpaqueBytes("Thank you, Alice! (${sequence})".toByteArray()))
             ibcB.recvPacket(
                     packet,
-                    ibcA.makeProof(ibcA.chanStx()),
+                    ibcA.chanProof(),
                     ibcA.host().getCurrentHeight(),
                     ack)
         }
@@ -137,7 +137,7 @@ object Relayer {
             val ack = Acknowledgement(OpaqueBytes("Thank you, Bob! (${sequence})".toByteArray()))
             ibcA.recvPacket(
                     packet,
-                    ibcB.makeProof(ibcB.chanStx()),
+                    ibcB.chanProof(),
                     ibcB.host().getCurrentHeight(),
                     ack)
         }
