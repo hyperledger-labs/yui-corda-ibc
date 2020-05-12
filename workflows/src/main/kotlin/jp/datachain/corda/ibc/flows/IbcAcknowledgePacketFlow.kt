@@ -46,7 +46,7 @@ object IbcAcknowledgePacketFlow {
             require(participants.contains(ourIdentity))
 
             // query chan from vault
-            val chanId = packet.destChannel
+            val chanId = packet.sourceChannel
             val chan = serviceHub.vaultService.queryBy<Channel>(
                     QueryCriteria.LinearStateQueryCriteria(linearId = listOf(chanId.toUniqueIdentifier()))
             ).states.single()

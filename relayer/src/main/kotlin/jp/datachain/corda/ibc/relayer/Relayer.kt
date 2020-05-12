@@ -120,6 +120,12 @@ object Relayer {
                     ibcA.chanProof(),
                     ibcA.host().getCurrentHeight(),
                     ack)
+
+            ibcA.acknowledgePacket(
+                    packet,
+                    ack,
+                    ibcB.chanProof(),
+                    ibcB.host().getCurrentHeight())
         }
 
         for (sequence in 1..10) {
@@ -140,6 +146,22 @@ object Relayer {
                     ibcB.chanProof(),
                     ibcB.host().getCurrentHeight(),
                     ack)
+
+            ibcB.acknowledgePacket(
+                    packet,
+                    ack,
+                    ibcA.chanProof(),
+                    ibcA.host().getCurrentHeight())
         }
+
+        ibcA.chanCloseInit(
+                portAid,
+                chanAid)
+
+        ibcB.chanCloseConfirm(
+                portBid,
+                chanBid,
+                ibcA.chanProof(),
+                ibcA.host().getCurrentHeight())
     }
 }
