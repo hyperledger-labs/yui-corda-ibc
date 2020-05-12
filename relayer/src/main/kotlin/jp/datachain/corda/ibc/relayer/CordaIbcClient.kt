@@ -302,6 +302,38 @@ class CordaIbcClient(host: String, port: Int) {
         updateChan(state, stx)
     }
 
+    fun chanCloseInit(
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier
+    ) {
+        val stx = ops().startFlowDynamic(
+                IbcChanCloseInitFlow.Initiator::class.java,
+                host().id,
+                portIdentifier,
+                channelIdentifier).returnValue.get()
+        val state = stx.tx.outputsOfType<Channel>().single()
+        assert(state.end.state == ChannelState.CLOSED)
+        updateChan(state, stx)
+    }
+
+    fun chanCloseConfirm(
+            portIdentifier: Identifier,
+            channelIdentifier: Identifier,
+            proofInit: CommitmentProof,
+            proofHeight: Height
+    ) {
+        val stx = ops().startFlowDynamic(
+                IbcChanCloseConfirmFlow.Initiator::class.java,
+                host().id,
+                portIdentifier,
+                channelIdentifier,
+                proofInit,
+                proofHeight).returnValue.get()
+        val state = stx.tx.outputsOfType<Channel>().single()
+        assert(state.end.state == ChannelState.CLOSED)
+        updateChan(state, stx)
+    }
+
     fun sendPacket(
             packet: Packet
     ) {
@@ -330,6 +362,25 @@ class CordaIbcClient(host: String, port: Int) {
                 acknowledgement).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
         assert(state.nextSequenceRecv == packet.sequence + 1)
+        updateChan(state, stx)
+    }
+
+    fun acknowledgePacket(
+            packet: Packet,
+            acknowledgement: Acknowledgement,
+            proof: CommitmentProof,
+            proofHeight: Height
+    ) {
+        val stx = ops().startFlowDynamic(
+                IbcAcknowledgePacketFlow.Initiator::class.java,
+                host().id,
+                packet,
+                acknowledgement,
+                proof,
+                proofHeight).returnValue.get()
+        val state = stx.tx.outputsOfType<Channel>().single()
+        assert(state.nextSequenceAck == packet.sequence + 1)
+        assert(!state.packets.contains(packet.sequence))
         updateChan(state, stx)
     }
 }
