@@ -2,4 +2,5 @@ include 'workflows'
 include 'contracts'
 include 'clients'
 include 'relayer'
+include 'cosmos-experiment'
 
