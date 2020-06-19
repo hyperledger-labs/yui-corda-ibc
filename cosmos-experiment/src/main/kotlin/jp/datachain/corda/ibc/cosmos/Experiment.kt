@@ -10,8 +10,13 @@ import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenConf
 import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenInitReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenTryReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.types.ConnectionResponse
+import jp.datachain.cosmos.x.ibc.ics04_channel.client.rest.ChannelOpenInitReq
+import jp.datachain.cosmos.x.ibc.ics04_channel.client.rest.ChannelOpenTryReq
+import jp.datachain.cosmos.x.ibc.ics04_channel.types.ChannelResponse
 import jp.datachain.cosmos.x.ibc.ics07_tendermint.client.rest.UpdateClientReq
 import jp.datachain.cosmos.x.ibc.ics23_commitment.types.MerklePrefix
+import jp.datachain.cosmos.x.ibc.types.Order
+import jp.datachain.cosmos.x.ibc.types.State
 import jp.datachain.cosmos.x.ibc.ics09_localhost.client.rest.CreateClientReq as CreateClientReqIcs09
 import jp.datachain.cosmos.x.ibc.ics07_tendermint.client.rest.CreateClientReq as CreateClientReqIcs07
 
@@ -34,7 +39,14 @@ object Experiment {
     val CONNECTION_A = "connectionaaa"
     val CONNECTION_B = "connectionbbb"
 
-    val VERSIONS = listOf("1.0.0")
+    val CONN_VERSIONS = listOf("1.0.0")
+
+    val PORT_ID = "transfer"
+    val CHANNEL_A = "channelaaa"
+    val CHANNEL_B = "channelbbb"
+
+    val CHAN_VERSION = "ics20-1"
+    val ORDER = Order.ORDERED
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -115,7 +127,7 @@ object Experiment {
                 counterpartyClientID = CLIENT_A,
                 counterpartyConnectionID = CONNECTION_A,
                 counterpartyPrefix = MerklePrefix("ibc".toByteArray(charset = Charsets.US_ASCII)),
-                counterpartyVersions = VERSIONS,
+                counterpartyVersions = CONN_VERSIONS,
                 proofInit = connA.proof!!,
                 proofConsensus = consensusA.proof!!,
                 proofHeight = headerA.height().toString(),
@@ -124,7 +136,7 @@ object Experiment {
         triple.waitForBlock()
 
         headerB = client.query("ibc/header").resultAs<DisfixWrapper>().value
-        val connB = client.query("ibc/connections/${CONNECTION_B}?height=${headerB.height()-1}").resultAs<ConnectionResponse>()
+        var connB = client.query("ibc/connections/${CONNECTION_B}?height=${headerB.height()-1}").resultAs<ConnectionResponse>()
         val consensusB = client.query("ibc/clients/${CLIENT_B}/consensus-state/${headerA.height()}?height=${headerB.height()-1}").resultAs<ConsensusStateResponse>()
 
         triple.sendTx(UpdateClientReq(headerB), CLIENT_A)
@@ -133,7 +145,7 @@ object Experiment {
                 proofConsensus = consensusB.proof!!,
                 proofHeight = headerB.height().toString(),
                 consensusHeight = headerA.height().toString(),
-                version = VERSIONS.single()
+                version = CONN_VERSIONS.single()
         ), CONNECTION_A)
         triple.waitForBlock()
 
@@ -145,6 +157,46 @@ object Experiment {
                 proofAck = connA.proof!!,
                 proofHeight = headerA.height().toString()
         ), CONNECTION_B)
+        triple.waitForBlock()
+
+        headerB = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        connB = client.query("ibc/connections/${CONNECTION_B}?height=${headerB.height()-1}").resultAs<ConnectionResponse>()
+        assert(connB.connection.state == State.OPEN)
+
+        triple.sendTx(UpdateClientReq(headerB), CLIENT_A)
+        triple.sendTx(ChannelOpenInitReq(
+                portID = PORT_ID,
+                channelID = CHANNEL_A,
+                version = CHAN_VERSION,
+                channelOrder = ORDER,
+                connectionHops = listOf(CONNECTION_A),
+                counterpartyPortID = PORT_ID,
+                counterpartyChannelID = CHANNEL_B
+        ))
+        triple.waitForBlock()
+
+        headerA = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        var chanA = client.query("ibc/ports/${PORT_ID}/channels/${CHANNEL_A}?height=${headerA.height()-1}").resultAs<ChannelResponse>()
+
+        triple.sendTx(UpdateClientReq(headerA), CLIENT_B)
+        triple.sendTx(ChannelOpenTryReq(
+                portID = PORT_ID,
+                channelID = CHANNEL_B,
+                version = CHAN_VERSION,
+                channelOrder = ORDER,
+                connectionHops = listOf(CONNECTION_B),
+                counterpartyPortID = PORT_ID,
+                counterpartyChannelID = CHANNEL_A,
+                counterpartyVersion = CHAN_VERSION,
+                proofInit = chanA.proof!!,
+                proofHeight = headerA.height().toString()
+        ))
+        triple.waitForBlock()
+
+        headerB = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        var chanB = client.query("ibc/ports/${PORT_ID}/channels/${CHANNEL_B}?height=${headerB.height()-1}").resultAs<ChannelResponse>()
+
+        println(chanB)
     }
 
     inline fun <reified REQ: CosmosRequest> Triple<CosmosRESTClient, CosmosTransactor, CosmosSigner>.sendTx(req: REQ, vararg pathArgs: String) {
