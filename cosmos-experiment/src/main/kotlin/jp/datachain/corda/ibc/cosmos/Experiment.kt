@@ -5,6 +5,8 @@ import jp.datachain.amino.DisfixWrapper
 import jp.datachain.cosmos.x.auth.types.BaseAccount
 import jp.datachain.cosmos.x.auth.types.StdTx
 import jp.datachain.cosmos.x.ibc.ics02_client.types.ConsensusStateResponse
+import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenAckReq
+import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenConfirmReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenInitReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenTryReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.types.ConnectionResponse
@@ -26,11 +28,11 @@ object Experiment {
     val UNBONDING_PERIOD = 504L * 3600 * 1000 * 1000 * 1000
     val MAX_CLOCK_DRIFT = 10L * 1000 * 1000 * 1000
 
-    val CLIENT_A = "clientalice"
-    val CLIENT_B = "clientbob"
+    val CLIENT_A = "clientaaa"
+    val CLIENT_B = "clientbbb"
 
-    val CONNECTION_A = "connectionalice"
-    val CONNECTION_B = "connectionbob"
+    val CONNECTION_A = "connectionaaa"
+    val CONNECTION_B = "connectionbbb"
 
     val VERSIONS = listOf("1.0.0")
 
@@ -103,17 +105,10 @@ object Experiment {
         triple.waitForBlock()
 
         headerA = client.query("ibc/header").resultAs<DisfixWrapper>().value
-
-        val connA = client.query("ibc/connections/${CONNECTION_A}?height=${headerA.height()-1}").resultAs<ConnectionResponse>()
-        println("connA OK")
-        println(connA)
-
-        val consensus = client.query("ibc/clients/${CLIENT_A}/consensus-state/${headerB.height()}?height=${headerA.height()-1}").resultAs<ConsensusStateResponse>()
-        println("consensus OK")
-        println(consensus)
+        var connA = client.query("ibc/connections/${CONNECTION_A}?height=${headerA.height()-1}").resultAs<ConnectionResponse>()
+        val consensusA = client.query("ibc/clients/${CLIENT_A}/consensus-state/${headerB.height()}?height=${headerA.height()-1}").resultAs<ConsensusStateResponse>()
 
         triple.sendTx(UpdateClientReq(headerA), CLIENT_B)
-
         triple.sendTx(ConnectionOpenTryReq(
                 connectionID = CONNECTION_B,
                 clientID = CLIENT_B,
@@ -122,14 +117,34 @@ object Experiment {
                 counterpartyPrefix = MerklePrefix("ibc".toByteArray(charset = Charsets.US_ASCII)),
                 counterpartyVersions = VERSIONS,
                 proofInit = connA.proof!!,
-                proofConsensus = consensus.proof!!,
+                proofConsensus = consensusA.proof!!,
                 proofHeight = headerA.height().toString(),
                 consensusHeight = headerB.height().toString()
         ))
+        triple.waitForBlock()
 
-        val connB = client.query("ibc/connections/$CONNECTION_B").resultAs<ConnectionResponse>()
-        println("connB OK")
-        println(connB)
+        headerB = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        val connB = client.query("ibc/connections/${CONNECTION_B}?height=${headerB.height()-1}").resultAs<ConnectionResponse>()
+        val consensusB = client.query("ibc/clients/${CLIENT_B}/consensus-state/${headerA.height()}?height=${headerB.height()-1}").resultAs<ConsensusStateResponse>()
+
+        triple.sendTx(UpdateClientReq(headerB), CLIENT_A)
+        triple.sendTx(ConnectionOpenAckReq(
+                proofTry = connB.proof!!,
+                proofConsensus = consensusB.proof!!,
+                proofHeight = headerB.height().toString(),
+                consensusHeight = headerA.height().toString(),
+                version = VERSIONS.single()
+        ), CONNECTION_A)
+        triple.waitForBlock()
+
+        headerA = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        connA = client.query("ibc/connections/${CONNECTION_A}?height=${headerA.height()-1}").resultAs<ConnectionResponse>()
+
+        triple.sendTx(UpdateClientReq(headerA), CLIENT_B)
+        triple.sendTx(ConnectionOpenConfirmReq(
+                proofAck = connA.proof!!,
+                proofHeight = headerA.height().toString()
+        ), CONNECTION_B)
     }
 
     inline fun <reified REQ: CosmosRequest> Triple<CosmosRESTClient, CosmosTransactor, CosmosSigner>.sendTx(req: REQ, vararg pathArgs: String) {
