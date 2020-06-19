@@ -10,8 +10,7 @@ import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenConf
 import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenInitReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.client.rest.ConnectionOpenTryReq
 import jp.datachain.cosmos.x.ibc.ics03_connection.types.ConnectionResponse
-import jp.datachain.cosmos.x.ibc.ics04_channel.client.rest.ChannelOpenInitReq
-import jp.datachain.cosmos.x.ibc.ics04_channel.client.rest.ChannelOpenTryReq
+import jp.datachain.cosmos.x.ibc.ics04_channel.client.rest.*
 import jp.datachain.cosmos.x.ibc.ics04_channel.types.ChannelResponse
 import jp.datachain.cosmos.x.ibc.ics07_tendermint.client.rest.UpdateClientReq
 import jp.datachain.cosmos.x.ibc.ics23_commitment.types.MerklePrefix
@@ -196,7 +195,39 @@ object Experiment {
         headerB = client.query("ibc/header").resultAs<DisfixWrapper>().value
         var chanB = client.query("ibc/ports/${PORT_ID}/channels/${CHANNEL_B}?height=${headerB.height()-1}").resultAs<ChannelResponse>()
 
-        println(chanB)
+        triple.sendTx(UpdateClientReq(headerB), CLIENT_A)
+        triple.sendTx(ChannelOpenAckReq(
+                counterpartyVersion = CHAN_VERSION,
+                proofTry = chanB.proof!!,
+                proofHeight = headerB.height().toString()
+        ), PORT_ID, CHANNEL_A)
+        triple.waitForBlock()
+
+        headerA = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        chanA = client.query("ibc/ports/${PORT_ID}/channels/${CHANNEL_A}?height=${headerA.height()-1}").resultAs<ChannelResponse>()
+
+        triple.sendTx(UpdateClientReq(headerA), CLIENT_B)
+        triple.sendTx(ChannelOpenConfirmReq(
+                proofAck = chanA.proof!!,
+                proofHeight = headerA.height().toString()
+        ), PORT_ID, CHANNEL_B)
+        triple.waitForBlock()
+
+        headerB = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        chanB = client.query("ibc/ports/${PORT_ID}/channels/${CHANNEL_B}?height=${headerB.height()-1}").resultAs<ChannelResponse>()
+
+        triple.sendTx(UpdateClientReq(headerB), CLIENT_A)
+        triple.sendTx(ChannelCloseInitReq(), PORT_ID, CHANNEL_A)
+        triple.waitForBlock()
+
+        headerA = client.query("ibc/header").resultAs<DisfixWrapper>().value
+        chanA = client.query("ibc/ports/${PORT_ID}/channels/${CHANNEL_A}?height=${headerA.height()-1}").resultAs<ChannelResponse>()
+
+        triple.sendTx(UpdateClientReq(headerA), CLIENT_B)
+        triple.sendTx(ChannelCloseConfirmReq(
+                proofInit = chanA.proof!!,
+                proofHeight = headerA.height().toString()
+        ), PORT_ID, CHANNEL_B)
     }
 
     inline fun <reified REQ: CosmosRequest> Triple<CosmosRESTClient, CosmosTransactor, CosmosSigner>.sendTx(req: REQ, vararg pathArgs: String) {
