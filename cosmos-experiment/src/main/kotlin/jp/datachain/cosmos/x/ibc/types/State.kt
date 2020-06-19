@@ -1,6 +1,8 @@
 package jp.datachain.cosmos.x.ibc.types
 
-enum class State(val state: Int) {
+import com.fasterxml.jackson.annotation.JsonValue
+
+enum class State(@JsonValue val state: Int) {
     // Default State
     UNINITIALIZED(0),
     // A channel or connection end has just started the opening handshake.
