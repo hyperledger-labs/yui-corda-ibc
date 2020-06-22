@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
 data class Coin(
         val denom: String?,
-        val amount: Int
+        val amount: String /*Int*/
 )
 
 typealias Coins = List<Coin>
