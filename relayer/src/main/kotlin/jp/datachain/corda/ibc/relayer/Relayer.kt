@@ -1,16 +1,20 @@
 package jp.datachain.corda.ibc.relayer
 
-import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.ics2.ClientType
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.utilities.OpaqueBytes
+import java.util.*
 
 object Relayer {
+    fun toIdentifier(externalId: String, id: String) = Identifier(UniqueIdentifier(externalId, UUID.nameUUIDFromBytes(id.toByteArray(Charsets.US_ASCII))))
+
     @JvmStatic
     fun main(args: Array<String>) {
         val ibcA = CordaIbcClient("localhost", 10006)
@@ -22,16 +26,19 @@ object Relayer {
         ibcA.createHost(listOf("PartyA"))
         ibcB.createHost(listOf("PartyB"))
 
-        val clientAid = ibcA.host().generateIdentifier()
+        val externalIdA = ibcA.host().linearId.externalId!!
+        val externalIdB = ibcB.host().linearId.externalId!!
+
+        val clientAid = toIdentifier(externalIdA, "client")
         val consensusStateB = ibcB.host().getConsensusState(Height(0))
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
-        val clientBid = ibcB.host().generateIdentifier()
+        val clientBid = toIdentifier(externalIdB, "client")
         val consensusStateA = ibcA.host().getConsensusState(Height(0))
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
-        val connAid = ibcA.host().generateIdentifier()
-        val connBid = ibcB.host().generateIdentifier()
+        val connAid = toIdentifier(externalIdA, "connection")
+        val connBid = toIdentifier(externalIdB, "connection")
         ibcA.connOpenInit(
                 connAid,
                 connBid,
@@ -64,10 +71,10 @@ object Relayer {
                 ibcA.connProof(),
                 ibcA.host().getCurrentHeight())
 
-        val portAid = ibcA.host().generateIdentifier()
-        val chanAid = ibcA.host().generateIdentifier()
-        val portBid = ibcB.host().generateIdentifier()
-        val chanBid = ibcB.host().generateIdentifier()
+        val portAid = toIdentifier(externalIdA, "port")
+        val chanAid = toIdentifier(externalIdA, "channel")
+        val portBid = toIdentifier(externalIdB, "port")
+        val chanBid = toIdentifier(externalIdB, "channel")
         ibcA.chanOpenInit(
                 ChannelOrder.ORDERED,
                 listOf(ibcA.conn().id),
