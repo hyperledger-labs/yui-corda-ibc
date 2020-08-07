@@ -7,7 +7,5 @@ import net.corda.core.contracts.UniqueIdentifier
 interface IbcState : LinearState {
     val id get() = Identifier(linearId)
 
-    fun generateIdentifier() = Identifier(UniqueIdentifier(linearId.externalId))
-
     fun validateIdentifier(identifier: Identifier) = (identifier.toUniqueIdentifier().externalId == linearId.externalId)
 }
