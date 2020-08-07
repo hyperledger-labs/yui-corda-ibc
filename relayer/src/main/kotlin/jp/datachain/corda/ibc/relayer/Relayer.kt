@@ -23,11 +23,11 @@ object Relayer {
         ibcB.createHost(listOf("PartyB"))
 
         val clientAid = ibcA.host().generateIdentifier()
-        val consensusStateB = ibcB.host().getConsensusState(Height(0)) as CordaConsensusState
+        val consensusStateB = ibcB.host().getConsensusState(Height(0))
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
         val clientBid = ibcB.host().generateIdentifier()
-        val consensusStateA = ibcA.host().getConsensusState(Height(0)) as CordaConsensusState
+        val consensusStateA = ibcA.host().getConsensusState(Height(0))
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
         val connAid = ibcA.host().generateIdentifier()
@@ -102,7 +102,7 @@ object Relayer {
                 ibcA.chanProof(),
                 ibcA.host().getCurrentHeight())
 
-        for (sequence in 1..10) {
+        for (sequence in 1L..10) {
             val packet = Packet(
                     OpaqueBytes("Hello, Bob! (${sequence})".toByteArray()),
                     portAid,
@@ -128,7 +128,7 @@ object Relayer {
                     ibcB.host().getCurrentHeight())
         }
 
-        for (sequence in 1..10) {
+        for (sequence in 1L..10) {
             val packet = Packet(
                     OpaqueBytes("Hello, Alice! (${sequence})".toByteArray()),
                     portBid,

@@ -472,7 +472,7 @@ object Handler {
 
         require(conn.end.clientIdentifier == client.id)
         val latestClientHeight = client.latestClientHeight()
-        require(packet.timeoutHeight.height == 0 || latestClientHeight.height < packet.timeoutHeight.height)
+        require(packet.timeoutHeight.height == 0L || latestClientHeight.height < packet.timeoutHeight.height)
 
         require(packet.sequence == chan.nextSequenceSend)
 
@@ -507,7 +507,7 @@ object Handler {
         require(conn.id == chan.end.connectionHops.single())
         require(conn.end.state == ConnectionState.OPEN)
 
-        require(packet.timeoutHeight.height == 0 || host.getCurrentHeight().height < packet.timeoutHeight.height)
+        require(packet.timeoutHeight.height == 0L || host.getCurrentHeight().height < packet.timeoutHeight.height)
         require(packet.timeoutTimestamp.timestamp == 0 || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
 
         require(client.verifyPacketData(
