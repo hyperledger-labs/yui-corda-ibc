@@ -16,11 +16,11 @@ data class Channel private constructor (
         override val linearId: UniqueIdentifier,
         val portId: Identifier,
         val end: ChannelEnd,
-        val nextSequenceSend: Int,
-        val nextSequenceRecv: Int,
-        val nextSequenceAck: Int,
-        val packets: Map<Int, Packet>,
-        val acknowledgements: Map<Int, Acknowledgement>
+        val nextSequenceSend: Long,
+        val nextSequenceRecv: Long,
+        val nextSequenceAck: Long,
+        val packets: Map<Long, Packet>,
+        val acknowledgements: Map<Long, Acknowledgement>
 ) : IbcState {
     constructor(host: Host, portId: Identifier, chanId: Identifier, end: ChannelEnd) : this(
             host.participants,

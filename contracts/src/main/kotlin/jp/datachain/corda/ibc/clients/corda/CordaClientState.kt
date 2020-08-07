@@ -89,7 +89,7 @@ data class CordaClientState private constructor(
                 chan.end == channelEnd
     }
 
-    override fun verifyPacketData(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int, packet: Packet): Boolean {
+    override fun verifyPacketData(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, packet: Packet): Boolean {
         val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
@@ -104,7 +104,7 @@ data class CordaClientState private constructor(
                 chan.packets.get(sequence) == packet
     }
 
-    override fun verifyPacketAcknowledgement(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int, acknowledgement: Acknowledgement): Boolean {
+    override fun verifyPacketAcknowledgement(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, acknowledgement: Acknowledgement): Boolean {
         val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof
@@ -119,11 +119,11 @@ data class CordaClientState private constructor(
                 chan.acknowledgements.get(sequence) == acknowledgement
     }
 
-    override fun verifyPacketAcknowledgementAbsence(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Int): Boolean {
+    override fun verifyPacketAcknowledgementAbsence(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long): Boolean {
         throw NotImplementedError()
     }
 
-    override fun verifyNextSequenceRecv(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: Int): Boolean {
+    override fun verifyNextSequenceRecv(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: Long): Boolean {
         val hostId = hostIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val proof = proof as CordaCommitmentProof

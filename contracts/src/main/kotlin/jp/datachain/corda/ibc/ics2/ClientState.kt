@@ -50,7 +50,7 @@ interface ClientState : IbcState {
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            sequence: Int,
+            sequence: Long,
             packet: Packet) : Boolean
 
     fun verifyPacketAcknowledgement(
@@ -59,7 +59,7 @@ interface ClientState : IbcState {
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            sequence: Int,
+            sequence: Long,
             acknowledgement: Acknowledgement) : Boolean
 
     fun verifyPacketAcknowledgementAbsence(
@@ -68,7 +68,7 @@ interface ClientState : IbcState {
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            sequence: Int) : Boolean
+            sequence: Long) : Boolean
 
     fun verifyNextSequenceRecv(
             height: Height,
@@ -76,5 +76,5 @@ interface ClientState : IbcState {
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            nextSequenceRecv: Int) : Boolean
+            nextSequenceRecv: Long) : Boolean
 }

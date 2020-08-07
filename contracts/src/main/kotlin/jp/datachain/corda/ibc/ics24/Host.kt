@@ -37,8 +37,8 @@ data class Host private constructor (
 
     fun getStoredRecentConsensusStateCount() = 1
 
-    fun getConsensusState(height: Height) : ConsensusState {
-        require(height.height == 0)
+    fun getConsensusState(height: Height) : CordaConsensusState {
+        require(height.height == 0L)
         return CordaConsensusState(Timestamp(0), Height(0), id, notary.owningKey)
     }
 

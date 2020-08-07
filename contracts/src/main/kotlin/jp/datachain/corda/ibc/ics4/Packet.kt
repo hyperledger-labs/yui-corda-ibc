@@ -15,4 +15,4 @@ data class Packet(
         val destChannel: Identifier,
         val timeoutHeight: Height,
         val timeoutTimestamp: Timestamp,
-        val sequence: Int)
+        val sequence: Long)
