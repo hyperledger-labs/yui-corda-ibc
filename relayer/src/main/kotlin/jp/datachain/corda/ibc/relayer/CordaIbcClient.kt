@@ -8,6 +8,7 @@ import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
+import jp.datachain.corda.ibc.ics24.HostSeed
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.Acknowledgement
@@ -20,6 +21,8 @@ import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.CordaRPCConnection
+import net.corda.core.contracts.StateRef
+import net.corda.core.messaging.startFlow
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NetworkHostAndPort
 import java.util.*
@@ -68,16 +71,19 @@ class CordaIbcClient(host: String, port: Int) {
     fun createHost(participantNames: List<String>, uuid: UUID = UUID.randomUUID()) {
         val participants = participantNames.map{ops().partiesFromName(it, false).single()}
 
-        ops().startFlowDynamic(
-                IbcHostSeedCreateFlow.Initiator::class.java,
+        val stxSeed = ops().startFlow(
+                IbcHostSeedCreateFlow::Initiator,
                 participants
         ).returnValue.get()
 
-        val stx = ops().startFlowDynamic(
-                IbcHostCreateFlow.Initiator::class.java,
+        val seedRef = StateRef(stxSeed.tx.id, 0)
+
+        val stxHost = ops().startFlow(
+                IbcHostCreateFlow::Initiator,
+                seedRef,
                 uuid
         ).returnValue.get()
-        val state = stx.tx.outputsOfType<Host>().single()
+        val state = stxHost.tx.outputsOfType<Host>().single()
         insertHost(state)
     }
 
@@ -86,8 +92,8 @@ class CordaIbcClient(host: String, port: Int) {
             clientType: ClientType,
             cordaConsensusState: CordaConsensusState
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcClientCreateFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcClientCreateFlow::Initiator,
                 host().id,
                 id,
                 clientType,
@@ -107,8 +113,8 @@ class CordaIbcClient(host: String, port: Int) {
             clientIdentifier: Identifier,
             counterpartyClientIdentifier: Identifier
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcConnOpenInitFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcConnOpenInitFlow::Initiator,
                 host().id,
                 identifier,
                 desiredConnectionIdentifier,
@@ -191,8 +197,8 @@ class CordaIbcClient(host: String, port: Int) {
             proofAck: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcConnOpenConfirmFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcConnOpenConfirmFlow::Initiator,
                 host().id,
                 identifier,
                 proofAck,
@@ -271,8 +277,8 @@ class CordaIbcClient(host: String, port: Int) {
             proofTry: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcChanOpenAckFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcChanOpenAckFlow::Initiator,
                 host().id,
                 portIdentifier,
                 channelIdentifier,
@@ -290,8 +296,8 @@ class CordaIbcClient(host: String, port: Int) {
             proofAck: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcChanOpenConfirmFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcChanOpenConfirmFlow::Initiator,
                 host().id,
                 portIdentifier,
                 channelIdentifier,
@@ -306,8 +312,8 @@ class CordaIbcClient(host: String, port: Int) {
             portIdentifier: Identifier,
             channelIdentifier: Identifier
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcChanCloseInitFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcChanCloseInitFlow::Initiator,
                 host().id,
                 portIdentifier,
                 channelIdentifier).returnValue.get()
@@ -322,8 +328,8 @@ class CordaIbcClient(host: String, port: Int) {
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcChanCloseConfirmFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcChanCloseConfirmFlow::Initiator,
                 host().id,
                 portIdentifier,
                 channelIdentifier,
@@ -337,8 +343,8 @@ class CordaIbcClient(host: String, port: Int) {
     fun sendPacket(
             packet: Packet
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcSendPacketFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcSendPacketFlow::Initiator,
                 host().id,
                 packet).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
@@ -353,8 +359,8 @@ class CordaIbcClient(host: String, port: Int) {
             proofHeight: Height,
             acknowledgement: Acknowledgement
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcRecvPacketFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcRecvPacketFlow::Initiator,
                 host().id,
                 packet,
                 proof,
@@ -371,8 +377,8 @@ class CordaIbcClient(host: String, port: Int) {
             proof: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcAcknowledgePacketFlow.Initiator::class.java,
+        val stx = ops().startFlow(
+                IbcAcknowledgePacketFlow::Initiator,
                 host().id,
                 packet,
                 acknowledgement,
