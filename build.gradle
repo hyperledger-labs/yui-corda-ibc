@@ -65,6 +65,9 @@ allprojects {
         // This makes the JAR's SHA-256 hash repeatable.
         preserveFileTimestamps = false
         reproducibleFileOrder = true
+        jar {
+            from sourceSets.main.kotlin
+        }
     }
 }
 
