@@ -8,7 +8,6 @@ import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics24.HostSeed
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.Acknowledgement
@@ -94,7 +93,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcClientCreateFlow::Initiator,
-                host().id,
                 id,
                 clientType,
                 cordaConsensusState).returnValue.get()
@@ -115,7 +113,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcConnOpenInitFlow::Initiator,
-                host().id,
                 identifier,
                 desiredConnectionIdentifier,
                 counterpartyPrefix,
@@ -147,7 +144,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlowDynamic(
                 IbcConnOpenTryFlow.Initiator::class.java,
-                host().id,
                 desiredIdentifier,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
@@ -178,9 +174,8 @@ class CordaIbcClient(host: String, port: Int) {
             proofHeight: Height,
             consensusHeight: Height
     ) {
-        val stx = ops().startFlowDynamic(
-                IbcConnOpenAckFlow.Initiator::class.java,
-                host().id,
+        val stx = ops().startFlow(
+                IbcConnOpenAckFlow::Initiator,
                 identifier,
                 version,
                 proofTry,
@@ -199,7 +194,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcConnOpenConfirmFlow::Initiator,
-                host().id,
                 identifier,
                 proofAck,
                 proofHeight).returnValue.get()
@@ -219,7 +213,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlowDynamic(
                 IbcChanOpenInitFlow.Initiator::class.java,
-                host().id,
                 order,
                 connectionHops,
                 portIdentifier,
@@ -250,7 +243,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlowDynamic(
                 IbcChanOpenTryFlow.Initiator::class.java,
-                host().id,
                 order,
                 connectionHops,
                 portIdentifier,
@@ -279,7 +271,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcChanOpenAckFlow::Initiator,
-                host().id,
                 portIdentifier,
                 channelIdentifier,
                 counterpartyVersion,
@@ -298,7 +289,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcChanOpenConfirmFlow::Initiator,
-                host().id,
                 portIdentifier,
                 channelIdentifier,
                 proofAck,
@@ -314,7 +304,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcChanCloseInitFlow::Initiator,
-                host().id,
                 portIdentifier,
                 channelIdentifier).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
@@ -330,7 +319,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcChanCloseConfirmFlow::Initiator,
-                host().id,
                 portIdentifier,
                 channelIdentifier,
                 proofInit,
@@ -343,10 +331,7 @@ class CordaIbcClient(host: String, port: Int) {
     fun sendPacket(
             packet: Packet
     ) {
-        val stx = ops().startFlow(
-                IbcSendPacketFlow::Initiator,
-                host().id,
-                packet).returnValue.get()
+        val stx = ops().startFlow(IbcSendPacketFlow::Initiator, packet).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
         assert(state.nextSequenceSend == packet.sequence + 1)
         assert(state.packets[packet.sequence] == packet)
@@ -361,7 +346,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcRecvPacketFlow::Initiator,
-                host().id,
                 packet,
                 proof,
                 proofHeight,
@@ -379,7 +363,6 @@ class CordaIbcClient(host: String, port: Int) {
     ) {
         val stx = ops().startFlow(
                 IbcAcknowledgePacketFlow::Initiator,
-                host().id,
                 packet,
                 acknowledgement,
                 proof,

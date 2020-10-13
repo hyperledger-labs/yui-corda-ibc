@@ -17,16 +17,14 @@ import net.corda.core.transactions.TransactionBuilder
 object IbcClientCreateFlow {
     @StartableByRPC
     @InitiatingFlow
-    class Initiator(val hostIdentifier: Identifier, val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
+    class Initiator(val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call() : SignedTransaction {
             val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
             val builder = TransactionBuilder(notary)
 
-            val host = serviceHub.vaultService.queryBy<Host>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(hostIdentifier.toUniqueIdentifier()))
-            ).states.single()
+            val host = serviceHub.vaultService.queryHost(id.toUniqueIdentifier().externalId!!)
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 
