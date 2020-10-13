@@ -4,8 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
-import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.Packet
@@ -21,76 +19,74 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-object IbcRecvPacketFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(
-            val packet: Packet,
-            val proof: CommitmentProof,
-            val proofHeight: Height,
-            val acknowledgement: Acknowledgement
-    ) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+@StartableByRPC
+@InitiatingFlow
+class IbcRecvPacketFlow(
+        val packet: Packet,
+        val proof: CommitmentProof,
+        val proofHeight: Height,
+        val acknowledgement: Acknowledgement
+) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            // query host from vault
-            val host = serviceHub.vaultService.queryHost(packet.destChannel.toUniqueIdentifier().externalId!!)
-            val participants = host.state.data.participants.map{it as Party}
-            require(participants.contains(ourIdentity))
+        // query host from vault
+        val host = serviceHub.vaultService.queryHost(packet.destChannel.toUniqueIdentifier().externalId!!)
+        val participants = host.state.data.participants.map{it as Party}
+        require(participants.contains(ourIdentity))
 
-            // query chan from vault
-            val chanId = packet.destChannel
-            val chan = serviceHub.vaultService.queryBy<Channel>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(chanId.toUniqueIdentifier()))
-            ).states.single()
+        // query chan from vault
+        val chanId = packet.destChannel
+        val chan = serviceHub.vaultService.queryBy<Channel>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(chanId.toUniqueIdentifier()))
+        ).states.single()
 
-            // query conn from vault
-            val connId = chan.state.data.end.connectionHops.single()
-            val conn = serviceHub.vaultService.queryBy<Connection>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-            ).states.single()
+        // query conn from vault
+        val connId = chan.state.data.end.connectionHops.single()
+        val conn = serviceHub.vaultService.queryBy<Connection>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
+        ).states.single()
 
-            // query client from vault
-            val clientId = conn.state.data.end.clientIdentifier
-            val client = serviceHub.vaultService.queryBy<ClientState>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientId.toUniqueIdentifier()))
-            ).states.single()
+        // query client from vault
+        val clientId = conn.state.data.end.clientIdentifier
+        val client = serviceHub.vaultService.queryBy<ClientState>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientId.toUniqueIdentifier()))
+        ).states.single()
 
-            val newChan = Quadruple(host.state.data, client.state.data, conn.state.data, chan.state.data).recvPacket(
-                    packet,
-                    proof,
-                    proofHeight,
-                    acknowledgement)
+        val newChan = Quadruple(host.state.data, client.state.data, conn.state.data, chan.state.data).recvPacket(
+                packet,
+                proof,
+                proofHeight,
+                acknowledgement)
 
-            builder.addCommand(Ibc.Commands.RecvPacket(
-                    packet,
-                    proof,
-                    proofHeight,
-                    acknowledgement
-            ), ourIdentity.owningKey)
-                    .addReferenceState(ReferencedStateAndRef(host))
-                    .addReferenceState(ReferencedStateAndRef(client))
-                    .addReferenceState(ReferencedStateAndRef(conn))
-                    .addInputState(chan)
-                    .addOutputState(newChan)
+        builder.addCommand(Ibc.Commands.RecvPacket(
+                packet,
+                proof,
+                proofHeight,
+                acknowledgement
+        ), ourIdentity.owningKey)
+                .addReferenceState(ReferencedStateAndRef(host))
+                .addReferenceState(ReferencedStateAndRef(client))
+                .addReferenceState(ReferencedStateAndRef(conn))
+                .addInputState(chan)
+                .addOutputState(newChan)
 
-            val tx = serviceHub.signInitialTransaction(builder)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcRecvPacketFlow::class)
+class IbcRecvPacketResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }

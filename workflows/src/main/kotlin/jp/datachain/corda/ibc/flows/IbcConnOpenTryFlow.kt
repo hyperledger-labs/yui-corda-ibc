@@ -18,85 +18,83 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-object IbcConnOpenTryFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(
-            val desiredIdentifier: Identifier,
-            val counterpartyConnectionIdentifier: Identifier,
-            val counterpartyPrefix: CommitmentPrefix,
-            val counterpartyClientIdentifier: Identifier,
-            val clientIdentifier: Identifier,
-            val counterpartyVersions: Version.Multiple,
-            val proofInit: CommitmentProof,
-            val proofConsensus: CommitmentProof,
-            val proofHeight: Height,
-            val consensusHeight: Height
-    ) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+@StartableByRPC
+@InitiatingFlow
+class IbcConnOpenTryFlow(
+        val desiredIdentifier: Identifier,
+        val counterpartyConnectionIdentifier: Identifier,
+        val counterpartyPrefix: CommitmentPrefix,
+        val counterpartyClientIdentifier: Identifier,
+        val clientIdentifier: Identifier,
+        val counterpartyVersions: Version.Multiple,
+        val proofInit: CommitmentProof,
+        val proofConsensus: CommitmentProof,
+        val proofHeight: Height,
+        val consensusHeight: Height
+) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            val host = serviceHub.vaultService.queryHost(clientIdentifier.toUniqueIdentifier().externalId!!)
-            val participants = host.state.data.participants.map{it as Party}
-            require(participants.contains(ourIdentity))
+        val host = serviceHub.vaultService.queryHost(clientIdentifier.toUniqueIdentifier().externalId!!)
+        val participants = host.state.data.participants.map{it as Party}
+        require(participants.contains(ourIdentity))
 
-            val client = serviceHub.vaultService.queryBy<ClientState>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientIdentifier.toUniqueIdentifier()))
-            ).states.single()
+        val client = serviceHub.vaultService.queryBy<ClientState>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientIdentifier.toUniqueIdentifier()))
+        ).states.single()
 
-            val conns = serviceHub.vaultService.queryBy<Connection>(
-                    QueryCriteria.LinearStateQueryCriteria(participants, listOf(desiredIdentifier.toUniqueIdentifier()))).states
-            require(conns.size <= 1)
-            val conn = conns.singleOrNull()
+        val conns = serviceHub.vaultService.queryBy<Connection>(
+                QueryCriteria.LinearStateQueryCriteria(participants, listOf(desiredIdentifier.toUniqueIdentifier()))).states
+        require(conns.size <= 1)
+        val conn = conns.singleOrNull()
 
-            val (newHost, newClient, newConn) = Triple(host.state.data, client.state.data, conn?.state?.data).connOpenTry(
-                    desiredIdentifier,
-                    counterpartyConnectionIdentifier,
-                    counterpartyPrefix,
-                    counterpartyClientIdentifier,
-                    clientIdentifier,
-                    counterpartyVersions,
-                    proofInit,
-                    proofConsensus,
-                    proofHeight,
-                    consensusHeight)
+        val (newHost, newClient, newConn) = Triple(host.state.data, client.state.data, conn?.state?.data).connOpenTry(
+                desiredIdentifier,
+                counterpartyConnectionIdentifier,
+                counterpartyPrefix,
+                counterpartyClientIdentifier,
+                clientIdentifier,
+                counterpartyVersions,
+                proofInit,
+                proofConsensus,
+                proofHeight,
+                consensusHeight)
 
-            builder.addCommand(Ibc.Commands.ConnOpenTry(
-                    desiredIdentifier,
-                    counterpartyConnectionIdentifier,
-                    counterpartyPrefix,
-                    counterpartyClientIdentifier,
-                    clientIdentifier,
-                    counterpartyVersions,
-                    proofInit,
-                    proofConsensus,
-                    proofHeight,
-                    consensusHeight
-            ), ourIdentity.owningKey)
-                    .addInputState(host)
-                    .addInputState(client)
-                    .addOutputState(newHost)
-                    .addOutputState(newClient)
-                    .addOutputState(newConn)
-            conn?.let{builder.addInputState(it)}
+        builder.addCommand(Ibc.Commands.ConnOpenTry(
+                desiredIdentifier,
+                counterpartyConnectionIdentifier,
+                counterpartyPrefix,
+                counterpartyClientIdentifier,
+                clientIdentifier,
+                counterpartyVersions,
+                proofInit,
+                proofConsensus,
+                proofHeight,
+                consensusHeight
+        ), ourIdentity.owningKey)
+                .addInputState(host)
+                .addInputState(client)
+                .addOutputState(newHost)
+                .addOutputState(newClient)
+                .addOutputState(newConn)
+        conn?.let{builder.addInputState(it)}
 
-            val tx = serviceHub.signInitialTransaction(builder)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcConnOpenTryFlow::class)
+class IbcConnOpenTryResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }

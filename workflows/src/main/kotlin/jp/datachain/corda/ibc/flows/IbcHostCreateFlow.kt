@@ -13,39 +13,37 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import java.util.*
 
-object IbcHostCreateFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(val seedRef: StateRef, val uuid: UUID) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+@StartableByRPC
+@InitiatingFlow
+class IbcHostCreateFlow(val seedRef: StateRef, val uuid: UUID) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            val seed = serviceHub.vaultService.queryBy<HostSeed>(QueryCriteria.VaultQueryCriteria(stateRefs = listOf(seedRef))).states.first() // queryBy returns all unconsumed states by default
-            val participants = seed.state.data.participants.map{it as Party}
-            require(participants.contains(ourIdentity))
-            val host = Host(seed, uuid)
+        val seed = serviceHub.vaultService.queryBy<HostSeed>(QueryCriteria.VaultQueryCriteria(stateRefs = listOf(seedRef))).states.first() // queryBy returns all unconsumed states by default
+        val participants = seed.state.data.participants.map{it as Party}
+        require(participants.contains(ourIdentity))
+        val host = Host(seed, uuid)
 
-            builder.addCommand(Ibc.Commands.HostCreate(uuid), ourIdentity.owningKey)
-                    .addInputState(seed)
-                    .addOutputState(host)
+        builder.addCommand(Ibc.Commands.HostCreate(uuid), ourIdentity.owningKey)
+                .addInputState(seed)
+                .addOutputState(host)
 
-            val tx = serviceHub.signInitialTransaction(builder)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcHostCreateFlow::class)
+class IbcHostCreateResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }
