@@ -25,7 +25,7 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import java.util.*
 
-class CordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode) {
+class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode) {
     var host: Host? = null
     var client: Pair<ClientState, SignedTransaction>? = null
     val conns = mutableMapOf<Identifier, Pair<Connection, SignedTransaction>>()
@@ -44,15 +44,11 @@ class CordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode) {
     private fun insertClient(v: ClientState, stx: SignedTransaction) { assert(client == null); client = Pair(v, stx)}
     private fun updateClient(v: ClientState, stx: SignedTransaction) { assert(client != null); client = Pair(v, stx)}
 
-    fun conn(id: Identifier) = conns[id]!!.first
-    fun connProof(id: Identifier) = makeProof(conns[id]!!.second)
     fun conn() = conns.values.single().first
     fun connProof() = makeProof(conns.values.single().second)
     fun insertConn(v: Connection, stx: SignedTransaction) { assert(!conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
     fun updateConn(v: Connection, stx: SignedTransaction) { assert(conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
 
-    fun chan(id: Identifier) = chans[id]!!.first
-    fun chanProof(id: Identifier) = makeProof(chans[id]!!.second)
     fun chan() = chans.values.single().first
     fun chanProof() = makeProof(chans.values.single().second)
     fun insertChan(v: Channel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}

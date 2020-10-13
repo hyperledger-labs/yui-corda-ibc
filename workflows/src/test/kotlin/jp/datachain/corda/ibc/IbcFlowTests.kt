@@ -11,8 +11,6 @@ import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
-import net.corda.core.node.AutoAcceptable
-import net.corda.core.node.NetworkParameters
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkNotarySpec
@@ -21,9 +19,6 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.security.PublicKey
-import java.time.Duration
-import java.time.Instant
 import java.util.*
 
 class IbcFlowTests {
@@ -79,8 +74,8 @@ class IbcFlowTests {
 
     @Test
     fun `relayer logic`() {
-        val ibcA = CordaIbcClient(network, a)
-        val ibcB = CordaIbcClient(network, x)
+        val ibcA = TestCordaIbcClient(network, a)
+        val ibcB = TestCordaIbcClient(network, x)
 
         ibcA.createHost(listOf(
                 a.info.legalIdentities.single(),
