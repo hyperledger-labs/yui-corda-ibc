@@ -25,7 +25,6 @@ object IbcRecvPacketFlow {
     @StartableByRPC
     @InitiatingFlow
     class Initiator(
-            val hostIdentifier: Identifier,
             val packet: Packet,
             val proof: CommitmentProof,
             val proofHeight: Height,
@@ -38,9 +37,7 @@ object IbcRecvPacketFlow {
             val builder = TransactionBuilder(notary)
 
             // query host from vault
-            val host = serviceHub.vaultService.queryBy<Host>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(hostIdentifier.toUniqueIdentifier()))
-            ).states.single()
+            val host = serviceHub.vaultService.queryHost(packet.destChannel.toUniqueIdentifier().externalId!!)
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 

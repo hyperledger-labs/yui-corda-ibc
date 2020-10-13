@@ -19,7 +19,6 @@ object IbcChanCloseInitFlow {
     @StartableByRPC
     @InitiatingFlow
     class Initiator(
-            val hostIdentifier: Identifier,
             val portIdentifier: Identifier,
             val channelIdentifier: Identifier
     ) : FlowLogic<SignedTransaction>() {
@@ -30,9 +29,7 @@ object IbcChanCloseInitFlow {
             val builder = TransactionBuilder(notary)
 
             // query host from vault
-            val host = serviceHub.vaultService.queryBy<Host>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(hostIdentifier.toUniqueIdentifier()))
-            ).states.single()
+            val host = serviceHub.vaultService.queryHost(channelIdentifier.toUniqueIdentifier().externalId!!)
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 

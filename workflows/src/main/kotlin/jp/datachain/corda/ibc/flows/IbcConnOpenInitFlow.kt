@@ -18,7 +18,6 @@ object IbcConnOpenInitFlow {
     @StartableByRPC
     @InitiatingFlow
     class Initiator(
-            val hostIdentifier: Identifier,
             val identifier: Identifier,
             val desiredConnectionIdentifier: Identifier,
             val counterpartyPrefix: CommitmentPrefix,
@@ -31,9 +30,7 @@ object IbcConnOpenInitFlow {
 
             val builder = TransactionBuilder(notary)
 
-            val host = serviceHub.vaultService.queryBy<Host>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(hostIdentifier.toUniqueIdentifier()))
-            ).states.single()
+            val host = serviceHub.vaultService.queryHost(clientIdentifier.toUniqueIdentifier().externalId!!)
             val participants = host.state.data.participants.map{it as Party}
             require(participants.contains(ourIdentity))
 
