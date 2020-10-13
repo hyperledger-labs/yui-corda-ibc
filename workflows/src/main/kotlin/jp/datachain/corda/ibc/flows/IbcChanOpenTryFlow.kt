@@ -21,96 +21,94 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-object IbcChanOpenTryFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(
-            val order: ChannelOrder,
-            val connectionHops: List<Identifier>,
-            val portIdentifier: Identifier,
-            val channelIdentifier: Identifier,
-            val counterpartyPortIdentifier: Identifier,
-            val counterpartyChannelIdentifier: Identifier,
-            val version: Version.Single,
-            val counterpartyVersion: Version.Single,
-            val proofInit: CommitmentProof,
-            val proofHeight: Height
-    ) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+@StartableByRPC
+@InitiatingFlow
+class IbcChanOpenTryFlow(
+        val order: ChannelOrder,
+        val connectionHops: List<Identifier>,
+        val portIdentifier: Identifier,
+        val channelIdentifier: Identifier,
+        val counterpartyPortIdentifier: Identifier,
+        val counterpartyChannelIdentifier: Identifier,
+        val version: Version.Single,
+        val counterpartyVersion: Version.Single,
+        val proofInit: CommitmentProof,
+        val proofHeight: Height
+) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            // query host from vault
-            val host = serviceHub.vaultService.queryHost(connectionHops.single().toUniqueIdentifier().externalId!!)
-            val participants = host.state.data.participants.map{it as Party}
-            require(participants.contains(ourIdentity))
+        // query host from vault
+        val host = serviceHub.vaultService.queryHost(connectionHops.single().toUniqueIdentifier().externalId!!)
+        val participants = host.state.data.participants.map{it as Party}
+        require(participants.contains(ourIdentity))
 
-            // query conn from vault
-            val connId = connectionHops.single()
-            val conn = serviceHub.vaultService.queryBy<Connection>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-            ).states.single()
+        // query conn from vault
+        val connId = connectionHops.single()
+        val conn = serviceHub.vaultService.queryBy<Connection>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
+        ).states.single()
 
-            // query client from vault
-            val clientId = conn.state.data.end.clientIdentifier
-            val client = serviceHub.vaultService.queryBy<ClientState>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientId.toUniqueIdentifier()))
-            ).states.single()
+        // query client from vault
+        val clientId = conn.state.data.end.clientIdentifier
+        val client = serviceHub.vaultService.queryBy<ClientState>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientId.toUniqueIdentifier()))
+        ).states.single()
 
-            // (optional) channel from vault
-            val chans = serviceHub.vaultService.queryBy<Channel>(
-                    QueryCriteria.LinearStateQueryCriteria(participants, listOf(channelIdentifier.toUniqueIdentifier()))
-            ).states
-            require(chans.size <= 1)
-            val chan = chans.singleOrNull()
+        // (optional) channel from vault
+        val chans = serviceHub.vaultService.queryBy<Channel>(
+                QueryCriteria.LinearStateQueryCriteria(participants, listOf(channelIdentifier.toUniqueIdentifier()))
+        ).states
+        require(chans.size <= 1)
+        val chan = chans.singleOrNull()
 
-            val (newHost, newChan) = Quadruple(host.state.data, client.state.data, conn.state.data, chan?.state?.data).chanOpenTry(
-                    order,
-                    connectionHops,
-                    portIdentifier,
-                    channelIdentifier,
-                    counterpartyPortIdentifier,
-                    counterpartyChannelIdentifier,
-                    version,
-                    counterpartyVersion,
-                    proofInit,
-                    proofHeight)
+        val (newHost, newChan) = Quadruple(host.state.data, client.state.data, conn.state.data, chan?.state?.data).chanOpenTry(
+                order,
+                connectionHops,
+                portIdentifier,
+                channelIdentifier,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                version,
+                counterpartyVersion,
+                proofInit,
+                proofHeight)
 
-            builder.addCommand(Ibc.Commands.ChanOpenTry(
-                    order,
-                    connectionHops,
-                    portIdentifier,
-                    channelIdentifier,
-                    counterpartyPortIdentifier,
-                    counterpartyChannelIdentifier,
-                    version,
-                    counterpartyVersion,
-                    proofInit,
-                    proofHeight
-            ), ourIdentity.owningKey)
-                    .addReferenceState(ReferencedStateAndRef(client))
-                    .addReferenceState(ReferencedStateAndRef(conn))
-                    .addInputState(host)
-                    .addOutputState(newHost)
-                    .addOutputState(newChan)
-            chan?.let{builder.addInputState(it)}
+        builder.addCommand(Ibc.Commands.ChanOpenTry(
+                order,
+                connectionHops,
+                portIdentifier,
+                channelIdentifier,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                version,
+                counterpartyVersion,
+                proofInit,
+                proofHeight
+        ), ourIdentity.owningKey)
+                .addReferenceState(ReferencedStateAndRef(client))
+                .addReferenceState(ReferencedStateAndRef(conn))
+                .addInputState(host)
+                .addOutputState(newHost)
+                .addOutputState(newChan)
+        chan?.let{builder.addInputState(it)}
 
-            val tx = serviceHub.signInitialTransaction(builder)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcChanOpenTryFlow::class)
+class IbcChanOpenTryResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }

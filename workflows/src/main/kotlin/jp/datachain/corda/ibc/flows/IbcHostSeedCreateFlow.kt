@@ -8,35 +8,33 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-object IbcHostSeedCreateFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(val participants: List<Party>) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            require(participants.contains(ourIdentity))
+@StartableByRPC
+@InitiatingFlow
+class IbcHostSeedCreateFlow(val participants: List<Party>) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        require(participants.contains(ourIdentity))
 
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            builder.addCommand(Ibc.Commands.HostSeedCreate(), ourIdentity.owningKey)
-                    .addOutputState(HostSeed(participants, notary))
+        builder.addCommand(Ibc.Commands.HostSeedCreate(), ourIdentity.owningKey)
+                .addOutputState(HostSeed(participants, notary))
 
-            val tx = serviceHub.signInitialTransaction(builder)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcHostSeedCreateFlow::class)
+class IbcHostSeedCreateResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }

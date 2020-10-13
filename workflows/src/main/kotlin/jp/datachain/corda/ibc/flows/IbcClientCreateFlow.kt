@@ -14,41 +14,39 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-object IbcClientCreateFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+@StartableByRPC
+@InitiatingFlow
+class IbcClientCreateFlow(val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            val host = serviceHub.vaultService.queryHost(id.toUniqueIdentifier().externalId!!)
-            val participants = host.state.data.participants.map{it as Party}
-            require(participants.contains(ourIdentity))
+        val host = serviceHub.vaultService.queryHost(id.toUniqueIdentifier().externalId!!)
+        val participants = host.state.data.participants.map{it as Party}
+        require(participants.contains(ourIdentity))
 
-            val (newHost, newClient) = host.state.data.createClient(id, clientType, consensusState)
+        val (newHost, newClient) = host.state.data.createClient(id, clientType, consensusState)
 
-            builder.addCommand(Ibc.Commands.ClientCreate(clientType, consensusState), ourIdentity.owningKey)
-                    .addInputState(host)
-                    .addOutputState(newHost)
-                    .addOutputState(newClient)
+        builder.addCommand(Ibc.Commands.ClientCreate(clientType, consensusState), ourIdentity.owningKey)
+                .addInputState(host)
+                .addOutputState(newHost)
+                .addOutputState(newClient)
 
-            val tx = serviceHub.signInitialTransaction(builder)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcClientCreateFlow::class)
+class IbcClientCreateResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }

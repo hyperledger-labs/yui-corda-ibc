@@ -16,73 +16,71 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-object IbcChanOpenInitFlow {
-    @StartableByRPC
-    @InitiatingFlow
-    class Initiator(
-            val order: ChannelOrder,
-            val connectionHops: List<Identifier>,
-            val portIdentifier: Identifier,
-            val channelIdentifier: Identifier,
-            val counterpartyPortIdentifier: Identifier,
-            val counterpartyChannelIdentifier: Identifier,
-            val version: Version.Single
-    ) : FlowLogic<SignedTransaction>() {
-        @Suspendable
-        override fun call() : SignedTransaction {
-            val notary = serviceHub.networkMapCache.notaryIdentities.single()
+@StartableByRPC
+@InitiatingFlow
+class IbcChanOpenInitFlow(
+        val order: ChannelOrder,
+        val connectionHops: List<Identifier>,
+        val portIdentifier: Identifier,
+        val channelIdentifier: Identifier,
+        val counterpartyPortIdentifier: Identifier,
+        val counterpartyChannelIdentifier: Identifier,
+        val version: Version.Single
+) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
-            val builder = TransactionBuilder(notary)
+        val builder = TransactionBuilder(notary)
 
-            // query host from vault
-            val host = serviceHub.vaultService.queryHost(connectionHops.single().toUniqueIdentifier().externalId!!)
-            val participants = host.state.data.participants.map{it as Party}
-            require(participants.contains(ourIdentity))
+        // query host from vault
+        val host = serviceHub.vaultService.queryHost(connectionHops.single().toUniqueIdentifier().externalId!!)
+        val participants = host.state.data.participants.map{it as Party}
+        require(participants.contains(ourIdentity))
 
-            // query connection from vault
-            val connId = connectionHops.single()
-            val conn = serviceHub.vaultService.queryBy<Connection>(
-                    QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-            ).states.single()
+        // query connection from vault
+        val connId = connectionHops.single()
+        val conn = serviceHub.vaultService.queryBy<Connection>(
+                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
+        ).states.single()
 
-            // calculate a newly created channel state and an updated host state
-            val (newHost, newChan) = Pair(host.state.data, conn.state.data).chanOpenInit(
-                    order,
-                    connectionHops,
-                    portIdentifier,
-                    channelIdentifier,
-                    counterpartyPortIdentifier,
-                    counterpartyChannelIdentifier,
-                    version)
+        // calculate a newly created channel state and an updated host state
+        val (newHost, newChan) = Pair(host.state.data, conn.state.data).chanOpenInit(
+                order,
+                connectionHops,
+                portIdentifier,
+                channelIdentifier,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                version)
 
-            // build tx
-            builder.addCommand(Ibc.Commands.ChanOpenInit(
-                    order,
-                    connectionHops,
-                    portIdentifier,
-                    channelIdentifier,
-                    counterpartyPortIdentifier,
-                    counterpartyChannelIdentifier,
-                    version
-            ), ourIdentity.owningKey)
-                    .addInputState(host)
-                    .addReferenceState(ReferencedStateAndRef(conn))
-                    .addOutputState(newHost)
-                    .addOutputState(newChan)
-            val tx = serviceHub.signInitialTransaction(builder)
+        // build tx
+        builder.addCommand(Ibc.Commands.ChanOpenInit(
+                order,
+                connectionHops,
+                portIdentifier,
+                channelIdentifier,
+                counterpartyPortIdentifier,
+                counterpartyChannelIdentifier,
+                version
+        ), ourIdentity.owningKey)
+                .addInputState(host)
+                .addReferenceState(ReferencedStateAndRef(conn))
+                .addOutputState(newHost)
+                .addOutputState(newChan)
+        val tx = serviceHub.signInitialTransaction(builder)
 
-            val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-            val stx = subFlow(FinalityFlow(tx, sessions))
-            return stx
-        }
+        val sessions = (participants - ourIdentity).map{initiateFlow(it)}
+        val stx = subFlow(FinalityFlow(tx, sessions))
+        return stx
     }
+}
 
-    @InitiatedBy(Initiator::class)
-    class Responder(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
-        @Suspendable
-        override fun call() {
-            val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
-            println(stx)
-        }
+@InitiatedBy(IbcChanOpenInitFlow::class)
+class IbcChanOpenInitResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
+        println(stx)
     }
 }
