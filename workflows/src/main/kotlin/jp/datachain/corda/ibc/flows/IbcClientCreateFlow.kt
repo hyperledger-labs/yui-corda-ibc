@@ -4,26 +4,24 @@ import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics2.ConsensusState
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.createClient
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcClientCreateFlow(val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
+class IbcClientCreateFlow(val baseId: StateRef, val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
 
         val builder = TransactionBuilder(notary)
 
-        val host = serviceHub.vaultService.queryHost(id.toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 

@@ -7,13 +7,14 @@ import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics4.Packet
 import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 
 @BelongsToContract(Ibc::class)
 data class Channel private constructor (
         override val participants: List<AbstractParty>,
-        override val linearId: UniqueIdentifier,
+        override val baseId: StateRef,
+        override val id: Identifier,
         val portId: Identifier,
         val end: ChannelEnd,
         val nextSequenceSend: Long,
@@ -24,7 +25,8 @@ data class Channel private constructor (
 ) : IbcState {
     constructor(host: Host, portId: Identifier, chanId: Identifier, end: ChannelEnd) : this(
             host.participants,
-            chanId.toUniqueIdentifier(),
+            host.baseId,
+            chanId,
             portId,
             end,
             1,

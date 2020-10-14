@@ -7,16 +7,16 @@ import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import net.corda.core.contracts.ReferencedStateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcChanCloseInitFlow(
+        val baseId: StateRef,
         val portIdentifier: Identifier,
         val channelIdentifier: Identifier
 ) : FlowLogic<SignedTransaction>() {
@@ -27,20 +27,16 @@ class IbcChanCloseInitFlow(
         val builder = TransactionBuilder(notary)
 
         // query host from vault
-        val host = serviceHub.vaultService.queryHost(channelIdentifier.toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
         // query channel from vault
-        val chan = serviceHub.vaultService.queryBy<Channel>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(channelIdentifier.toUniqueIdentifier()))
-        ).states.single()
+        val chan = serviceHub.vaultService.queryIbcState<Channel>(baseId, channelIdentifier)!!
 
         // query connection from vault
         val connId = chan.state.data.end.connectionHops.single()
-        val conn = serviceHub.vaultService.queryBy<Connection>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-        ).states.single()
+        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
 
         // calculate a newly created channel state and an updated host state
         val newChan = Triple(host.state.data, conn.state.data, chan.state.data).chanCloseInit(

@@ -10,16 +10,16 @@ import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcConnOpenAckFlow(
+        val baseId: StateRef,
         val identifier: Identifier,
         val version: Version.Single,
         val proofTry: CommitmentProof,
@@ -33,17 +33,12 @@ class IbcConnOpenAckFlow(
 
         val builder = TransactionBuilder(notary)
 
-        val host = serviceHub.vaultService.queryHost(identifier.toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val conn = serviceHub.vaultService.queryBy<Connection>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(identifier.toUniqueIdentifier()))
-        ).states.single()
-
-        val client = serviceHub.vaultService.queryBy<ClientState>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(conn.state.data.end.clientIdentifier.toUniqueIdentifier()))
-        ).states.single()
+        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, identifier)!!
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, conn.state.data.end.clientIdentifier)!!
 
         val newConn = Triple(host.state.data, client.state.data, conn.state.data).connOpenAck(
                 identifier,

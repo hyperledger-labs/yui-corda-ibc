@@ -5,22 +5,21 @@ import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcConnOpenTryFlow(
+        val baseId: StateRef,
         val desiredIdentifier: Identifier,
         val counterpartyConnectionIdentifier: Identifier,
         val counterpartyPrefix: CommitmentPrefix,
@@ -38,20 +37,14 @@ class IbcConnOpenTryFlow(
 
         val builder = TransactionBuilder(notary)
 
-        val host = serviceHub.vaultService.queryHost(clientIdentifier.toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val client = serviceHub.vaultService.queryBy<ClientState>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientIdentifier.toUniqueIdentifier()))
-        ).states.single()
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
+        val connOrNull = serviceHub.vaultService.queryIbcState<Connection>(baseId, desiredIdentifier)
 
-        val conns = serviceHub.vaultService.queryBy<Connection>(
-                QueryCriteria.LinearStateQueryCriteria(participants, listOf(desiredIdentifier.toUniqueIdentifier()))).states
-        require(conns.size <= 1)
-        val conn = conns.singleOrNull()
-
-        val (newHost, newClient, newConn) = Triple(host.state.data, client.state.data, conn?.state?.data).connOpenTry(
+        val (newHost, newClient, newConn) = Triple(host.state.data, client.state.data, connOrNull?.state?.data).connOpenTry(
                 desiredIdentifier,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
@@ -80,7 +73,7 @@ class IbcConnOpenTryFlow(
                 .addOutputState(newHost)
                 .addOutputState(newClient)
                 .addOutputState(newConn)
-        conn?.let{builder.addInputState(it)}
+        connOrNull?.let{builder.addInputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 

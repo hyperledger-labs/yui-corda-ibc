@@ -2,23 +2,22 @@ package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenInit
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcChanOpenInitFlow(
+        val baseId: StateRef,
         val order: ChannelOrder,
         val connectionHops: List<Identifier>,
         val portIdentifier: Identifier,
@@ -34,15 +33,13 @@ class IbcChanOpenInitFlow(
         val builder = TransactionBuilder(notary)
 
         // query host from vault
-        val host = serviceHub.vaultService.queryHost(connectionHops.single().toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
         // query connection from vault
         val connId = connectionHops.single()
-        val conn = serviceHub.vaultService.queryBy<Connection>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-        ).states.single()
+        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
 
         // calculate a newly created channel state and an updated host state
         val (newHost, newChan) = Pair(host.state.data, conn.state.data).chanOpenInit(
