@@ -6,16 +6,16 @@ import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.connOpenInit
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcConnOpenInitFlow(
+        val baseId: StateRef,
         val identifier: Identifier,
         val desiredConnectionIdentifier: Identifier,
         val counterpartyPrefix: CommitmentPrefix,
@@ -28,13 +28,11 @@ class IbcConnOpenInitFlow(
 
         val builder = TransactionBuilder(notary)
 
-        val host = serviceHub.vaultService.queryHost(clientIdentifier.toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val client = serviceHub.vaultService.queryBy<ClientState>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientIdentifier.toUniqueIdentifier()))
-        ).states.single()
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
 
         val (newHost, newClient, conn) = Pair(host.state.data, client.state.data).connOpenInit(
                 identifier,

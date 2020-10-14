@@ -20,7 +20,7 @@ class IbcHostSeedCreateFlow(val participants: List<Party>) : FlowLogic<SignedTra
         val builder = TransactionBuilder(notary)
 
         builder.addCommand(Ibc.Commands.HostSeedCreate(), ourIdentity.owningKey)
-                .addOutputState(HostSeed(participants, notary))
+                .addOutputState(HostSeed(participants))
 
         val tx = serviceHub.signInitialTransaction(builder)
 

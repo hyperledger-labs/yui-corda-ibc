@@ -60,16 +60,13 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         return future.get()
     }
 
-    fun createHost(participants: List<Party>, uuid: UUID = UUID.randomUUID()) {
+    fun createHost(participants: List<Party>) {
         val stxSeed = executeFlow(IbcHostSeedCreateFlow(
                 participants
         ))
-        val seedRef = StateRef(stxSeed.tx.id, 0)
+        val baseId = StateRef(stxSeed.tx.id, 0)
 
-        val stxHost = executeFlow(IbcHostCreateFlow(
-                seedRef,
-                uuid
-        ))
+        val stxHost = executeFlow(IbcHostCreateFlow(baseId))
         val state = stxHost.tx.outputsOfType<Host>().single()
         insertHost(state)
     }
@@ -80,6 +77,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             cordaConsensusState: CordaConsensusState
     ) {
         val stx = executeFlow(IbcClientCreateFlow(
+                host().baseId,
                 id,
                 clientType,
                 cordaConsensusState
@@ -100,6 +98,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             counterpartyClientIdentifier: Identifier
     ) {
         val stx = executeFlow(IbcConnOpenInitFlow(
+                host().baseId,
                 identifier,
                 desiredConnectionIdentifier,
                 counterpartyPrefix,
@@ -131,6 +130,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             consensusHeight: Height
     ) {
         val stx = executeFlow(IbcConnOpenTryFlow(
+                host().baseId,
                 desiredIdentifier,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
@@ -163,6 +163,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             consensusHeight: Height
     ) {
         val stx = executeFlow(IbcConnOpenAckFlow(
+                host().baseId,
                 identifier,
                 version,
                 proofTry,
@@ -181,6 +182,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcConnOpenConfirmFlow(
+                host().baseId,
                 identifier,
                 proofAck,
                 proofHeight
@@ -200,6 +202,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             version: Version.Single
     ) {
         val stx = executeFlow(IbcChanOpenInitFlow(
+                host().baseId,
                 order,
                 connectionHops,
                 portIdentifier,
@@ -230,6 +233,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanOpenTryFlow(
+                host().baseId,
                 order,
                 connectionHops,
                 portIdentifier,
@@ -258,6 +262,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanOpenAckFlow(
+                host().baseId,
                 portIdentifier,
                 channelIdentifier,
                 counterpartyVersion,
@@ -276,6 +281,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanOpenConfirmFlow(
+                host().baseId,
                 portIdentifier,
                 channelIdentifier,
                 proofAck,
@@ -291,6 +297,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             channelIdentifier: Identifier
     ) {
         val stx = executeFlow(IbcChanCloseInitFlow(
+                host().baseId,
                 portIdentifier,
                 channelIdentifier
         ))
@@ -306,6 +313,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanCloseConfirmFlow(
+                host().baseId,
                 portIdentifier,
                 channelIdentifier,
                 proofInit,
@@ -319,7 +327,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun sendPacket(
             packet: Packet
     ) {
-        val stx = executeFlow(IbcSendPacketFlow(packet))
+        val stx = executeFlow(IbcSendPacketFlow(host().baseId, packet))
         val state = stx.tx.outputsOfType<Channel>().single()
         assert(state.nextSequenceSend == packet.sequence + 1)
         assert(state.packets[packet.sequence] == packet)
@@ -333,6 +341,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             acknowledgement: Acknowledgement
     ) {
         val stx = executeFlow(IbcRecvPacketFlow(
+                host().baseId,
                 packet,
                 proof,
                 proofHeight,
@@ -350,6 +359,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcAcknowledgePacketFlow(
+                host().baseId,
                 packet,
                 acknowledgement,
                 proof,

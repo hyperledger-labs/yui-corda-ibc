@@ -12,16 +12,16 @@ import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Quadruple
 import net.corda.core.contracts.ReferencedStateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcAcknowledgePacketFlow(
+        val baseId: StateRef,
         val packet: Packet,
         val acknowledgement: Acknowledgement,
         val proof: CommitmentProof,
@@ -34,27 +34,21 @@ class IbcAcknowledgePacketFlow(
         val builder = TransactionBuilder(notary)
 
         // query host from vault
-        val host = serviceHub.vaultService.queryHost(packet.sourceChannel.toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
         // query chan from vault
         val chanId = packet.sourceChannel
-        val chan = serviceHub.vaultService.queryBy<Channel>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(chanId.toUniqueIdentifier()))
-        ).states.single()
+        val chan = serviceHub.vaultService.queryIbcState<Channel>(baseId, chanId)!!
 
         // query conn from vault
         val connId = chan.state.data.end.connectionHops.single()
-        val conn = serviceHub.vaultService.queryBy<Connection>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-        ).states.single()
+        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
 
         // query client from vault
         val clientId = conn.state.data.end.clientIdentifier
-        val client = serviceHub.vaultService.queryBy<ClientState>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientId.toUniqueIdentifier()))
-        ).states.single()
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         val newChan = Quadruple(host.state.data, client.state.data, conn.state.data, chan.state.data).acknowledgePacket(
                 packet,

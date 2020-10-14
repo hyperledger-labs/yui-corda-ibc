@@ -46,13 +46,13 @@ class Ibc : Contract {
             }
         }
 
-        data class HostCreate(val uuid: UUID) : TypeOnlyCommandData(), Commands {
+        class HostCreate : TypeOnlyCommandData(), Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
                 val seed = tx.inRefsOfType<HostSeed>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expected = Host(seed, uuid)
+                val expected = Host(seed)
                 "Output should be expected state" using (newHost == expected)
             }
         }

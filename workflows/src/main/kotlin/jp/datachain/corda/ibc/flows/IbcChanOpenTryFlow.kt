@@ -4,7 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenTry
 import jp.datachain.corda.ibc.ics4.ChannelOrder
@@ -14,16 +13,16 @@ import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
 class IbcChanOpenTryFlow(
+        val baseId: StateRef,
         val order: ChannelOrder,
         val connectionHops: List<Identifier>,
         val portIdentifier: Identifier,
@@ -42,30 +41,22 @@ class IbcChanOpenTryFlow(
         val builder = TransactionBuilder(notary)
 
         // query host from vault
-        val host = serviceHub.vaultService.queryHost(connectionHops.single().toUniqueIdentifier().externalId!!)
+        val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
         // query conn from vault
         val connId = connectionHops.single()
-        val conn = serviceHub.vaultService.queryBy<Connection>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(connId.toUniqueIdentifier()))
-        ).states.single()
+        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
 
         // query client from vault
         val clientId = conn.state.data.end.clientIdentifier
-        val client = serviceHub.vaultService.queryBy<ClientState>(
-                QueryCriteria.LinearStateQueryCriteria(linearId = listOf(clientId.toUniqueIdentifier()))
-        ).states.single()
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // (optional) channel from vault
-        val chans = serviceHub.vaultService.queryBy<Channel>(
-                QueryCriteria.LinearStateQueryCriteria(participants, listOf(channelIdentifier.toUniqueIdentifier()))
-        ).states
-        require(chans.size <= 1)
-        val chan = chans.singleOrNull()
+        val chanOrNull = serviceHub.vaultService.queryIbcState<Channel>(baseId, channelIdentifier)
 
-        val (newHost, newChan) = Quadruple(host.state.data, client.state.data, conn.state.data, chan?.state?.data).chanOpenTry(
+        val (newHost, newChan) = Quadruple(host.state.data, client.state.data, conn.state.data, chanOrNull?.state?.data).chanOpenTry(
                 order,
                 connectionHops,
                 portIdentifier,
@@ -94,7 +85,7 @@ class IbcChanOpenTryFlow(
                 .addInputState(host)
                 .addOutputState(newHost)
                 .addOutputState(newChan)
-        chan?.let{builder.addInputState(it)}
+        chanOrNull?.let{builder.addInputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 
