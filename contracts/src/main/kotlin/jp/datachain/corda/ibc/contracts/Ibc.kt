@@ -4,7 +4,7 @@ import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics24.HostSeed
+import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.acknowledgePacket
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseConfirm
@@ -30,7 +30,6 @@ import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
-import java.util.*
 
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) = tx.commandsOfType<Commands>().single().value.verify(tx)
@@ -38,11 +37,11 @@ class Ibc : Contract {
     interface Commands : CommandData {
         fun verify(tx: LedgerTransaction)
 
-        class HostSeedCreate : TypeOnlyCommandData(), Commands {
+        class GenesisCreate : TypeOnlyCommandData(), Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "No state should be consumed" using (tx.inputs.size == 0)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
-                "Output type should be HostIdentifier" using (tx.outputs.single().data is HostSeed)
+                "Output type should be HostIdentifier" using (tx.outputs.single().data is Genesis)
             }
         }
 
@@ -50,9 +49,9 @@ class Ibc : Contract {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
-                val seed = tx.inRefsOfType<HostSeed>().single()
+                val genesis = tx.inRefsOfType<Genesis>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expected = Host(seed)
+                val expected = Host(genesis)
                 "Output should be expected state" using (newHost == expected)
             }
         }

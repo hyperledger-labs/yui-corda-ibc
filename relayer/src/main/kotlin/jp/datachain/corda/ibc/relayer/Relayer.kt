@@ -13,8 +13,6 @@ import net.corda.core.utilities.OpaqueBytes
 import java.util.*
 
 object Relayer {
-    fun toIdentifier(externalId: String, id: String) = Identifier(UniqueIdentifier(externalId, UUID.nameUUIDFromBytes(id.toByteArray(Charsets.US_ASCII))))
-
     @JvmStatic
     fun main(args: Array<String>) {
         val ibcA = CordaIbcClient("localhost", 10006)
@@ -29,16 +27,16 @@ object Relayer {
         val externalIdA = ibcA.host().linearId.externalId!!
         val externalIdB = ibcB.host().linearId.externalId!!
 
-        val clientAid = toIdentifier(externalIdA, "client")
+        val clientAid = Identifier("client")
         val consensusStateB = ibcB.host().getConsensusState(Height(0))
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
-        val clientBid = toIdentifier(externalIdB, "client")
+        val clientBid = Identifier("client")
         val consensusStateA = ibcA.host().getConsensusState(Height(0))
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
-        val connAid = toIdentifier(externalIdA, "connection")
-        val connBid = toIdentifier(externalIdB, "connection")
+        val connAid = Identifier("connection")
+        val connBid = Identifier("connection")
         ibcA.connOpenInit(
                 connAid,
                 connBid,
@@ -71,10 +69,10 @@ object Relayer {
                 ibcA.connProof(),
                 ibcA.host().getCurrentHeight())
 
-        val portAid = toIdentifier(externalIdA, "port")
-        val chanAid = toIdentifier(externalIdA, "channel")
-        val portBid = toIdentifier(externalIdB, "port")
-        val chanBid = toIdentifier(externalIdB, "channel")
+        val portAid = Identifier("port")
+        val chanAid = Identifier("channel")
+        val portBid = Identifier("port")
+        val chanBid = Identifier("channel")
         ibcA.chanOpenInit(
                 ChannelOrder.ORDERED,
                 listOf(ibcA.conn().id),

@@ -6,4 +6,4 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 
 @BelongsToContract(Ibc::class)
-data class HostSeed(override val participants: List<AbstractParty>) : ContractState
+data class Genesis(override val participants: List<AbstractParty>) : ContractState
