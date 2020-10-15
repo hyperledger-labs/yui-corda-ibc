@@ -23,7 +23,6 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
-import java.util.*
 
 class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode) {
     var host: Host? = null
@@ -61,10 +60,10 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     }
 
     fun createHost(participants: List<Party>) {
-        val stxSeed = executeFlow(IbcHostSeedCreateFlow(
+        val stxGenesis = executeFlow(IbcGenesisCreateFlow(
                 participants
         ))
-        val baseId = StateRef(stxSeed.tx.id, 0)
+        val baseId = StateRef(stxGenesis.tx.id, 0)
 
         val stxHost = executeFlow(IbcHostCreateFlow(baseId))
         val state = stxHost.tx.outputsOfType<Host>().single()

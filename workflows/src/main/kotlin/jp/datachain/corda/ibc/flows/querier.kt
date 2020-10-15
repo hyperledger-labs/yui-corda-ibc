@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.flows
 
+import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcState
@@ -8,6 +9,10 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.node.services.VaultService
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
+
+fun VaultService.queryIbcGenesis(baseId: StateRef) : StateAndRef<Genesis>? = queryBy<Genesis>(
+        QueryCriteria.VaultQueryCriteria(stateRefs = listOf(baseId))
+).states.singleOrNull()
 
 fun VaultService.queryIbcHost(baseId: StateRef) : StateAndRef<Host>? = queryBy<Host>(
         QueryCriteria.LinearStateQueryCriteria(externalId = listOf(baseId.toString()))

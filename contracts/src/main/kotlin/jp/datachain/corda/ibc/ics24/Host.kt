@@ -3,7 +3,6 @@ package jp.datachain.corda.ibc.ics24
 import jp.datachain.corda.ibc.clients.corda.CordaCommitmentPrefix
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.ics2.ConsensusState
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
@@ -11,11 +10,8 @@ import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
-import java.nio.charset.Charset
-import java.util.*
 
 @BelongsToContract(Ibc::class)
 data class Host private constructor (
@@ -28,10 +24,10 @@ data class Host private constructor (
 ) : IbcState {
     override val id = Identifier("host")
 
-    constructor(seedAndRef: StateAndRef<HostSeed>) : this(
-            seedAndRef.state.data.participants,
-            seedAndRef.ref,
-            seedAndRef.state.notary,
+    constructor(genesisAndRef: StateAndRef<Genesis>) : this(
+            genesisAndRef.state.data.participants,
+            genesisAndRef.ref,
+            genesisAndRef.state.notary,
             emptyList(),
             emptyList(),
             emptyList()
