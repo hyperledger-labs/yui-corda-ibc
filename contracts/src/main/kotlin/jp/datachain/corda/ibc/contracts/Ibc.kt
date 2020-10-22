@@ -20,11 +20,14 @@ import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
 import jp.datachain.corda.ibc.ics25.Handler.createClient
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
@@ -32,7 +35,23 @@ import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 
 class Ibc : Contract {
-    override fun verify(tx: LedgerTransaction) = tx.commandsOfType<Commands>().single().value.verify(tx)
+    override fun verify(tx: LedgerTransaction) {
+        val commandSigners = tx.commands.single()
+        val command = commandSigners.value
+        val signers = commandSigners.signers
+        when (command) {
+            is Commands -> {
+                command.verify(tx)
+            }
+            is DatagramHandler -> {
+                command.verifySigners(signers)
+
+                val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
+                command.execute(ctx)
+                require(ctx.matchesOutputs(tx.outputsOfType<IbcState>()))
+            }
+        }
+    }
 
     interface Commands : CommandData {
         fun verify(tx: LedgerTransaction)
