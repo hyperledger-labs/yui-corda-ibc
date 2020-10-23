@@ -65,7 +65,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         ))
         val baseId = StateRef(stxGenesis.tx.id, 0)
 
-        val stxHost = executeFlow(IbcHostCreateFlow(baseId))
+        val stxHost = executeFlow(IbcHostAndBankCreateFlow(baseId))
         val state = stxHost.tx.outputsOfType<Host>().single()
         insertHost(state)
     }

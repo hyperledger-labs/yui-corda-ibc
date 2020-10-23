@@ -42,7 +42,8 @@ class IbcFlowTests {
     init {
         listOf(a, b, c, x, y, z).forEach {
             it.registerInitiatedFlow(IbcGenesisCreateResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcHostCreateResponderFlow::class.java)
+            it.registerInitiatedFlow(IbcHostAndBankCreateResponderFlow::class.java)
+            it.registerInitiatedFlow(IbcFundAllocateResponderFlow::class.java)
 
             it.registerInitiatedFlow(IbcClientCreateResponderFlow::class.java)
 

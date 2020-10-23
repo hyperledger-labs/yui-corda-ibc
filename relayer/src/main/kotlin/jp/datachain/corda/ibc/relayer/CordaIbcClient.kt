@@ -77,7 +77,7 @@ class CordaIbcClient(host: String, port: Int) {
 
         val genesisRef = StateRef(stxGenesis.tx.id, 0)
 
-        val stxHost = ops().startFlow(::IbcHostCreateFlow, genesisRef).returnValue.get()
+        val stxHost = ops().startFlow(::IbcHostAndBankCreateFlow, genesisRef).returnValue.get()
         val state = stxHost.tx.outputsOfType<Host>().single()
         insertHost(state)
     }
