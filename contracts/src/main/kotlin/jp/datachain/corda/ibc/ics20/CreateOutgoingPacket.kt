@@ -55,9 +55,9 @@ data class CreateOutgoingPacket(
                 sequence = sequence
         )
         val chan: Channel = Quadruple(
-                ctx.getInput<Host>(),
-                ctx.getInput<ClientState>(),
-                ctx.getInput<Connection>(),
+                ctx.getReference<Host>(),
+                ctx.getReference<ClientState>(),
+                ctx.getReference<Connection>(),
                 ctx.getInput<Channel>()
         ).sendPacket(packet)
         ctx.addOutput(chan)

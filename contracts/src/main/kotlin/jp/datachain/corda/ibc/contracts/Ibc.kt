@@ -1,6 +1,9 @@
 package jp.datachain.corda.ibc.contracts
 
 import jp.datachain.corda.ibc.ics2.*
+import jp.datachain.corda.ibc.ics20.Amount
+import jp.datachain.corda.ibc.ics20.Bank
+import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
@@ -32,7 +35,9 @@ import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.*
+import net.corda.core.contracts.Requirements.using
 import net.corda.core.transactions.LedgerTransaction
+import java.security.PublicKey
 
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) {
@@ -64,14 +69,27 @@ class Ibc : Contract {
             }
         }
 
-        class HostCreate : TypeOnlyCommandData(), Commands {
+        class HostAndBankCreate : TypeOnlyCommandData(), Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 2)
                 val genesis = tx.inRefsOfType<Genesis>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expected = Host(genesis)
-                "Output should be expected state" using (newHost == expected)
+                val newBank = tx.outputsOfType<Bank>().single()
+                val expectedHost = Host(genesis)
+                val expectedBank = Bank(genesis)
+                "Output should be expected states" using (Pair(newHost, newBank) == Pair(expectedHost, expectedBank))
+            }
+        }
+
+        data class FundAllocate(val owner: PublicKey, val denom: Denom, val amount: Amount): Commands {
+            override fun verify(tx: LedgerTransaction) {
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
+                val bank = tx.inputsOfType<Bank>().single()
+                val newBank = tx.outputsOfType<Bank>().single()
+                val expectedBank = bank.allocate(owner, denom, amount)
+                "Output should be expected state" using (newBank == expectedBank)
             }
         }
 
