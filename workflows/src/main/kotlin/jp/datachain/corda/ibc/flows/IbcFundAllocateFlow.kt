@@ -33,7 +33,7 @@ class IbcFundAllocateFlow(
 
         // build transaction
         val builder = TransactionBuilder(notary)
-        builder.addCommand(Ibc.Commands.FundAllocate(owner, denom, amount))
+        builder.addCommand(Ibc.Commands.FundAllocate(owner, denom, amount), ourIdentity.owningKey)
                 .addInputState(bank)
                 .addOutputState(newBank)
 

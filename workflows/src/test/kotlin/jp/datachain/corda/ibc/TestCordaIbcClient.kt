@@ -6,7 +6,9 @@ import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
+import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
+import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
@@ -25,6 +27,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
+import java.security.PublicKey
 
 class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode) {
     var _baseId: StateRef? = null
@@ -61,7 +64,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         return future.get()
     }
 
-    fun createHost(participants: List<Party>) {
+    fun createHostAndBank(participants: List<Party>) {
         assert(_baseId == null)
 
         val stxGenesis = executeFlow(IbcGenesisCreateFlow(
@@ -74,6 +77,18 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         assert(host.baseId == baseId)
         val bank = stx.tx.outputsOfType<Bank>().single()
         assert(bank.baseId == baseId)
+    }
+
+    fun allocateFund(owner: PublicKey, denom: Denom, amount: Amount) {
+        val orgAmount = bank().allocated.get(denom)?.get(owner) ?: Amount(0)
+        val stx = executeFlow(IbcFundAllocateFlow(
+                baseId,
+                owner,
+                denom,
+                amount
+        ))
+        val bank = stx.tx.outputsOfType<Bank>().single()
+        assert(bank.allocated[denom]!![owner]!! == orgAmount + amount)
     }
 
     fun createClient(
