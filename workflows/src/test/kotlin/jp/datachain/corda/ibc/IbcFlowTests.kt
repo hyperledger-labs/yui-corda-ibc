@@ -2,6 +2,8 @@ package jp.datachain.corda.ibc
 
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientType
+import jp.datachain.corda.ibc.ics20.Amount
+import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
@@ -18,6 +20,7 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.math.BigDecimal
 
 class IbcFlowTests {
     private val networkParam = MockNetworkParameters(
@@ -74,12 +77,12 @@ class IbcFlowTests {
         val ibcA = TestCordaIbcClient(network, a)
         val ibcB = TestCordaIbcClient(network, x)
 
-        ibcA.createHost(listOf(
+        ibcA.createHostAndBank(listOf(
                 a.info.legalIdentities.single(),
                 b.info.legalIdentities.single(),
                 c.info.legalIdentities.single()
         ))
-        ibcB.createHost(listOf(
+        ibcB.createHostAndBank(listOf(
                 x.info.legalIdentities.single(),
                 y.info.legalIdentities.single(),
                 z.info.legalIdentities.single()
@@ -226,5 +229,62 @@ class IbcFlowTests {
                 chanBid,
                 ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
+    }
+
+    @Test
+    fun `fund allocation`() {
+        val ibcA = TestCordaIbcClient(network, a)
+        val ibcB = TestCordaIbcClient(network, b)
+        val ibcC = TestCordaIbcClient(network, c)
+        val ibcX = TestCordaIbcClient(network, x)
+        val ibcY = TestCordaIbcClient(network, y)
+        val ibcZ = TestCordaIbcClient(network, z)
+
+        val aKey = a.info.legalIdentities.single().owningKey
+        val bKey = b.info.legalIdentities.single().owningKey
+        val cKey = c.info.legalIdentities.single().owningKey
+        val xKey = x.info.legalIdentities.single().owningKey
+        val yKey = y.info.legalIdentities.single().owningKey
+        val zKey = z.info.legalIdentities.single().owningKey
+
+        ibcA.createHostAndBank(listOf(
+                a.info.legalIdentities.single(),
+                b.info.legalIdentities.single(),
+                c.info.legalIdentities.single()
+        ))
+        ibcX.createHostAndBank(listOf(
+                x.info.legalIdentities.single(),
+                y.info.legalIdentities.single(),
+                z.info.legalIdentities.single()
+        ))
+
+        ibcB._baseId = ibcA.baseId
+        ibcC._baseId = ibcA.baseId
+        ibcY._baseId = ibcX.baseId
+        ibcZ._baseId = ibcX.baseId
+
+        ibcB.allocateFund(bKey, Denom("JPY"), Amount(2000))
+        ibcC.allocateFund(cKey, Denom("JPY"), Amount(3000))
+        ibcA.allocateFund(aKey, Denom("JPY"), Amount(11000))
+        ibcA.allocateFund(bKey, Denom("JPY"), Amount(20000))
+        ibcA.allocateFund(cKey, Denom("JPY"), Amount(30000))
+
+        ibcY.allocateFund(yKey, Denom("USD"), Amount(100))
+        ibcZ.allocateFund(zKey, Denom("USD"), Amount(200))
+        ibcX.allocateFund(yKey, Denom("USD"), Amount(1000))
+        ibcX.allocateFund(zKey, Denom("USD"), Amount(2000))
+
+        val bankABC = ibcA.bank()
+        val bankXYZ = ibcX.bank()
+
+        assert(bankABC.allocated[Denom("JPY")]!![aKey]!! == Amount(11000))
+        assert(bankABC.allocated[Denom("JPY")]!![bKey]!! == Amount(22000))
+        assert(bankABC.allocated[Denom("JPY")]!![cKey]!! == Amount(33000))
+        assert(bankABC.allocated[Denom("USD")] == null)
+
+        assert(bankXYZ.allocated[Denom("USD")]!![xKey] == null)
+        assert(bankXYZ.allocated[Denom("USD")]!![yKey]!! == Amount(1100))
+        assert(bankXYZ.allocated[Denom("USD")]!![zKey]!! == Amount(2200))
+        assert(bankXYZ.allocated[Denom("JPY")] == null)
     }
 }

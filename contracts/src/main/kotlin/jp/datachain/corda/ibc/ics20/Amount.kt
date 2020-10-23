@@ -5,6 +5,8 @@ import java.math.BigDecimal
 
 @CordaSerializable
 data class Amount(val amount: BigDecimal) {
+    constructor(amount: Long): this(BigDecimal(amount))
+
     operator fun plus(amount: Amount) = Amount(this.amount + amount.amount)
     operator fun minus(amount: Amount) = Amount(this.amount - amount.amount)
     operator fun compareTo(amount: Amount) = this.amount.compareTo(amount.amount)
