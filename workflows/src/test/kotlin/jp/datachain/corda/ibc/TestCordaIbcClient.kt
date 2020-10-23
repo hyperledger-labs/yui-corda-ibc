@@ -1,10 +1,12 @@
 package jp.datachain.corda.ibc
 
+import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.corda.CordaCommitmentProof
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
+import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
@@ -16,42 +18,42 @@ import jp.datachain.corda.ibc.ics4.ChannelState
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
-import net.corda.core.transactions.SignedTransaction
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 
 class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode) {
-    var host: Host? = null
-    var client: Pair<ClientState, SignedTransaction>? = null
-    val conns = mutableMapOf<Identifier, Pair<Connection, SignedTransaction>>()
-    val chans = mutableMapOf<Identifier, Pair<Channel, SignedTransaction>>()
+    var _baseId: StateRef? = null
+    val baseId
+        get() = _baseId!!
 
-    fun host() = host!!
-    private fun insertHost(v: Host) { assert(host == null); host = v }
-    private fun updateHost(v: Host) { assert(host != null); host = v }
+    inline fun host() = mockNode.services.vaultService.queryIbcHost(baseId)!!.state.data
 
-    private fun makeProof(stx: SignedTransaction) = CordaCommitmentProof(
-            stx.coreTransaction,
-            stx.sigs.filter{it.by == host().notary.owningKey}.single())
+    inline fun bank() = mockNode.services.vaultService.queryIbcBank(baseId)!!.state.data
 
-    fun client() = client!!.first
-    fun clientProof() = makeProof(client!!.second)
-    private fun insertClient(v: ClientState, stx: SignedTransaction) { assert(client == null); client = Pair(v, stx)}
-    private fun updateClient(v: ClientState, stx: SignedTransaction) { assert(client != null); client = Pair(v, stx)}
+    inline fun <reified T: IbcState> queryStateWithProof(id: Identifier): Pair<T, CordaCommitmentProof> {
+        val stateAndRef = mockNode.services.vaultService.queryIbcState<T>(baseId!!, id)!!
+        val stx = mockNode.services.validatedTransactions.getTransaction(stateAndRef.ref.txhash)!!
+        val state = stateAndRef.state.data
+        val proof = CordaCommitmentProof(
+                stx.coreTransaction,
+                stx.sigs.filter{it.by == mockNet.defaultNotaryIdentity.owningKey}.single()
+        )
+        return Pair(state, proof)
+    }
 
-    fun conn() = conns.values.single().first
-    fun connProof() = makeProof(conns.values.single().second)
-    fun insertConn(v: Connection, stx: SignedTransaction) { assert(!conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
-    fun updateConn(v: Connection, stx: SignedTransaction) { assert(conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
+    inline fun client(id: Identifier) = queryStateWithProof<ClientState>(id).first
+    inline fun clientProof(id: Identifier) = queryStateWithProof<ClientState>(id).second
 
-    fun chan() = chans.values.single().first
-    fun chanProof() = makeProof(chans.values.single().second)
-    fun insertChan(v: Channel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
-    fun updateChan(v: Channel, stx: SignedTransaction) { assert(chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
+    inline fun conn(id: Identifier) = queryStateWithProof<Connection>(id).first
+    inline fun connProof(id: Identifier) = queryStateWithProof<Connection>(id).second
+
+    inline fun chan(id: Identifier) = queryStateWithProof<Channel>(id).first
+    inline fun chanProof(id: Identifier) = queryStateWithProof<Channel>(id).second
 
     private fun <T> executeFlow(logic: net.corda.core.flows.FlowLogic<T>) : T {
         val future = mockNode.startFlow(logic)
@@ -60,14 +62,18 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     }
 
     fun createHost(participants: List<Party>) {
+        assert(_baseId == null)
+
         val stxGenesis = executeFlow(IbcGenesisCreateFlow(
                 participants
         ))
-        val baseId = StateRef(stxGenesis.tx.id, 0)
+        _baseId = StateRef(stxGenesis.tx.id, 0)
 
-        val stxHost = executeFlow(IbcHostAndBankCreateFlow(baseId))
-        val state = stxHost.tx.outputsOfType<Host>().single()
-        insertHost(state)
+        val stx = executeFlow(IbcHostAndBankCreateFlow(baseId))
+        val host = stx.tx.outputsOfType<Host>().single()
+        assert(host.baseId == baseId)
+        val bank = stx.tx.outputsOfType<Bank>().single()
+        assert(bank.baseId == baseId)
     }
 
     fun createClient(
@@ -76,17 +82,15 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             cordaConsensusState: CordaConsensusState
     ) {
         val stx = executeFlow(IbcClientCreateFlow(
-                host().baseId,
+                baseId,
                 id,
                 clientType,
                 cordaConsensusState
         ))
-
-        val hostState = stx.tx.outputsOfType<Host>().single()
-        updateHost(hostState)
-
-        val clientState = stx.tx.outputsOfType<ClientState>().single()
-        insertClient(clientState, stx)
+        val client = stx.tx.outputsOfType<ClientState>().single()
+        assert(client.id == id)
+        assert(client is CordaClientState)
+        assert((client as CordaClientState).consensusStates.values.single() == cordaConsensusState)
     }
 
     fun connOpenInit(
@@ -97,23 +101,16 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             counterpartyClientIdentifier: Identifier
     ) {
         val stx = executeFlow(IbcConnOpenInitFlow(
-                host().baseId,
+                baseId,
                 identifier,
                 desiredConnectionIdentifier,
                 counterpartyPrefix,
                 clientIdentifier,
                 counterpartyClientIdentifier
         ))
-
-        val hostState = stx.tx.outputsOfType<Host>().single()
-        updateHost(hostState)
-
-        val clientState = stx.tx.outputsOfType<ClientState>().single()
-        updateClient(clientState, stx)
-
-        val connState = stx.tx.outputsOfType<Connection>().single()
-        assert(connState.end.state == ConnectionState.INIT)
-        insertConn(connState, stx)
+        val conn = stx.tx.outputsOfType<Connection>().single()
+        assert(conn.id == identifier)
+        assert(conn.end.state == ConnectionState.INIT)
     }
 
     fun connOpenTry(
@@ -129,7 +126,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             consensusHeight: Height
     ) {
         val stx = executeFlow(IbcConnOpenTryFlow(
-                host().baseId,
+                baseId,
                 desiredIdentifier,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
@@ -141,16 +138,9 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofHeight,
                 consensusHeight
         ))
-
-        val hostState = stx.tx.outputsOfType<Host>().single()
-        updateHost(hostState)
-
-        val clientState = stx.tx.outputsOfType<ClientState>().single()
-        updateClient(clientState, stx)
-
-        val connState = stx.tx.outputsOfType<Connection>().single()
-        assert(connState.end.state == ConnectionState.TRYOPEN)
-        insertConn(connState, stx)
+        val conn = stx.tx.outputsOfType<Connection>().single()
+        assert(conn.id == desiredIdentifier)
+        assert(conn.end.state == ConnectionState.TRYOPEN)
     }
 
     fun connOpenAck(
@@ -162,7 +152,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             consensusHeight: Height
     ) {
         val stx = executeFlow(IbcConnOpenAckFlow(
-                host().baseId,
+                baseId,
                 identifier,
                 version,
                 proofTry,
@@ -170,9 +160,9 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofHeight,
                 consensusHeight
         ))
-        val state = stx.tx.outputsOfType<Connection>().single()
-        assert(state.end.state == ConnectionState.OPEN)
-        updateConn(state, stx)
+        val conn = stx.tx.outputsOfType<Connection>().single()
+        assert(conn.id == identifier)
+        assert(conn.end.state == ConnectionState.OPEN)
     }
 
     fun connOpenConfirm(
@@ -181,14 +171,14 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcConnOpenConfirmFlow(
-                host().baseId,
+                baseId,
                 identifier,
                 proofAck,
                 proofHeight
         ))
-        val state = stx.tx.outputsOfType<Connection>().single()
-        assert(state.end.state == ConnectionState.OPEN)
-        updateConn(state, stx)
+        val conn = stx.tx.outputsOfType<Connection>().single()
+        assert(conn.id == identifier)
+        assert(conn.end.state == ConnectionState.OPEN)
     }
 
     fun chanOpenInit(
@@ -201,7 +191,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             version: Version.Single
     ) {
         val stx = executeFlow(IbcChanOpenInitFlow(
-                host().baseId,
+                baseId,
                 order,
                 connectionHops,
                 portIdentifier,
@@ -210,13 +200,10 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 counterpartyChannelIdentifier,
                 version
         ))
-
-        val hostState = stx.tx.outputsOfType<Host>().single()
-        updateHost(hostState)
-
-        val chanState = stx.tx.outputsOfType<Channel>().single()
-        assert(chanState.end.state == ChannelState.INIT)
-        insertChan(chanState, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.portId == portIdentifier)
+        assert(chan.id == channelIdentifier)
+        assert(chan.end.state == ChannelState.INIT)
     }
 
     fun chanOpenTry(
@@ -232,7 +219,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanOpenTryFlow(
-                host().baseId,
+                baseId,
                 order,
                 connectionHops,
                 portIdentifier,
@@ -244,13 +231,10 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofInit,
                 proofHeight
         ))
-
-        val hostState = stx.tx.outputsOfType<Host>().single()
-        updateHost(hostState)
-
-        val chanState = stx.tx.outputsOfType<Channel>().single()
-        assert(chanState.end.state == ChannelState.TRYOPEN)
-        insertChan(chanState, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.portId == portIdentifier)
+        assert(chan.id == channelIdentifier)
+        assert(chan.end.state == ChannelState.TRYOPEN)
     }
 
     fun chanOpenAck(
@@ -261,16 +245,17 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanOpenAckFlow(
-                host().baseId,
+                baseId,
                 portIdentifier,
                 channelIdentifier,
                 counterpartyVersion,
                 proofTry,
                 proofHeight
         ))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.end.state == ChannelState.OPEN)
-        updateChan(state, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.portId == portIdentifier)
+        assert(chan.id == channelIdentifier)
+        assert(chan.end.state == ChannelState.OPEN)
     }
 
     fun chanOpenConfirm(
@@ -280,15 +265,16 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanOpenConfirmFlow(
-                host().baseId,
+                baseId,
                 portIdentifier,
                 channelIdentifier,
                 proofAck,
                 proofHeight
         ))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.end.state == ChannelState.OPEN)
-        updateChan(state, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.portId == portIdentifier)
+        assert(chan.id == channelIdentifier)
+        assert(chan.end.state == ChannelState.OPEN)
     }
 
     fun chanCloseInit(
@@ -296,13 +282,14 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             channelIdentifier: Identifier
     ) {
         val stx = executeFlow(IbcChanCloseInitFlow(
-                host().baseId,
+                baseId,
                 portIdentifier,
                 channelIdentifier
         ))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.end.state == ChannelState.CLOSED)
-        updateChan(state, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.portId == portIdentifier)
+        assert(chan.id == channelIdentifier)
+        assert(chan.end.state == ChannelState.CLOSED)
     }
 
     fun chanCloseConfirm(
@@ -312,25 +299,25 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcChanCloseConfirmFlow(
-                host().baseId,
+                baseId,
                 portIdentifier,
                 channelIdentifier,
                 proofInit,
                 proofHeight
         ))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.end.state == ChannelState.CLOSED)
-        updateChan(state, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.portId == portIdentifier)
+        assert(chan.id == channelIdentifier)
+        assert(chan.end.state == ChannelState.CLOSED)
     }
 
     fun sendPacket(
             packet: Packet
     ) {
-        val stx = executeFlow(IbcSendPacketFlow(host().baseId, packet))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.nextSequenceSend == packet.sequence + 1)
-        assert(state.packets[packet.sequence] == packet)
-        updateChan(state, stx)
+        val stx = executeFlow(IbcSendPacketFlow(baseId, packet))
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.nextSequenceSend == packet.sequence + 1)
+        assert(chan.packets[packet.sequence] == packet)
     }
 
     fun recvPacket(
@@ -340,15 +327,14 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             acknowledgement: Acknowledgement
     ) {
         val stx = executeFlow(IbcRecvPacketFlow(
-                host().baseId,
+                baseId,
                 packet,
                 proof,
                 proofHeight,
                 acknowledgement
         ))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.nextSequenceRecv == packet.sequence + 1)
-        updateChan(state, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.nextSequenceRecv == packet.sequence + 1)
     }
 
     fun acknowledgePacket(
@@ -358,15 +344,14 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofHeight: Height
     ) {
         val stx = executeFlow(IbcAcknowledgePacketFlow(
-                host().baseId,
+                baseId,
                 packet,
                 acknowledgement,
                 proof,
                 proofHeight
         ))
-        val state = stx.tx.outputsOfType<Channel>().single()
-        assert(state.nextSequenceAck == packet.sequence + 1)
-        assert(!state.packets.contains(packet.sequence))
-        updateChan(state, stx)
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.nextSequenceAck == packet.sequence + 1)
+        assert(!chan.packets.contains(packet.sequence))
     }
 }

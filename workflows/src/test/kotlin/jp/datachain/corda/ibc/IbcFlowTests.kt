@@ -9,7 +9,6 @@ import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.node.MockNetwork
@@ -19,7 +18,6 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.util.*
 
 class IbcFlowTests {
     private val networkParam = MockNetworkParameters(
@@ -87,84 +85,84 @@ class IbcFlowTests {
                 z.info.legalIdentities.single()
         ))
 
-        val clientAid = Identifier("client")
+        val clientAid = Identifier("clientA")
         val consensusStateB = ibcB.host().getConsensusState(Height(0))
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
-        val clientBid = Identifier("client")
+        val clientBid = Identifier("clientB")
         val consensusStateA = ibcA.host().getConsensusState(Height(0))
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
-        val connAid = Identifier("connection")
-        val connBid = Identifier("connection")
+        val connAid = Identifier("connectionA")
+        val connBid = Identifier("connectionB")
         ibcA.connOpenInit(
                 connAid,
                 connBid,
                 ibcB.host().getCommitmentPrefix(),
-                ibcA.client().id,
-                ibcB.client().id)
+                clientAid,
+                clientBid)
 
         ibcB.connOpenTry(
                 connBid,
                 connAid,
                 ibcA.host().getCommitmentPrefix(),
-                ibcA.client().id,
-                ibcB.client().id,
+                clientAid,
+                clientBid,
                 ibcA.host().getCompatibleVersions(),
-                ibcA.connProof(),
-                ibcA.clientProof(),
+                ibcA.connProof(connAid),
+                ibcA.clientProof(clientAid),
                 ibcA.host().getCurrentHeight(),
                 ibcB.host().getCurrentHeight())
 
         ibcA.connOpenAck(
                 connAid,
-                ibcB.conn().end.version as Version.Single,
-                ibcB.connProof(),
-                ibcB.clientProof(),
+                ibcB.conn(connBid).end.version as Version.Single,
+                ibcB.connProof(connBid),
+                ibcB.clientProof(clientBid),
                 ibcB.host().getCurrentHeight(),
                 ibcA.host().getCurrentHeight())
 
         ibcB.connOpenConfirm(
                 connBid,
-                ibcA.connProof(),
+                ibcA.connProof(connAid),
                 ibcA.host().getCurrentHeight())
 
-        val portAid = Identifier("port")
-        val chanAid = Identifier("channel")
-        val portBid = Identifier("port")
-        val chanBid = Identifier("channel")
+        val portAid = Identifier("portA")
+        val chanAid = Identifier("channelA")
+        val portBid = Identifier("portB")
+        val chanBid = Identifier("channelB")
         ibcA.chanOpenInit(
                 ChannelOrder.ORDERED,
-                listOf(ibcA.conn().id),
+                listOf(connAid),
                 portAid,
                 chanAid,
                 portBid,
                 chanBid,
-                ibcA.conn().end.version as Version.Single)
+                ibcA.conn(connAid).end.version as Version.Single)
 
         ibcB.chanOpenTry(
                 ChannelOrder.ORDERED,
-                listOf(ibcB.conn().id),
+                listOf(connBid),
                 portBid,
                 chanBid,
                 portAid,
                 chanAid,
-                ibcB.conn().end.version as Version.Single,
-                ibcA.conn().end.version as Version.Single,
-                ibcA.chanProof(),
+                ibcB.conn(connBid).end.version as Version.Single,
+                ibcA.conn(connAid).end.version as Version.Single,
+                ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
 
         ibcA.chanOpenAck(
                 portAid,
                 chanAid,
-                ibcB.chan().end.version,
-                ibcB.chanProof(),
+                ibcB.chan(chanBid).end.version,
+                ibcB.chanProof(chanBid),
                 ibcB.host().getCurrentHeight())
 
         ibcB.chanOpenConfirm(
                 portBid,
                 chanBid,
-                ibcA.chanProof(),
+                ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
 
         for (sequence in 1L..10) {
@@ -182,14 +180,14 @@ class IbcFlowTests {
             val ack = Acknowledgement(OpaqueBytes("Thank you, Alice! (${sequence})".toByteArray()))
             ibcB.recvPacket(
                     packet,
-                    ibcA.chanProof(),
+                    ibcA.chanProof(chanAid),
                     ibcA.host().getCurrentHeight(),
                     ack)
 
             ibcA.acknowledgePacket(
                     packet,
                     ack,
-                    ibcB.chanProof(),
+                    ibcB.chanProof(chanBid),
                     ibcB.host().getCurrentHeight())
         }
 
@@ -208,14 +206,14 @@ class IbcFlowTests {
             val ack = Acknowledgement(OpaqueBytes("Thank you, Bob! (${sequence})".toByteArray()))
             ibcA.recvPacket(
                     packet,
-                    ibcB.chanProof(),
+                    ibcB.chanProof(chanBid),
                     ibcB.host().getCurrentHeight(),
                     ack)
 
             ibcB.acknowledgePacket(
                     packet,
                     ack,
-                    ibcA.chanProof(),
+                    ibcA.chanProof(chanAid),
                     ibcA.host().getCurrentHeight())
         }
 
@@ -226,7 +224,7 @@ class IbcFlowTests {
         ibcB.chanCloseConfirm(
                 portBid,
                 chanBid,
-                ibcA.chanProof(),
+                ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
     }
 }
