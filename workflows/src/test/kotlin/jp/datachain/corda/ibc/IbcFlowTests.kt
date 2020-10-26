@@ -257,7 +257,6 @@ class IbcFlowTests {
                 y.info.legalIdentities.single(),
                 z.info.legalIdentities.single()
         ))
-
         ibcB._baseId = ibcA.baseId
         ibcC._baseId = ibcA.baseId
         ibcY._baseId = ibcX.baseId
@@ -286,5 +285,170 @@ class IbcFlowTests {
         assert(bankXYZ.allocated[Denom("USD")]!![yKey]!! == Amount(1100))
         assert(bankXYZ.allocated[Denom("USD")]!![zKey]!! == Amount(2200))
         assert(bankXYZ.allocated[Denom("JPY")] == null)
+    }
+
+    @Test
+    fun `create outgoing packet`() {
+        val ibcA = TestCordaIbcClient(network, a)
+        val ibcB = TestCordaIbcClient(network, b)
+        val ibcC = TestCordaIbcClient(network, c)
+        val ibcX = TestCordaIbcClient(network, x)
+        val ibcY = TestCordaIbcClient(network, y)
+        val ibcZ = TestCordaIbcClient(network, z)
+
+        val aKey = a.info.legalIdentities.single().owningKey
+        val bKey = b.info.legalIdentities.single().owningKey
+        val cKey = c.info.legalIdentities.single().owningKey
+        val xKey = x.info.legalIdentities.single().owningKey
+        val yKey = y.info.legalIdentities.single().owningKey
+        val zKey = z.info.legalIdentities.single().owningKey
+
+        ibcA.createHostAndBank(listOf(
+                a.info.legalIdentities.single(),
+                b.info.legalIdentities.single(),
+                c.info.legalIdentities.single()
+        ))
+        ibcX.createHostAndBank(listOf(
+                x.info.legalIdentities.single(),
+                y.info.legalIdentities.single(),
+                z.info.legalIdentities.single()
+        ))
+        ibcB._baseId = ibcA.baseId
+        ibcC._baseId = ibcA.baseId
+        ibcY._baseId = ibcX.baseId
+        ibcZ._baseId = ibcX.baseId
+
+        ibcC.allocateFund(aKey, Denom("JPY"), Amount(1000))
+        ibcC.allocateFund(bKey, Denom("JPY"), Amount(2000))
+        ibcC.allocateFund(cKey, Denom("JPY"), Amount(3000))
+        ibcZ.allocateFund(xKey, Denom("USD"), Amount(10000))
+        ibcZ.allocateFund(yKey, Denom("USD"), Amount(20000))
+        ibcZ.allocateFund(zKey, Denom("USD"), Amount(30000))
+
+        val idCliABC = Identifier("clientABC")
+        val idCliXYZ = Identifier("clientXYZ")
+
+        ibcA.createClient(
+                idCliABC,
+                ClientType.CordaClient,
+                ibcY.host().getConsensusState(Height(0)))
+        ibcX.createClient(
+                idCliXYZ,
+                ClientType.CordaClient,
+                ibcB.host().getConsensusState(Height(0)))
+
+        val idConnABC = Identifier("connABC")
+        val idConnXYZ = Identifier("connXYZ")
+
+        ibcB.connOpenInit(
+                idConnABC,
+                idConnXYZ,
+                ibcZ.host().getCommitmentPrefix(),
+                idCliABC,
+                idCliXYZ)
+        ibcY.connOpenTry(
+                idConnXYZ,
+                idConnABC,
+                ibcC.host().getCommitmentPrefix(),
+                idCliABC,
+                idCliXYZ,
+                ibcC.host().getCompatibleVersions(),
+                ibcC.connProof(idConnABC),
+                ibcC.clientProof(idCliABC),
+                ibcC.host().getCurrentHeight(),
+                ibcC.host().getCurrentHeight())
+        ibcC.connOpenAck(
+                idConnABC,
+                ibcX.conn(idConnXYZ).end.version as Version.Single,
+                ibcX.connProof(idConnXYZ),
+                ibcX.clientProof(idCliXYZ),
+                ibcX.host().getCurrentHeight(),
+                ibcX.host().getCurrentHeight())
+        ibcZ.connOpenConfirm(
+                idConnXYZ,
+                ibcA.connProof(idConnABC),
+                ibcA.host().getCurrentHeight())
+
+        val idPortABC = Identifier("portABC")
+        val idPortXYZ = Identifier("portXYZ")
+        val idChanABC = Identifier("chanABC")
+        val idChanXYZ = Identifier("chanXYZ")
+        val order = ChannelOrder.ORDERED
+
+        ibcA.chanOpenInit(
+                order,
+                listOf(idConnABC),
+                idPortABC,
+                idChanABC,
+                idPortXYZ,
+                idChanXYZ,
+                ibcB.conn(idConnABC).end.version as Version.Single)
+        ibcX.chanOpenTry(
+                order,
+                listOf(idConnXYZ),
+                idPortXYZ,
+                idChanXYZ,
+                idPortABC,
+                idChanABC,
+                ibcY.conn(idConnXYZ).end.version as Version.Single,
+                ibcB.chan(idChanABC).end.version,
+                ibcB.chanProof(idChanABC),
+                ibcB.host().getCurrentHeight())
+        ibcB.chanOpenAck(
+                idPortABC,
+                idChanABC,
+                ibcZ.chan(idChanXYZ).end.version,
+                ibcZ.chanProof(idChanXYZ),
+                ibcZ.host().getCurrentHeight())
+        ibcY.chanOpenConfirm(
+                idPortXYZ,
+                idChanXYZ,
+                ibcC.chanProof(idChanABC),
+                ibcC.host().getCurrentHeight())
+
+        val denom = Denom("JPY")
+        val amount = Amount(100)
+        val destPort = idPortXYZ
+        val destChannel = idChanXYZ
+        val sourcePort = idPortABC
+        val sourceChannel = idChanABC
+        val timeoutHeight = Height(0)
+        val timeoutTimestamp = Timestamp(0)
+        ibcC.transfer(
+                denom,
+                amount,
+                cKey,
+                zKey,
+                destPort,
+                destChannel,
+                sourcePort,
+                sourceChannel,
+                timeoutHeight,
+                timeoutTimestamp
+        )
+        ibcA.transfer(
+                denom,
+                amount,
+                aKey,
+                xKey,
+                destPort,
+                destChannel,
+                sourcePort,
+                sourceChannel,
+                timeoutHeight,
+                timeoutTimestamp
+        )
+        ibcB.transfer(
+                denom,
+                amount,
+                bKey,
+                yKey,
+                destPort,
+                destChannel,
+                sourcePort,
+                sourceChannel,
+                timeoutHeight,
+                timeoutTimestamp
+        )
     }
 }

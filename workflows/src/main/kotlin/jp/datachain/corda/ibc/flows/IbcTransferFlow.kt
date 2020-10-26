@@ -84,6 +84,7 @@ class IbcTransferFlow(
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
+                .addInputState(bank)
         ctx.outStates.forEach { builder.addOutputState(it) }
 
         // sign transaction (by initiator)
