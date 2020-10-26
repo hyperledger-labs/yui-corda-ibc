@@ -9,6 +9,7 @@ import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics20.FungibleTokenPacketData
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
@@ -22,6 +23,7 @@ import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
@@ -34,12 +36,12 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     val baseId
         get() = _baseId!!
 
-    inline fun host() = mockNode.services.vaultService.queryIbcHost(baseId)!!.state.data
+    fun host() = mockNode.services.vaultService.queryIbcHost(baseId)!!.state.data
 
-    inline fun bank() = mockNode.services.vaultService.queryIbcBank(baseId)!!.state.data
+    fun bank() = mockNode.services.vaultService.queryIbcBank(baseId)!!.state.data
 
     inline fun <reified T: IbcState> queryStateWithProof(id: Identifier): Pair<T, CordaCommitmentProof> {
-        val stateAndRef = mockNode.services.vaultService.queryIbcState<T>(baseId!!, id)!!
+        val stateAndRef = mockNode.services.vaultService.queryIbcState<T>(baseId, id)!!
         val stx = mockNode.services.validatedTransactions.getTransaction(stateAndRef.ref.txhash)!!
         val state = stateAndRef.state.data
         val proof = CordaCommitmentProof(
@@ -49,14 +51,14 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         return Pair(state, proof)
     }
 
-    inline fun client(id: Identifier) = queryStateWithProof<ClientState>(id).first
-    inline fun clientProof(id: Identifier) = queryStateWithProof<ClientState>(id).second
+    fun client(id: Identifier) = queryStateWithProof<ClientState>(id).first
+    fun clientProof(id: Identifier) = queryStateWithProof<ClientState>(id).second
 
-    inline fun conn(id: Identifier) = queryStateWithProof<Connection>(id).first
-    inline fun connProof(id: Identifier) = queryStateWithProof<Connection>(id).second
+    fun conn(id: Identifier) = queryStateWithProof<Connection>(id).first
+    fun connProof(id: Identifier) = queryStateWithProof<Connection>(id).second
 
-    inline fun chan(id: Identifier) = queryStateWithProof<Channel>(id).first
-    inline fun chanProof(id: Identifier) = queryStateWithProof<Channel>(id).second
+    fun chan(id: Identifier) = queryStateWithProof<Channel>(id).first
+    fun chanProof(id: Identifier) = queryStateWithProof<Channel>(id).second
 
     private fun <T> executeFlow(logic: net.corda.core.flows.FlowLogic<T>) : T {
         val future = mockNode.startFlow(logic)
@@ -368,5 +370,56 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceAck == packet.sequence + 1)
         assert(!chan.packets.contains(packet.sequence))
+    }
+
+    fun transfer(
+            denomination: Denom,
+            amount: Amount,
+            sender: PublicKey,
+            receiver: PublicKey,
+            destPort: Identifier,
+            destChannel: Identifier,
+            sourcePort: Identifier,
+            sourceChannel: Identifier,
+            timeoutHeight: Height,
+            timeoutTimestamp: Timestamp
+    ) {
+        val prevBank = bank()
+        val sequence = chan(sourceChannel).nextSequenceSend
+        val stx = executeFlow(IbcTransferFlow(
+                baseId,
+                denomination,
+                amount,
+                sender,
+                receiver,
+                destPort,
+                destChannel,
+                sourcePort,
+                sourceChannel,
+                timeoutHeight,
+                timeoutTimestamp,
+                sequence
+        ))
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.nextSequenceSend == sequence + 1)
+        val packet = chan.packets[sequence]!!
+        assert(packet.destPort == destPort)
+        assert(packet.destChannel == destChannel)
+        assert(packet.sourcePort == sourcePort)
+        assert(packet.sourceChannel == sourceChannel)
+        assert(packet.timeoutHeight == timeoutHeight)
+        assert(packet.timeoutTimestamp == timeoutTimestamp)
+        assert(packet.sequence == sequence)
+        val data = FungibleTokenPacketData.decode(packet.data.bytes)
+        assert(data.denomination == denomination)
+        assert(data.amount == amount)
+        assert(data.sender == sender)
+        assert(data.receiver == receiver)
+        val bank = stx.tx.outputsOfType<Bank>().single()
+        if (denomination.hasPrefix(sourcePort, sourceChannel)) {
+            assert(prevBank.burn(sender, denomination, amount) == bank)
+        } else {
+            assert(prevBank.lock(sender, denomination, amount) == bank)
+        }
     }
 }
