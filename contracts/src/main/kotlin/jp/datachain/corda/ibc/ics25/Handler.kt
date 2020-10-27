@@ -9,6 +9,7 @@ import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics3.ConnectionEnd
 import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.*
@@ -450,11 +451,11 @@ object Handler {
         return chan.copy(end = chan.end.copy(state = ChannelState.CLOSED))
     }
 
-    fun Quadruple<Host, ClientState, Connection, Channel>.sendPacket(packet: Packet) : Channel {
-        val host = this.first
-        val client = this.second
-        val conn = this.third
-        val chan = this.fourth
+    fun sendPacket(ctx: Context, packet: Packet) {
+        val host = ctx.getReference<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getReference<Connection>()
+        val chan = ctx.getInput<Channel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -476,9 +477,9 @@ object Handler {
 
         require(packet.sequence == chan.nextSequenceSend)
 
-        return chan.copy(
+        ctx.addOutput(chan.copy(
                 nextSequenceSend = chan.nextSequenceSend + 1,
-                packets = chan.packets + mapOf(packet.sequence to packet))
+                packets = chan.packets + mapOf(packet.sequence to packet)))
     }
 
     fun Quadruple<Host, ClientState, Connection, Channel>.recvPacket(

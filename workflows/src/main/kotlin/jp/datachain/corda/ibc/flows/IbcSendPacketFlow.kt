@@ -3,11 +3,11 @@ package jp.datachain.corda.ibc.flows
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics25.Handler.sendPacket
+import jp.datachain.corda.ibc.ics25.Handler
+import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
-import jp.datachain.corda.ibc.types.Quadruple
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -44,14 +44,15 @@ class IbcSendPacketFlow(
         val clientId = conn.state.data.end.clientIdentifier
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
-        val newChan = Quadruple(host.state.data, client.state.data, conn.state.data, chan.state.data).sendPacket(packet)
+        val ctx = Context(setOf(chan.state.data), setOf(host.state.data, client.state.data, conn.state.data))
+        Handler.sendPacket(ctx, packet)
 
         builder.addCommand(Ibc.Commands.SendPacket(packet), ourIdentity.owningKey)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
-                .addOutputState(newChan)
+        ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 

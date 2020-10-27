@@ -1,16 +1,11 @@
 package jp.datachain.corda.ibc.ics20
 
-import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.sendPacket
+import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
-import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
@@ -38,6 +33,7 @@ data class CreateOutgoingPacket(
         } else {
             ctx.addOutput(bank.burn(sender, denomination, amount))
         }
+
         val data = FungibleTokenPacketData(
                 denomination = denomination,
                 amount = amount,
@@ -54,12 +50,6 @@ data class CreateOutgoingPacket(
                 timeoutTimestamp = timeoutTimestamp,
                 sequence = sequence
         )
-        val chan: Channel = Quadruple(
-                ctx.getReference<Host>(),
-                ctx.getReference<ClientState>(),
-                ctx.getReference<Connection>(),
-                ctx.getInput<Channel>()
-        ).sendPacket(packet)
-        ctx.addOutput(chan)
+        Handler.sendPacket(ctx, packet)
     }
 }
