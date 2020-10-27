@@ -28,9 +28,9 @@ data class CreateOutgoingPacket(
         val timeoutTimestamp: Timestamp,
         val sequence: Long
 ): DatagramHandler {
-    override fun verifySigners(signers: Collection<PublicKey>) = require(signers.contains(sender))
+    override fun execute(ctx: Context, signers: Collection<PublicKey>) {
+        require(signers.contains(sender))
 
-    override fun execute(ctx: Context) {
         val bank: Bank = ctx.getInput<Bank>()
         val source = !denomination.hasPrefix(sourcePort, sourceChannel)
         if (source) {
