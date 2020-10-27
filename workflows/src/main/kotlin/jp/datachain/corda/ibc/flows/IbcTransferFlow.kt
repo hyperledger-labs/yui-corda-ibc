@@ -63,6 +63,7 @@ class IbcTransferFlow(
                 setOf(chan, bank).map{it.state.data},
                 setOf(host, client, conn).map{it.state.data}
         )
+        val signers = listOf(ourIdentity.owningKey)
         val command = CreateOutgoingPacket(
                 denomination,
                 amount,
@@ -75,11 +76,11 @@ class IbcTransferFlow(
                 timeoutHeight,
                 timeoutTimestamp,
                 sequence)
-        command.execute(ctx)
+        command.execute(ctx, signers)
 
         // build transaction
         val builder = TransactionBuilder(notary)
-        builder.addCommand(command, ourIdentity.owningKey)
+        builder.addCommand(command, signers)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))

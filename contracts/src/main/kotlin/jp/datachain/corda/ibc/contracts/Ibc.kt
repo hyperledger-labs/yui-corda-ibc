@@ -49,10 +49,9 @@ class Ibc : Contract {
                 command.verify(tx)
             }
             is DatagramHandler -> {
-                command.verifySigners(signers)
-
                 val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
-                command.execute(ctx)
+                command.execute(ctx, signers)
+                require(ctx.outStates.map{it.linearId}.containsAll(ctx.inStates.map{it.linearId}))
                 require(ctx.matchesOutputs(tx.outputsOfType<IbcState>()))
             }
         }
