@@ -51,7 +51,7 @@ class Ibc : Contract {
             is DatagramHandler -> {
                 val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
                 command.execute(ctx, signers)
-                require(ctx.outStates.map{it.linearId}.containsAll(ctx.inStates.map{it.linearId}))
+                require(ctx.outputsContainAllInputs())
                 require(ctx.matchesOutputs(tx.outputsOfType<IbcState>()))
             }
         }
@@ -397,16 +397,10 @@ class Ibc : Contract {
 
         data class SendPacket(val packet: Packet) : Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly three states should be referenced" using (tx.references.size == 3)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val host = tx.referenceInputsOfType<Host>().single()
-                val client = tx.referenceInputsOfType<ClientState>().single()
-                val conn = tx.referenceInputsOfType<Connection>().single()
-                val chan = tx.inputsOfType<Channel>().single()
-                val newChan = tx.outputsOfType<Channel>().single()
-                val expected = Quadruple(host, client, conn, chan).sendPacket(packet)
-                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
+                val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
+                sendPacket(ctx, packet)
+                "All input states are updated into output states" using (ctx.outputsContainAllInputs())
+                "Output states should be expected ones" using (ctx.matchesOutputs(tx.outputsOfType<IbcState>()))
             }
         }
 

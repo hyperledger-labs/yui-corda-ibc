@@ -21,4 +21,8 @@ class Context(val inStates: Collection<IbcState>, val refStates: Collection<IbcS
     fun matchesOutputs(states: Collection<IbcState>): Boolean {
         return states.size == outStates.size && states.all{outStates.contains(it)}
     }
+
+    fun outputsContainAllInputs(): Boolean {
+        return outStates.map{it.linearId}.containsAll(inStates.map{it.linearId})
+    }
 }
