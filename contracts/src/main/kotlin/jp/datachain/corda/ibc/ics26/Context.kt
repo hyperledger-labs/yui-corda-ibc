@@ -18,11 +18,13 @@ class Context(val inStates: Collection<IbcState>, val refStates: Collection<IbcS
         outStates.add(state)
     }
 
-    fun matchesOutputs(states: Collection<IbcState>): Boolean {
-        return states.size == outStates.size && states.all{outStates.contains(it)}
-    }
+    fun verifyResults(expectedStates: Collection<IbcState>) {
+        // Confirm that output states are expected ones
+        require(expectedStates.map{it}.sortedBy{it.id}
+                == outStates.map{it}.sortedBy{it.id})
 
-    fun outputsContainAllInputs(): Boolean {
-        return outStates.map{it.linearId}.containsAll(inStates.map{it.linearId})
+        // Confirm that all input states are included in output states
+        require(outStates.map{it.linearId}.containsAll(
+                inStates.map{it.linearId}))
     }
 }

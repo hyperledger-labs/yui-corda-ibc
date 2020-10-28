@@ -20,17 +20,20 @@ import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 
 object Handler {
-    fun Host.createClient(
+    fun createClient(
+            ctx: Context,
             id: Identifier,
             clientType: ClientType,
             consensusState: ConsensusState
-    ): Pair<Host, ClientState> {
+    ) {
+        val host = ctx.getInput<Host>()
         when (clientType) {
             ClientType.CordaClient -> {
-                val host = addClient(id)
+                val host = host.addClient(id)
                 val consensusState = consensusState as CordaConsensusState
                 val client = CordaClientState(host, id, consensusState)
-                return Pair(host, client)
+                ctx.addOutput(host)
+                ctx.addOutput(client)
             }
             else -> throw NotImplementedError()
         }
