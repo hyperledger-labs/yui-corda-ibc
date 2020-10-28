@@ -20,7 +20,6 @@ import jp.datachain.corda.ibc.ics25.Handler.connOpenAck
 import jp.datachain.corda.ibc.ics25.Handler.connOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.connOpenInit
 import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
-import jp.datachain.corda.ibc.ics25.Handler.createClient
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
 import jp.datachain.corda.ibc.ics26.Context
@@ -51,8 +50,7 @@ class Ibc : Contract {
             is DatagramHandler -> {
                 val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
                 command.execute(ctx, signers)
-                require(ctx.outputsContainAllInputs())
-                require(ctx.matchesOutputs(tx.outputsOfType<IbcState>()))
+                ctx.verifyResults(tx.outputsOfType<IbcState>())
             }
         }
     }
@@ -89,40 +87,6 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = bank.allocate(owner, denom, amount)
                 "Output should be expected state" using (newBank == expectedBank)
-            }
-        }
-
-        data class ClientCreate(val clientType: ClientType, val consensusState: ConsensusState) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly two states should be created" using (tx.outputs.size == 2)
-                val host = tx.inputsOfType<Host>().single()
-                val newHost = tx.outputsOfType<Host>().single()
-                val newClient = tx.outputsOfType<ClientState>().single()
-                val expected = host.createClient(newClient.id, clientType, consensusState)
-                "Outputs should be expected states" using (Pair(newHost, newClient) == expected)
-            }
-        }
-
-        data class ClientUpdate(val header: Header) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val client = tx.inputsOfType<ClientState>().single()
-                val newClient = tx.outputsOfType<ClientState>().single()
-                val expected = client.checkValidityAndUpdateState(header)
-                "Output should be expected state" using (newClient ==  expected)
-            }
-        }
-
-        data class ClientMisbehaviour(val evidence: Evidence) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val client = tx.inputsOfType<ClientState>().single()
-                val newClient = tx.outputsOfType<ClientState>().single()
-                val expected = client.checkMisbehaviourAndUpdateState(evidence)
-                "Output should be expected state" using (newClient ==  expected)
             }
         }
 
@@ -396,11 +360,10 @@ class Ibc : Contract {
         }
 
         data class SendPacket(val packet: Packet) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
+            override fun verify(tx: LedgerTransaction) {
                 val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
                 sendPacket(ctx, packet)
-                "All input states are updated into output states" using (ctx.outputsContainAllInputs())
-                "Output states should be expected ones" using (ctx.matchesOutputs(tx.outputsOfType<IbcState>()))
+                ctx.verifyResults(tx.outputsOfType<IbcState>())
             }
         }
 
