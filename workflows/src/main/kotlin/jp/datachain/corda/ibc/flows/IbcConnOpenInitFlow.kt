@@ -1,11 +1,12 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.connOpenInit
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.HandleConnOpenInit
+import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -20,33 +21,34 @@ class IbcConnOpenInitFlow(
         val desiredConnectionIdentifier: Identifier,
         val counterpartyPrefix: CommitmentPrefix,
         val clientIdentifier: Identifier,
-        val counterpartyClientIdentifier: Identifier
+        val counterpartyClientIdentifier: Identifier,
+        val version: Version.Single?
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
-        val builder = TransactionBuilder(notary)
-
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
 
-        val (newHost, newClient, conn) = Pair(host.state.data, client.state.data).connOpenInit(
+        val command = HandleConnOpenInit(
                 identifier,
                 desiredConnectionIdentifier,
                 counterpartyPrefix,
                 clientIdentifier,
-                counterpartyClientIdentifier)
+                counterpartyClientIdentifier,
+                version)
+        val ctx = Context(setOf(host.state.data, client.state.data), emptySet())
+        val signers = listOf(ourIdentity.owningKey)
+        command.execute(ctx, signers)
 
-        builder.addCommand(Ibc.Commands.ConnOpenInit(identifier, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier), ourIdentity.owningKey)
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val builder = TransactionBuilder(notary)
+        builder.addCommand(command, ourIdentity.owningKey)
                 .addInputState(host)
                 .addInputState(client)
-                .addOutputState(newHost)
-                .addOutputState(newClient)
-                .addOutputState(conn)
+        ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 

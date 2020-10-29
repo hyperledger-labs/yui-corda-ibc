@@ -67,7 +67,7 @@ class CordaIbcClient(host: String, port: Int) {
     fun insertChan(v: Channel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
     fun updateChan(v: Channel, stx: SignedTransaction) { assert(chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
 
-    fun createHost(participantNames: List<String>, uuid: UUID = UUID.randomUUID()) {
+    fun createHost(participantNames: List<String>) {
         val participants = participantNames.map{ops().partiesFromName(it, false).single()}
 
         val stxGenesis = ops().startFlow(
@@ -106,16 +106,18 @@ class CordaIbcClient(host: String, port: Int) {
             desiredConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
-            counterpartyClientIdentifier: Identifier
+            counterpartyClientIdentifier: Identifier,
+            version: Version.Single?
     ) {
-        val stx = ops().startFlow(
-                ::IbcConnOpenInitFlow,
+        val stx = ops().startFlowDynamic(
+                IbcConnOpenInitFlow::class.java,
                 host().baseId,
                 identifier,
                 desiredConnectionIdentifier,
                 counterpartyPrefix,
                 clientIdentifier,
-                counterpartyClientIdentifier).returnValue.get()
+                counterpartyClientIdentifier,
+                version).returnValue.get()
 
         val hostState = stx.tx.outputsOfType<Host>().single()
         updateHost(hostState)

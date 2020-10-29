@@ -90,26 +90,6 @@ class Ibc : Contract {
             }
         }
 
-        data class ConnOpenInit(
-                val identifier: Identifier,
-                val desiredConnectionIdentifier: Identifier,
-                val counterpartyPrefix: CommitmentPrefix,
-                val clientIdentifier: Identifier,
-                val counterpartyClientIdentifier: Identifier
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly two states should be consumed" using (tx.inputs.size == 2)
-                "Exactly three states should be created" using (tx.outputs.size == 3)
-                val host = tx.inputsOfType<Host>().single()
-                val client = tx.inputsOfType<ClientState>().single()
-                val newHost = tx.outputsOfType<Host>().single()
-                val newClient = tx.outputsOfType<ClientState>().single()
-                val newConn = tx.outputsOfType<Connection>().single()
-                val expected = Pair(host, client).connOpenInit(identifier, desiredConnectionIdentifier, counterpartyPrefix, clientIdentifier, counterpartyClientIdentifier)
-                "Outputs should be expected states" using (Triple(newHost, newClient, newConn) == expected)
-            }
-        }
-
         data class ConnOpenTry(
                 val desiredIdentifier: Identifier,
                 val counterpartyConnectionIdentifier: Identifier,

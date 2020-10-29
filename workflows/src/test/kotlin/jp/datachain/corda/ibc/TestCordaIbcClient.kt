@@ -115,7 +115,8 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             desiredConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
-            counterpartyClientIdentifier: Identifier
+            counterpartyClientIdentifier: Identifier,
+            version: Version.Single?
     ) {
         val stx = executeFlow(IbcConnOpenInitFlow(
                 baseId,
@@ -123,7 +124,8 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 desiredConnectionIdentifier,
                 counterpartyPrefix,
                 clientIdentifier,
-                counterpartyClientIdentifier
+                counterpartyClientIdentifier,
+                version
         ))
         val conn = stx.tx.outputsOfType<Connection>().single()
         assert(conn.id == identifier)
