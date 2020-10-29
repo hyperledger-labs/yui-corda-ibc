@@ -39,29 +39,39 @@ object Handler {
         }
     }
 
-    fun Pair<Host, ClientState>.connOpenInit(
+    fun connOpenInit(
+            ctx: Context,
             identifier: Identifier,
             desiredCounterpartyConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
-            counterpartyClientIdentifier: Identifier
-    ) : Triple<Host, ClientState, Connection> {
-        val host = this.first.addConnection(identifier)
-        val client = this.second.addConnection(identifier)
+            counterpartyClientIdentifier: Identifier,
+            version: Version.Single?
+    ) {
+        val host = ctx.getInput<Host>().addConnection(identifier)
+        val client = ctx.getInput<ClientState>().addConnection(identifier)
 
-        require(host.clientIds.contains(client.id)){"unknown client"}
-        require(clientIdentifier == client.id){"mismatch client"}
+        require(host.clientIds.contains(clientIdentifier)){"unknown client"}
+        require(client.id == clientIdentifier)
 
+        val versions = if (version != null) {
+            require(host.getCompatibleVersions().versions.contains(version.version))
+            Version.Multiple(listOf(version.version))
+        } else {
+            host.getCompatibleVersions()
+        }
         val end = ConnectionEnd(
                 ConnectionState.INIT,
                 desiredCounterpartyConnectionIdentifier,
                 counterpartyPrefix,
                 clientIdentifier,
                 counterpartyClientIdentifier,
-                host.getCompatibleVersions()
+                versions
         )
 
-        return Triple(host, client, Connection(host, identifier, end))
+        ctx.addOutput(host)
+        ctx.addOutput(client)
+        ctx.addOutput(Connection(host, identifier, end))
     }
 
     fun Triple<Host, ClientState, Connection?>.connOpenTry(

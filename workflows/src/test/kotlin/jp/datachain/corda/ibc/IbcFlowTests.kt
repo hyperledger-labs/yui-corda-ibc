@@ -103,7 +103,8 @@ class IbcFlowTests {
                 connBid,
                 ibcB.host().getCommitmentPrefix(),
                 clientAid,
-                clientBid)
+                clientBid,
+                null)
 
         ibcB.connOpenTry(
                 connBid,
@@ -345,7 +346,8 @@ class IbcFlowTests {
                 idConnXYZ,
                 ibcZ.host().getCommitmentPrefix(),
                 idCliABC,
-                idCliXYZ)
+                idCliXYZ,
+                null)
         ibcY.connOpenTry(
                 idConnXYZ,
                 idConnABC,

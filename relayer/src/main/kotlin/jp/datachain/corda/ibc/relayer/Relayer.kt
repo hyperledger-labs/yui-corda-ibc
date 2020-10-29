@@ -24,9 +24,6 @@ object Relayer {
         ibcA.createHost(listOf("PartyA"))
         ibcB.createHost(listOf("PartyB"))
 
-        val externalIdA = ibcA.host().linearId.externalId!!
-        val externalIdB = ibcB.host().linearId.externalId!!
-
         val clientAid = Identifier("client")
         val consensusStateB = ibcB.host().getConsensusState(Height(0))
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
@@ -42,7 +39,8 @@ object Relayer {
                 connBid,
                 ibcB.host().getCommitmentPrefix(),
                 ibcA.client().id,
-                ibcB.client().id)
+                ibcB.client().id,
+                null)
 
         ibcB.connOpenTry(
                 connBid,

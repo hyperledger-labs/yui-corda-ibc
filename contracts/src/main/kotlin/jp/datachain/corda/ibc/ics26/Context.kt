@@ -26,5 +26,11 @@ class Context(val inStates: Collection<IbcState>, val refStates: Collection<IbcS
         // Confirm that all input states are included in output states
         require(outStates.map{it.linearId}.containsAll(
                 inStates.map{it.linearId}))
+
+        // Confirm all baseIds in states are same
+        val baseId = outStates.first().baseId
+        inStates.forEach{require(it.baseId == baseId)}
+        refStates.forEach{require(it.baseId == baseId)}
+        outStates.forEach{require(it.baseId == baseId)}
     }
 }
