@@ -56,7 +56,7 @@ object Relayer {
 
         ibcA.connOpenAck(
                 connAid,
-                ibcB.conn().end.version as Version.Single,
+                ibcB.conn().end.version,
                 ibcB.connProof(),
                 ibcB.clientProof(),
                 ibcB.host().getCurrentHeight(),
@@ -78,7 +78,7 @@ object Relayer {
                 chanAid,
                 portBid,
                 chanBid,
-                ibcA.conn().end.version as Version.Single)
+                ibcA.conn().end.version)
 
         ibcB.chanOpenTry(
                 ChannelOrder.ORDERED,
@@ -87,8 +87,8 @@ object Relayer {
                 chanBid,
                 portAid,
                 chanAid,
-                ibcB.conn().end.version as Version.Single,
-                ibcA.conn().end.version as Version.Single,
+                ibcB.conn().end.version,
+                ibcA.conn().end.version,
                 ibcA.chanProof(),
                 ibcA.host().getCurrentHeight())
 

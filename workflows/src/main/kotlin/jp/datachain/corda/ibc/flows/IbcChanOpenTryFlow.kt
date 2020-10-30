@@ -29,8 +29,8 @@ class IbcChanOpenTryFlow(
         val channelIdentifier: Identifier,
         val counterpartyPortIdentifier: Identifier,
         val counterpartyChannelIdentifier: Identifier,
-        val version: Version.Single,
-        val counterpartyVersion: Version.Single,
+        val version: Version,
+        val counterpartyVersion: Version,
         val proofInit: CommitmentProof,
         val proofHeight: Height
 ) : FlowLogic<SignedTransaction>() {

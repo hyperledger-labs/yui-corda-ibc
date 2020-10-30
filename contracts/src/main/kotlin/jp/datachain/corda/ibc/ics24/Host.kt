@@ -46,8 +46,8 @@ data class Host private constructor (
 
     fun currentTimestamp() = Timestamp(0)
 
-    fun getCompatibleVersions() = Version.Multiple(listOf(""))
-    fun pickVersion(versions: Version.Multiple) = Version.Single(versions.versions.single())
+    fun getCompatibleVersions() = listOf(Version(""))
+    fun pickVersion(versions: Collection<Version>) = versions.single()
 
     fun addClient(id: Identifier) : Host {
         require(!clientIds.contains(id))

@@ -46,7 +46,7 @@ object Handler {
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
             counterpartyClientIdentifier: Identifier,
-            version: Version.Single?
+            version: Version?
     ) {
         val host = ctx.getInput<Host>().addConnection(identifier)
         val client = ctx.getInput<ClientState>().addConnection(identifier)
@@ -55,8 +55,8 @@ object Handler {
         require(client.id == clientIdentifier)
 
         val versions = if (version != null) {
-            require(host.getCompatibleVersions().versions.contains(version.version))
-            Version.Multiple(listOf(version.version))
+            require(host.getCompatibleVersions().contains(version))
+            listOf(version)
         } else {
             host.getCompatibleVersions()
         }
@@ -80,7 +80,7 @@ object Handler {
             counterpartyPrefix: CommitmentPrefix,
             counterpartyClientIdentifier: Identifier,
             clientIdentifier: Identifier,
-            counterpartyVersions: Version.Multiple,
+            counterpartyVersions: List<Version>,
             proofInit: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -143,7 +143,7 @@ object Handler {
 
     fun Triple<Host, ClientState, Connection>.connOpenAck(
             identifier: Identifier,
-            version: Version.Single,
+            version: Version,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -184,9 +184,9 @@ object Handler {
                 consensusHeight,
                 expectedConsensusState)){"client consensus verification failure"}
 
-        require(host.getCompatibleVersions().versions.contains(version.version)){"incompatible version"}
+        require(host.getCompatibleVersions().contains(version)){"incompatible version"}
 
-        return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  version = version))
+        return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  versions = listOf(version)))
     }
 
     fun Triple<Host, ClientState, Connection>.connOpenConfirm(
@@ -228,7 +228,7 @@ object Handler {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single
+            version: Version
     ) : Pair<Host, Channel> {
         // TODO: port authentication should be added somehow
 
@@ -257,8 +257,8 @@ object Handler {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single,
-            counterpartyVersion: Version.Single,
+            version: Version,
+            counterpartyVersion: Version,
             proofInit: CommitmentProof,
             proofHeight: Height
     ) : Pair<Host, Channel> {
@@ -318,7 +318,7 @@ object Handler {
     fun Quadruple<Host, ClientState, Connection, Channel>.chanOpenAck(
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            counterpartyVersion: Version.Single,
+            counterpartyVersion: Version,
             proofTry: CommitmentProof,
             proofHeight: Height
     ) : Channel {

@@ -24,7 +24,7 @@ class IbcChanOpenInitFlow(
         val channelIdentifier: Identifier,
         val counterpartyPortIdentifier: Identifier,
         val counterpartyChannelIdentifier: Identifier,
-        val version: Version.Single
+        val version: Version
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {

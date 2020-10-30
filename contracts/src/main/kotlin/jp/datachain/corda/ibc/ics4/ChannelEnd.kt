@@ -11,5 +11,5 @@ data class ChannelEnd(
         val counterpartyPortIdentifier: Identifier,
         val counterpartyChannelIdentifier: Identifier,
         val connectionHops: List<Identifier>,
-        val version: Version.Single
+        val version: Version
 )

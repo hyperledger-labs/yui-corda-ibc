@@ -96,7 +96,7 @@ class Ibc : Contract {
                 val counterpartyPrefix: CommitmentPrefix,
                 val counterpartyClientIdentifier: Identifier,
                 val clientIdentifier: Identifier,
-                val counterpartyVersions: Version.Multiple,
+                val counterpartyVersions: List<Version>,
                 val proofInit: CommitmentProof,
                 val proofConsensus: CommitmentProof,
                 val proofHeight: Height,
@@ -132,7 +132,7 @@ class Ibc : Contract {
 
         data class ConnOpenAck(
                 val identifier: Identifier,
-                val version: Version.Single,
+                val version: Version,
                 val proofTry: CommitmentProof,
                 val proofConsensus: CommitmentProof,
                 val proofHeight: Height,
@@ -185,7 +185,7 @@ class Ibc : Contract {
                 val channelIdentifier: Identifier,
                 val counterpartyPortIdentifier: Identifier,
                 val counterpartyChannelIdentifier: Identifier,
-                val version: Version.Single
+                val version: Version
         ) : Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be referenced" using (tx.references.size == 1)
@@ -215,8 +215,8 @@ class Ibc : Contract {
                 val channelIdentifier: Identifier,
                 val counterpartyPortIdentifier: Identifier,
                 val counterpartyChannelIdentifier: Identifier,
-                val version: Version.Single,
-                val counterpartyVersion: Version.Single,
+                val version: Version,
+                val counterpartyVersion: Version,
                 val proofInit: CommitmentProof,
                 val proofHeight: Height
         ) : Commands {
@@ -249,7 +249,7 @@ class Ibc : Contract {
         data class ChanOpenAck(
                 val portIdentifier: Identifier,
                 val channelIdentifier: Identifier,
-                val counterpartyVersion: Version.Single,
+                val counterpartyVersion: Version,
                 val proofTry: CommitmentProof,
                 val proofHeight: Height
         ) : Commands {

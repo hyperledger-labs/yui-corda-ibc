@@ -120,7 +120,7 @@ class IbcFlowTests {
 
         ibcA.connOpenAck(
                 connAid,
-                ibcB.conn(connBid).end.version as Version.Single,
+                ibcB.conn(connBid).end.version,
                 ibcB.connProof(connBid),
                 ibcB.clientProof(clientBid),
                 ibcB.host().getCurrentHeight(),
@@ -142,7 +142,7 @@ class IbcFlowTests {
                 chanAid,
                 portBid,
                 chanBid,
-                ibcA.conn(connAid).end.version as Version.Single)
+                ibcA.conn(connAid).end.version)
 
         ibcB.chanOpenTry(
                 ChannelOrder.ORDERED,
@@ -151,8 +151,8 @@ class IbcFlowTests {
                 chanBid,
                 portAid,
                 chanAid,
-                ibcB.conn(connBid).end.version as Version.Single,
-                ibcA.conn(connAid).end.version as Version.Single,
+                ibcB.conn(connBid).end.version,
+                ibcA.conn(connAid).end.version,
                 ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
 
@@ -361,7 +361,7 @@ class IbcFlowTests {
                 ibcC.host().getCurrentHeight())
         ibcC.connOpenAck(
                 idConnABC,
-                ibcX.conn(idConnXYZ).end.version as Version.Single,
+                ibcX.conn(idConnXYZ).end.version,
                 ibcX.connProof(idConnXYZ),
                 ibcX.clientProof(idCliXYZ),
                 ibcX.host().getCurrentHeight(),
@@ -384,7 +384,7 @@ class IbcFlowTests {
                 idChanABC,
                 idPortXYZ,
                 idChanXYZ,
-                ibcB.conn(idConnABC).end.version as Version.Single)
+                ibcB.conn(idConnABC).end.version)
         ibcX.chanOpenTry(
                 order,
                 listOf(idConnXYZ),
@@ -392,7 +392,7 @@ class IbcFlowTests {
                 idChanXYZ,
                 idPortABC,
                 idChanABC,
-                ibcY.conn(idConnXYZ).end.version as Version.Single,
+                ibcY.conn(idConnXYZ).end.version,
                 ibcB.chan(idChanABC).end.version,
                 ibcB.chanProof(idChanABC),
                 ibcB.host().getCurrentHeight())

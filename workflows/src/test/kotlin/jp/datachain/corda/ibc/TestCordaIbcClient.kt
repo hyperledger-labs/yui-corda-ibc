@@ -116,7 +116,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
             counterpartyClientIdentifier: Identifier,
-            version: Version.Single?
+            version: Version?
     ) {
         val stx = executeFlow(IbcConnOpenInitFlow(
                 baseId,
@@ -138,7 +138,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             counterpartyPrefix: CommitmentPrefix,
             counterpartyClientIdentifier: Identifier,
             clientIdentifier: Identifier,
-            counterpartyVersions: Version.Multiple,
+            counterpartyVersions: List<Version>,
             proofInit: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -164,7 +164,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
 
     fun connOpenAck(
             identifier: Identifier,
-            version: Version.Single,
+            version: Version,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -207,7 +207,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single
+            version: Version
     ) {
         val stx = executeFlow(IbcChanOpenInitFlow(
                 baseId,
@@ -232,8 +232,8 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single,
-            counterpartyVersion: Version.Single,
+            version: Version,
+            counterpartyVersion: Version,
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
@@ -259,7 +259,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun chanOpenAck(
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            counterpartyVersion: Version.Single,
+            counterpartyVersion: Version,
             proofTry: CommitmentProof,
             proofHeight: Height
     ) {

@@ -12,5 +12,24 @@ data class ConnectionEnd(
         val counterpartyPrefix: CommitmentPrefix,
         val clientIdentifier: Identifier,
         val counterpartyClientIdentifier: Identifier,
-        val version: Version
-)
+        val versions: List<Version>
+) {
+    constructor(
+            state: ConnectionState,
+            counterpartyConnectionIdentifier: Identifier,
+            counterpartyPrefix: CommitmentPrefix,
+            clientIdentifier: Identifier,
+            counterpartyClientIdentifier: Identifier,
+            version: Version
+    ) : this(
+            state,
+            counterpartyConnectionIdentifier,
+            counterpartyPrefix,
+            clientIdentifier,
+            counterpartyClientIdentifier,
+            listOf(version)
+    )
+
+    val version
+        get() = versions.single()
+}

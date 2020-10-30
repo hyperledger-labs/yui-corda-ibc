@@ -107,7 +107,7 @@ class CordaIbcClient(host: String, port: Int) {
             counterpartyPrefix: CommitmentPrefix,
             clientIdentifier: Identifier,
             counterpartyClientIdentifier: Identifier,
-            version: Version.Single?
+            version: Version?
     ) {
         val stx = ops().startFlowDynamic(
                 IbcConnOpenInitFlow::class.java,
@@ -136,7 +136,7 @@ class CordaIbcClient(host: String, port: Int) {
             counterpartyPrefix: CommitmentPrefix,
             counterpartyClientIdentifier: Identifier,
             clientIdentifier: Identifier,
-            counterpartyVersions: Version.Multiple,
+            counterpartyVersions: List<Version>,
             proofInit: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -169,7 +169,7 @@ class CordaIbcClient(host: String, port: Int) {
 
     fun connOpenAck(
             identifier: Identifier,
-            version: Version.Single,
+            version: Version,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -212,7 +212,7 @@ class CordaIbcClient(host: String, port: Int) {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single
+            version: Version
     ) {
         val stx = ops().startFlowDynamic(
                 IbcChanOpenInitFlow::class.java,
@@ -240,8 +240,8 @@ class CordaIbcClient(host: String, port: Int) {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single,
-            counterpartyVersion: Version.Single,
+            version: Version,
+            counterpartyVersion: Version,
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
@@ -270,7 +270,7 @@ class CordaIbcClient(host: String, port: Int) {
     fun chanOpenAck(
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            counterpartyVersion: Version.Single,
+            counterpartyVersion: Version,
             proofTry: CommitmentProof,
             proofHeight: Height
     ) {
