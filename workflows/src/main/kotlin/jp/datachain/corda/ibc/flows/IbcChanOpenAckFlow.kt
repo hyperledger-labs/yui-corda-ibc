@@ -24,7 +24,7 @@ class IbcChanOpenAckFlow(
         val baseId: StateRef,
         val portIdentifier: Identifier,
         val channelIdentifier: Identifier,
-        val counterpartyVersion: Version.Single,
+        val counterpartyVersion: Version,
         val proofTry: CommitmentProof,
         val proofHeight: Height
 ) : FlowLogic<SignedTransaction>() {

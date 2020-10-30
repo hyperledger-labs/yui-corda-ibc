@@ -25,7 +25,7 @@ class IbcConnOpenTryFlow(
         val counterpartyPrefix: CommitmentPrefix,
         val counterpartyClientIdentifier: Identifier,
         val clientIdentifier: Identifier,
-        val counterpartyVersions: Version.Multiple,
+        val counterpartyVersions: List<Version>,
         val proofInit: CommitmentProof,
         val proofConsensus: CommitmentProof,
         val proofHeight: Height,

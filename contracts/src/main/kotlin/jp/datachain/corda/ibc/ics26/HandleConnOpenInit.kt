@@ -12,7 +12,7 @@ data class HandleConnOpenInit(
         val counterpartyPrefix: CommitmentPrefix,
         val clientIdentifier: Identifier,
         val counterpartyClientIdentifier: Identifier,
-        val version: Version.Single?
+        val version: Version?
 ): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
         Handler.connOpenInit(

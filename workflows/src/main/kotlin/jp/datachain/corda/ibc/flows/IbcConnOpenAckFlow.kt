@@ -21,7 +21,7 @@ import net.corda.core.transactions.TransactionBuilder
 class IbcConnOpenAckFlow(
         val baseId: StateRef,
         val identifier: Identifier,
-        val version: Version.Single,
+        val version: Version,
         val proofTry: CommitmentProof,
         val proofConsensus: CommitmentProof,
         val proofHeight: Height,

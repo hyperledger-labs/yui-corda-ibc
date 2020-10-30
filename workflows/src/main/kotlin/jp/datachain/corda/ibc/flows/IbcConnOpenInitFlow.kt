@@ -22,7 +22,7 @@ class IbcConnOpenInitFlow(
         val counterpartyPrefix: CommitmentPrefix,
         val clientIdentifier: Identifier,
         val counterpartyClientIdentifier: Identifier,
-        val version: Version.Single?
+        val version: Version?
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {

@@ -15,7 +15,7 @@ interface ModuleCallbacks {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single
+            version: Version
     ){
         throw NotImplementedError()
     }
@@ -28,8 +28,8 @@ interface ModuleCallbacks {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version.Single,
-            counterpartyVersion: Version.Single
+            version: Version,
+            counterpartyVersion: Version
     ) {
         throw NotImplementedError()
     }
@@ -38,7 +38,7 @@ interface ModuleCallbacks {
             ctx: Context,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            version: Version.Single
+            version: Version
     ) {
         throw NotImplementedError()
     }
