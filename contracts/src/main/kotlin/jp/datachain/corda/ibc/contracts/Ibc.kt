@@ -10,7 +10,6 @@ import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.acknowledgePacket
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseConfirm
-import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
 import jp.datachain.corda.ibc.ics26.Context
@@ -76,25 +75,6 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = bank.allocate(owner, denom, amount)
                 "Output should be expected state" using (newBank == expectedBank)
-            }
-        }
-
-        data class ChanCloseInit(
-                val portIdentifier: Identifier,
-                val channelIdentifier: Identifier
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly two states should be referenced" using (tx.references.size == 2)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val host = tx.referenceInputsOfType<Host>().single()
-                val conn = tx.referenceInputsOfType<Connection>().single()
-                val chan = tx.inputsOfType<Channel>().single()
-                val newChan = tx.outputsOfType<Channel>().single()
-                val expected = Triple(host, conn, chan).chanCloseInit(
-                        portIdentifier,
-                        channelIdentifier)
-                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
 
