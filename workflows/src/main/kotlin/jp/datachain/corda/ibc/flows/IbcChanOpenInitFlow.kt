@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.chanOpenInit
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.HandleChanOpenInit
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Version
@@ -28,10 +28,6 @@ class IbcChanOpenInitFlow(
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
-        val builder = TransactionBuilder(notary)
-
         // query host from vault
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
@@ -41,8 +37,8 @@ class IbcChanOpenInitFlow(
         val connId = connectionHops.single()
         val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
 
-        // calculate a newly created channel state and an updated host state
-        val (newHost, newChan) = Pair(host.state.data, conn.state.data).chanOpenInit(
+        // create command and outputs
+        val command = HandleChanOpenInit(
                 order,
                 connectionHops,
                 portIdentifier,
@@ -50,21 +46,18 @@ class IbcChanOpenInitFlow(
                 counterpartyPortIdentifier,
                 counterpartyChannelIdentifier,
                 version)
+        val ctx = Context(setOf(host.state.data), setOf(conn.state.data))
+        val signers = listOf(ourIdentity.owningKey)
+        command.execute(ctx, signers)
 
         // build tx
-        builder.addCommand(Ibc.Commands.ChanOpenInit(
-                order,
-                connectionHops,
-                portIdentifier,
-                channelIdentifier,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
-                version
-        ), ourIdentity.owningKey)
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val builder = TransactionBuilder(notary)
+                .addCommand(command, signers)
                 .addInputState(host)
                 .addReferenceState(ReferencedStateAndRef(conn))
-                .addOutputState(newHost)
-                .addOutputState(newChan)
+        ctx.outStates.forEach{builder.addOutputState(it)}
+
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}

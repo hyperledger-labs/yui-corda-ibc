@@ -236,7 +236,8 @@ object Handler {
         ctx.addOutput(conn.copy(end = conn.end.copy(state = ConnectionState.OPEN)))
     }
 
-    fun Pair<Host, Connection>.chanOpenInit(
+    fun chanOpenInit(
+            ctx: Context,
             order: ChannelOrder,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
@@ -244,11 +245,11 @@ object Handler {
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
             version: Version
-    ) : Pair<Host, Channel> {
+    ) {
         // TODO: port authentication should be added somehow
 
-        val host = this.first.addPortChannel(portIdentifier, channelIdentifier)
-        val conn = this.second
+        val host = ctx.getInput<Host>()
+        val conn = ctx.getReference<Connection>()
 
         require(host.connIds.contains(conn.id))
 
@@ -262,7 +263,8 @@ object Handler {
                 connectionHops,
                 version)
 
-        return Pair(host, Channel(host, portIdentifier, channelIdentifier, end))
+        ctx.addOutput(host.addPortChannel(portIdentifier, channelIdentifier))
+        ctx.addOutput(Channel(host, portIdentifier, channelIdentifier, end))
     }
 
     fun Quadruple<Host, ClientState, Connection, Channel?>.chanOpenTry(
