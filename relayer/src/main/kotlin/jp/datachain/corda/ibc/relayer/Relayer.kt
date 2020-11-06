@@ -96,6 +96,7 @@ object Relayer {
                 portAid,
                 chanAid,
                 ibcB.chan().end.version,
+                chanBid,
                 ibcB.chanProof(),
                 ibcB.host().getCurrentHeight())
 

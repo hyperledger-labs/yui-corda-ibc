@@ -1,15 +1,14 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.chanOpenAck
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.HandleChanOpenAck
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
-import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -25,15 +24,12 @@ class IbcChanOpenAckFlow(
         val portIdentifier: Identifier,
         val channelIdentifier: Identifier,
         val counterpartyVersion: Version,
+        val counterpartyChannelIdentifier: Identifier,
         val proofTry: CommitmentProof,
         val proofHeight: Height
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
-        val builder = TransactionBuilder(notary)
-
         // query host from vault
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
@@ -50,25 +46,27 @@ class IbcChanOpenAckFlow(
         val clientId = conn.state.data.end.clientIdentifier
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
-        val newChan = Quadruple(host.state.data, client.state.data, conn.state.data, chan.state.data).chanOpenAck(
+        // create command and outputs
+        val command = HandleChanOpenAck(
                 portIdentifier,
                 channelIdentifier,
                 counterpartyVersion,
+                counterpartyChannelIdentifier,
                 proofTry,
                 proofHeight)
+        val ctx = Context(setOf(chan.state.data), setOf(host, client, conn).map{it.state.data})
+        val signers = listOf(ourIdentity.owningKey)
+        command.execute(ctx, signers)
 
-        builder.addCommand(Ibc.Commands.ChanOpenAck(
-                portIdentifier,
-                channelIdentifier,
-                counterpartyVersion,
-                proofTry,
-                proofHeight
-        ), ourIdentity.owningKey)
+        // build tx
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val builder = TransactionBuilder(notary)
+                .addCommand(command, signers)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
-                .addOutputState(newChan)
+        ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 

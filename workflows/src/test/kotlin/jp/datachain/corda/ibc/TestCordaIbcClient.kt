@@ -266,6 +266,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             counterpartyVersion: Version,
+            counterpartyChannelIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofHeight: Height
     ) {
@@ -274,6 +275,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 portIdentifier,
                 channelIdentifier,
                 counterpartyVersion,
+                counterpartyChannelIdentifier,
                 proofTry,
                 proofHeight
         ))

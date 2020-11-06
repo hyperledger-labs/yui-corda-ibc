@@ -276,15 +276,17 @@ class CordaIbcClient(host: String, port: Int) {
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             counterpartyVersion: Version,
+            counterpartyChannelIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = ops().startFlow(
-                ::IbcChanOpenAckFlow,
+        val stx = ops().startFlowDynamic(
+                IbcChanOpenAckFlow::class.java,
                 host().baseId,
                 portIdentifier,
                 channelIdentifier,
                 counterpartyVersion,
+                counterpartyChannelIdentifier,
                 proofTry,
                 proofHeight).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()

@@ -11,7 +11,6 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.acknowledgePacket
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseConfirm
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
-import jp.datachain.corda.ibc.ics25.Handler.chanOpenAck
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
@@ -24,7 +23,6 @@ import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Quadruple
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.*
 import net.corda.core.contracts.Requirements.using
 import net.corda.core.transactions.LedgerTransaction
@@ -79,32 +77,6 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = bank.allocate(owner, denom, amount)
                 "Output should be expected state" using (newBank == expectedBank)
-            }
-        }
-
-        data class ChanOpenAck(
-                val portIdentifier: Identifier,
-                val channelIdentifier: Identifier,
-                val counterpartyVersion: Version,
-                val proofTry: CommitmentProof,
-                val proofHeight: Height
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly three states should be referenced" using (tx.references.size == 3)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val host = tx.referenceInputsOfType<Host>().single()
-                val client = tx.referenceInputsOfType<ClientState>().single()
-                val conn = tx.referenceInputsOfType<Connection>().single()
-                val chan = tx.inputsOfType<Channel>().single()
-                val newChan = tx.outputsOfType<Channel>().single()
-                val expected = Quadruple(host, client, conn, chan).chanOpenAck(
-                        portIdentifier,
-                        channelIdentifier,
-                        counterpartyVersion,
-                        proofTry,
-                        proofHeight)
-                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
 

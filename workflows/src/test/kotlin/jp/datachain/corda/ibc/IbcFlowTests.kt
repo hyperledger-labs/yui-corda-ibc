@@ -161,6 +161,7 @@ class IbcFlowTests {
                 portAid,
                 chanAid,
                 ibcB.chan(chanBid).end.version,
+                chanBid,
                 ibcB.chanProof(chanBid),
                 ibcB.host().getCurrentHeight())
 
@@ -404,6 +405,7 @@ class IbcFlowTests {
                 idPortABC,
                 idChanABC,
                 ibcZ.chan(idChanXYZ).end.version,
+                idChanXYZ,
                 ibcZ.chanProof(idChanXYZ),
                 ibcZ.host().getCurrentHeight())
         ibcY.chanOpenConfirm(
