@@ -4,7 +4,6 @@ import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Genesis
@@ -16,10 +15,6 @@ import jp.datachain.corda.ibc.ics25.Handler.chanOpenAck
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenInit
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenTry
-import jp.datachain.corda.ibc.ics25.Handler.connOpenAck
-import jp.datachain.corda.ibc.ics25.Handler.connOpenConfirm
-import jp.datachain.corda.ibc.ics25.Handler.connOpenInit
-import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
 import jp.datachain.corda.ibc.ics26.Context
@@ -87,27 +82,6 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = bank.allocate(owner, denom, amount)
                 "Output should be expected state" using (newBank == expectedBank)
-            }
-        }
-
-        data class ConnOpenConfirm(
-                val identifier: Identifier,
-                val proofAck: CommitmentProof,
-                val proofHeight: Height
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly two states should be referenced" using (tx.references.size == 2)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val host = tx.referenceInputsOfType<Host>().single()
-                val client = tx.referenceInputsOfType<ClientState>().single()
-                val conn = tx.inputsOfType<Connection>().single()
-                val newConn = tx.outputsOfType<Connection>().single()
-                val expected = Triple(host, client, conn).connOpenConfirm(
-                        identifier,
-                        proofAck,
-                        proofHeight)
-                "Output should be expected state" using (newConn ==  expected)
             }
         }
 

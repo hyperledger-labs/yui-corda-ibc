@@ -202,19 +202,21 @@ object Handler {
         ctx.addOutput(conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  versions = listOf(version))))
     }
 
-    fun Triple<Host, ClientState, Connection>.connOpenConfirm(
+    fun connOpenConfirm(
+            ctx: Context,
             identifier: Identifier,
             proofAck: CommitmentProof,
             proofHeight: Height
-    ) : Connection {
-        val host = this.first
-        val client = this.second
-        val conn = this.third
+    ) {
+        val host = ctx.getReference<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getInput<Connection>()
 
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
         require(client.connIds.contains(conn.id)){"unknown connection in client"}
         require(conn.id == identifier){"mismatch connection"}
+        require(client.id == conn.end.clientIdentifier){"mismatch client"}
 
         require(conn.end.state == ConnectionState.TRYOPEN){"invalid connection state"}
         val expected = ConnectionEnd(
@@ -231,7 +233,7 @@ object Handler {
                 conn.end.counterpartyConnectionIdentifier,
                 expected)){"connection verification failure"}
 
-        return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN))
+        ctx.addOutput(conn.copy(end = conn.end.copy(state = ConnectionState.OPEN)))
     }
 
     fun Pair<Host, Connection>.chanOpenInit(
