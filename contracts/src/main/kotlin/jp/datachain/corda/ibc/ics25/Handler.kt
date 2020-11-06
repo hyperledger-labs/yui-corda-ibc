@@ -397,16 +397,17 @@ object Handler {
         )))
     }
 
-    fun Quadruple<Host, ClientState, Connection, Channel>.chanOpenConfirm(
+    fun chanOpenConfirm(
+            ctx: Context,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             proofAck: CommitmentProof,
             proofHeight: Height
-    ) : Channel {
-        val host = this.first
-        val client = this.second
-        val conn = this.third
-        val chan = this.fourth
+    ) {
+        val host = ctx.getReference<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getReference<Connection>()
+        val chan = ctx.getInput<Channel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -414,11 +415,11 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == portIdentifier)
         require(chan.id == channelIdentifier)
+        require(client.id == conn.end.clientIdentifier)
 
         require(chan.end.state == ChannelState.TRYOPEN)
 
         require(conn.id == chan.end.connectionHops.single())
-
         require(conn.end.state == ConnectionState.OPEN)
 
         val expected = ChannelEnd(
@@ -436,7 +437,7 @@ object Handler {
                 chan.end.counterpartyChannelIdentifier,
                 expected))
 
-        return chan.copy(end = chan.end.copy(state = ChannelState.OPEN))
+        ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.OPEN)))
     }
 
     fun Triple<Host, Connection, Channel>.chanCloseInit(
