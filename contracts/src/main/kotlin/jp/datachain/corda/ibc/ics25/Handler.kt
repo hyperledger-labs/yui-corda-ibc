@@ -52,10 +52,10 @@ object Handler {
         val client = ctx.getInput<ClientState>().addConnection(identifier)
 
         require(host.clientIds.contains(clientIdentifier)){"unknown client"}
-        require(client.id == clientIdentifier)
+        require(client.id == clientIdentifier){"mismatch client"}
 
         val versions = if (version != null) {
-            require(host.getCompatibleVersions().contains(version))
+            require(host.getCompatibleVersions().contains(version)){"incompatible version"}
             listOf(version)
         } else {
             host.getCompatibleVersions()
@@ -74,8 +74,10 @@ object Handler {
         ctx.addOutput(Connection(host, identifier, end))
     }
 
-    fun Triple<Host, ClientState, Connection?>.connOpenTry(
+    fun connOpenTry(
+            ctx: Context,
             desiredIdentifier: Identifier,
+            counterpartyChosenConnectionIdentifier: Identifier,
             counterpartyConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             counterpartyClientIdentifier: Identifier,
@@ -85,23 +87,36 @@ object Handler {
             proofConsensus: CommitmentProof,
             proofHeight: Height,
             consensusHeight: Height
-    ) : Triple<Host, ClientState, Connection> {
-        val previous = this.third
-        val (host, client) = if (previous == null) {
-            Pair(this.first.addConnection(desiredIdentifier), this.second.addConnection(desiredIdentifier))
-        } else {
-            require(this.first.connIds.contains(desiredIdentifier)){"unknown connection in host"}
-            require(this.second.connIds.contains(desiredIdentifier)){"unknown connection in client"}
-            require(previous.id == desiredIdentifier){"mismatch connection"}
-            Pair(this.first, this.second)
-        }
+    ) {
+        val host = ctx.getInput<Host>()
+        val client = ctx.getInput<ClientState>()
+        val previous = ctx.getInputOrNull<Connection>()
 
+        if (previous != null) {
+            require(host.connIds.contains(desiredIdentifier)){"unknown connection in host"}
+            require(client.connIds.contains(desiredIdentifier)){"unknown connection in client"}
+            require(previous.id == desiredIdentifier){"mismatch connection"}
+        }
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(clientIdentifier == client.id){"mismatch client"}
 
+        require(counterpartyChosenConnectionIdentifier == Identifier("") ||
+                counterpartyChosenConnectionIdentifier == desiredIdentifier)
+
+        require(previous == null ||
+                (previous.end.state == ConnectionState.INIT &&
+                        previous.end.counterpartyConnectionIdentifier == counterpartyConnectionIdentifier &&
+                        previous.end.counterpartyPrefix == counterpartyPrefix &&
+                        previous.end.clientIdentifier == clientIdentifier &&
+                        previous.end.counterpartyClientIdentifier == counterpartyClientIdentifier)
+        ){"invalid previous state"}
+
+        val versionsIntersection = counterpartyVersions.intersect(if (previous != null) { previous.end.versions } else { host.getCompatibleVersions() })
+        val version = host.pickVersion(versionsIntersection)
+
         val expected = ConnectionEnd(
                 ConnectionState.INIT,
-                desiredIdentifier,
+                counterpartyChosenConnectionIdentifier,
                 host.getCommitmentPrefix(),
                 counterpartyClientIdentifier,
                 clientIdentifier,
@@ -122,7 +137,7 @@ object Handler {
                 consensusHeight,
                 expectedConsensusState)){"client consensus verification failure"}
 
-        val version = host.pickVersion(counterpartyVersions)
+        val identifier = desiredIdentifier
         val connectionEnd = ConnectionEnd(
                 ConnectionState.TRYOPEN,
                 counterpartyConnectionIdentifier,
@@ -130,15 +145,9 @@ object Handler {
                 clientIdentifier,
                 counterpartyClientIdentifier,
                 version)
-        require(previous == null ||
-                (previous.end.state == ConnectionState.INIT &&
-                        previous.end.counterpartyConnectionIdentifier == counterpartyConnectionIdentifier &&
-                        previous.end.counterpartyPrefix == counterpartyPrefix &&
-                        previous.end.clientIdentifier == clientIdentifier &&
-                        previous.end.counterpartyClientIdentifier == counterpartyClientIdentifier &&
-                        previous.end.version == version)){"invalid previous state"}
-
-        return Triple(host, client, Connection(host, desiredIdentifier, connectionEnd))
+        ctx.addOutput(Connection(host, identifier, connectionEnd))
+        ctx.addOutput(host.addConnection(identifier))
+        ctx.addOutput(client.addConnection(identifier))
     }
 
     fun Triple<Host, ClientState, Connection>.connOpenAck(

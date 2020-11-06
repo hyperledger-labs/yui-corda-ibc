@@ -132,6 +132,7 @@ class CordaIbcClient(host: String, port: Int) {
 
     fun connOpenTry(
             desiredIdentifier: Identifier,
+            counterpartyChosenConnectionIdentifer: Identifier,
             counterpartyConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             counterpartyClientIdentifier: Identifier,
@@ -146,6 +147,7 @@ class CordaIbcClient(host: String, port: Int) {
                 IbcConnOpenTryFlow::class.java,
                 host().baseId,
                 desiredIdentifier,
+                counterpartyChosenConnectionIdentifer,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
                 counterpartyClientIdentifier,
