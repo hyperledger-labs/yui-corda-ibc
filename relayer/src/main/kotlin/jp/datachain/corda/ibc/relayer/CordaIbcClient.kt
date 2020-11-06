@@ -172,6 +172,7 @@ class CordaIbcClient(host: String, port: Int) {
     fun connOpenAck(
             identifier: Identifier,
             version: Version,
+            counterpartyIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -182,6 +183,7 @@ class CordaIbcClient(host: String, port: Int) {
                 host().baseId,
                 identifier,
                 version,
+                counterpartyIdentifier,
                 proofTry,
                 proofConsensus,
                 proofHeight,

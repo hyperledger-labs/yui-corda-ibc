@@ -150,25 +150,31 @@ object Handler {
         ctx.addOutput(client.addConnection(identifier))
     }
 
-    fun Triple<Host, ClientState, Connection>.connOpenAck(
+    fun connOpenAck(
+            ctx: Context,
             identifier: Identifier,
             version: Version,
+            counterpartyIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
             consensusHeight: Height
-    ) : Connection {
-        val host = this.first
-        val client = this.second
-        val conn = this.third
+    ) {
+        val host = ctx.getReference<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getInput<Connection>()
 
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
         require(client.connIds.contains(conn.id)){"unknown connection in client"}
         require(conn.id == identifier){"mismatch connection"}
+        require(client.id == conn.end.clientIdentifier){"mismatch client"}
 
-        require(consensusHeight.height <= host.getCurrentHeight().height){"unknown height"}
-        require(conn.end.state == ConnectionState.INIT || conn.end.state == ConnectionState.TRYOPEN){"invalid connection state"}
+        require(consensusHeight <= host.getCurrentHeight()){"unknown height"}
+        require(conn.end.counterpartyConnectionIdentifier == Identifier("") ||
+                counterpartyIdentifier == conn.end.counterpartyConnectionIdentifier)
+        require(conn.end.state == ConnectionState.INIT && conn.end.versions.contains(version) ||
+                conn.end.state == ConnectionState.TRYOPEN || conn.end.version == version){"invalid connection state"}
 
         val expected = ConnectionEnd(
                 ConnectionState.TRYOPEN,
@@ -181,7 +187,7 @@ object Handler {
                 proofHeight,
                 conn.end.counterpartyPrefix,
                 proofTry,
-                conn.end.counterpartyConnectionIdentifier,
+                counterpartyIdentifier,
                 expected)){"connection verification failure"}
 
         val expectedConsensusState = host.getConsensusState(consensusHeight)
@@ -193,9 +199,7 @@ object Handler {
                 consensusHeight,
                 expectedConsensusState)){"client consensus verification failure"}
 
-        require(host.getCompatibleVersions().contains(version)){"incompatible version"}
-
-        return conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  versions = listOf(version)))
+        ctx.addOutput(conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  versions = listOf(version))))
     }
 
     fun Triple<Host, ClientState, Connection>.connOpenConfirm(

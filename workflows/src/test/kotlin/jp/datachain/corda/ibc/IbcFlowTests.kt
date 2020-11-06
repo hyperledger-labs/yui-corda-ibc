@@ -122,6 +122,7 @@ class IbcFlowTests {
         ibcA.connOpenAck(
                 connAid,
                 ibcB.conn(connBid).end.version,
+                connBid,
                 ibcB.connProof(connBid),
                 ibcB.clientProof(clientBid),
                 ibcB.host().getCurrentHeight(),
@@ -364,6 +365,7 @@ class IbcFlowTests {
         ibcC.connOpenAck(
                 idConnABC,
                 ibcX.conn(idConnXYZ).end.version,
+                idConnXYZ,
                 ibcX.connProof(idConnXYZ),
                 ibcX.clientProof(idCliXYZ),
                 ibcX.host().getCurrentHeight(),
