@@ -13,7 +13,6 @@ import jp.datachain.corda.ibc.ics25.Handler.chanCloseConfirm
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenAck
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenConfirm
-import jp.datachain.corda.ibc.ics25.Handler.chanOpenInit
 import jp.datachain.corda.ibc.ics25.Handler.chanOpenTry
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
@@ -82,36 +81,6 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = bank.allocate(owner, denom, amount)
                 "Output should be expected state" using (newBank == expectedBank)
-            }
-        }
-
-        data class ChanOpenInit(
-                val order: ChannelOrder,
-                val connectionHops: List<Identifier>,
-                val portIdentifier: Identifier,
-                val channelIdentifier: Identifier,
-                val counterpartyPortIdentifier: Identifier,
-                val counterpartyChannelIdentifier: Identifier,
-                val version: Version
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly one state should be referenced" using (tx.references.size == 1)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly two states should be created" using (tx.outputs.size == 2)
-                val conn = tx.referenceInputsOfType<Connection>().single()
-                val host = tx.inputsOfType<Host>().single()
-                val newHost = tx.outputsOfType<Host>().single()
-                val newChan = tx.outputsOfType<Channel>().single()
-                val expected = Pair(host, conn).chanOpenInit(
-                        order,
-                        connectionHops,
-                        portIdentifier,
-                        channelIdentifier,
-                        counterpartyPortIdentifier,
-                        counterpartyChannelIdentifier,
-                        version)
-                "Output host should be expected host state: ${newHost} != ${expected.first}" using (newHost == expected.first)
-                "Output channel should be expected channel state: ${newChan} != ${expected.second}" using (newChan == expected.second)
             }
         }
 
