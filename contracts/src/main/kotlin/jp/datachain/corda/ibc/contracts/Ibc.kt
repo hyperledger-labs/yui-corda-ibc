@@ -11,7 +11,6 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler.acknowledgePacket
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseConfirm
 import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
-import jp.datachain.corda.ibc.ics25.Handler.chanOpenConfirm
 import jp.datachain.corda.ibc.ics25.Handler.recvPacket
 import jp.datachain.corda.ibc.ics25.Handler.sendPacket
 import jp.datachain.corda.ibc.ics26.Context
@@ -77,30 +76,6 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = bank.allocate(owner, denom, amount)
                 "Output should be expected state" using (newBank == expectedBank)
-            }
-        }
-
-        data class ChanOpenConfirm(
-                val portIdentifier: Identifier,
-                val channelIdentifier: Identifier,
-                val proofAck: CommitmentProof,
-                val proofHeight: Height
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly three states should be referenced" using (tx.references.size == 3)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val host = tx.referenceInputsOfType<Host>().single()
-                val client = tx.referenceInputsOfType<ClientState>().single()
-                val conn = tx.referenceInputsOfType<Connection>().single()
-                val chan = tx.inputsOfType<Channel>().single()
-                val newChan = tx.outputsOfType<Channel>().single()
-                val expected = Quadruple(host, client, conn, chan).chanOpenConfirm(
-                        portIdentifier,
-                        channelIdentifier,
-                        proofAck,
-                        proofHeight)
-                "Output should be expected state: ${newChan} != ${expected}" using (newChan == expected)
             }
         }
 
