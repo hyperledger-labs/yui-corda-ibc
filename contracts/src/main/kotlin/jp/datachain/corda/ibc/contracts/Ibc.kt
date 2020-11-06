@@ -90,33 +90,6 @@ class Ibc : Contract {
             }
         }
 
-        data class ConnOpenAck(
-                val identifier: Identifier,
-                val version: Version,
-                val proofTry: CommitmentProof,
-                val proofConsensus: CommitmentProof,
-                val proofHeight: Height,
-                val consensusHeight: Height
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Exactly two states should be referenced" using (tx.references.size == 2)
-                "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 1)
-                val host = tx.referenceInputsOfType<Host>().single()
-                val client = tx.referenceInputsOfType<ClientState>().single()
-                val conn = tx.inputsOfType<Connection>().single()
-                val newConn = tx.outputsOfType<Connection>().single()
-                val expected = Triple(host, client, conn).connOpenAck(
-                        identifier,
-                        version,
-                        proofTry,
-                        proofConsensus,
-                        proofHeight,
-                        consensusHeight)
-                "Output should be expected state" using (newConn ==  expected)
-            }
-        }
-
         data class ConnOpenConfirm(
                 val identifier: Identifier,
                 val proofAck: CommitmentProof,

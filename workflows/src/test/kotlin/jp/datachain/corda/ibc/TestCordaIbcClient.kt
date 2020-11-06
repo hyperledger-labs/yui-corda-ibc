@@ -167,6 +167,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun connOpenAck(
             identifier: Identifier,
             version: Version,
+            counterpartyIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
@@ -176,6 +177,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 baseId,
                 identifier,
                 version,
+                counterpartyIdentifier,
                 proofTry,
                 proofConsensus,
                 proofHeight,

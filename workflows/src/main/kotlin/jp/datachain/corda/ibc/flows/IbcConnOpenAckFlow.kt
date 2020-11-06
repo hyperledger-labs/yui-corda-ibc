@@ -1,11 +1,11 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.connOpenAck
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.HandleConnOpenAck
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
@@ -22,6 +22,7 @@ class IbcConnOpenAckFlow(
         val baseId: StateRef,
         val identifier: Identifier,
         val version: Version,
+        val counterpartyIdentifier: Identifier,
         val proofTry: CommitmentProof,
         val proofConsensus: CommitmentProof,
         val proofHeight: Height,
@@ -29,37 +30,37 @@ class IbcConnOpenAckFlow(
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
-        val builder = TransactionBuilder(notary)
-
+        // query host state
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
+        // query conn state
         val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, identifier)!!
+        // query client state
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, conn.state.data.end.clientIdentifier)!!
 
-        val newConn = Triple(host.state.data, client.state.data, conn.state.data).connOpenAck(
+        // create command and outputs
+        val command = HandleConnOpenAck(
                 identifier,
                 version,
+                counterpartyIdentifier,
                 proofTry,
                 proofConsensus,
                 proofHeight,
                 consensusHeight)
+        val ctx = Context(setOf(conn.state.data), setOf(host.state.data, client.state.data))
+        val signers = listOf(ourIdentity.owningKey)
+        command.execute(ctx, signers)
 
-        builder.addCommand(Ibc.Commands.ConnOpenAck(
-                identifier,
-                version,
-                proofTry,
-                proofConsensus,
-                proofHeight,
-                consensusHeight
-        ), ourIdentity.owningKey)
+        // build tx
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val builder = TransactionBuilder(notary)
+                .addCommand(command, signers)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addInputState(conn)
-                .addOutputState(newConn)
+        ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 

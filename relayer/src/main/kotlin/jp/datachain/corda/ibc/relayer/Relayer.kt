@@ -55,6 +55,7 @@ object Relayer {
         ibcA.connOpenAck(
                 connAid,
                 ibcB.conn().end.version,
+                connBid,
                 ibcB.connProof(),
                 ibcB.clientProof(),
                 ibcB.host().getCurrentHeight(),
