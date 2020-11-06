@@ -1,12 +1,12 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.connOpenTry
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.HandleConnOpenTry
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Version
@@ -21,6 +21,7 @@ import net.corda.core.transactions.TransactionBuilder
 class IbcConnOpenTryFlow(
         val baseId: StateRef,
         val desiredIdentifier: Identifier,
+        val counterpartyChosenConnectionIdentifer: Identifier,
         val counterpartyConnectionIdentifier: Identifier,
         val counterpartyPrefix: CommitmentPrefix,
         val counterpartyClientIdentifier: Identifier,
@@ -33,19 +34,20 @@ class IbcConnOpenTryFlow(
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
-        val builder = TransactionBuilder(notary)
-
+        // query host state
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
+        // query client state
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
+
+        // query conn state
         val connOrNull = serviceHub.vaultService.queryIbcState<Connection>(baseId, desiredIdentifier)
 
-        val (newHost, newClient, newConn) = Triple(host.state.data, client.state.data, connOrNull?.state?.data).connOpenTry(
+        val command = HandleConnOpenTry(
                 desiredIdentifier,
+                counterpartyChosenConnectionIdentifer,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
                 counterpartyClientIdentifier,
@@ -55,25 +57,22 @@ class IbcConnOpenTryFlow(
                 proofConsensus,
                 proofHeight,
                 consensusHeight)
+        val inStates =
+                if (connOrNull == null)
+                    setOf(host.state.data, client.state.data)
+                else
+                    setOf(host.state.data, client.state.data, connOrNull.state.data)
+        val ctx = Context(inStates, emptySet())
+        val signers = listOf(ourIdentity.owningKey)
+        command.execute(ctx, signers)
 
-        builder.addCommand(Ibc.Commands.ConnOpenTry(
-                desiredIdentifier,
-                counterpartyConnectionIdentifier,
-                counterpartyPrefix,
-                counterpartyClientIdentifier,
-                clientIdentifier,
-                counterpartyVersions,
-                proofInit,
-                proofConsensus,
-                proofHeight,
-                consensusHeight
-        ), ourIdentity.owningKey)
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val builder = TransactionBuilder(notary)
+                .addCommand(command, signers)
                 .addInputState(host)
                 .addInputState(client)
-                .addOutputState(newHost)
-                .addOutputState(newClient)
-                .addOutputState(newConn)
         connOrNull?.let{builder.addInputState(it)}
+        ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 

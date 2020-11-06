@@ -134,6 +134,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
 
     fun connOpenTry(
             desiredIdentifier: Identifier,
+            counterpartyChosenConnectionIdentifer: Identifier,
             counterpartyConnectionIdentifier: Identifier,
             counterpartyPrefix: CommitmentPrefix,
             counterpartyClientIdentifier: Identifier,
@@ -147,6 +148,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         val stx = executeFlow(IbcConnOpenTryFlow(
                 baseId,
                 desiredIdentifier,
+                counterpartyChosenConnectionIdentifer,
                 counterpartyConnectionIdentifier,
                 counterpartyPrefix,
                 counterpartyClientIdentifier,

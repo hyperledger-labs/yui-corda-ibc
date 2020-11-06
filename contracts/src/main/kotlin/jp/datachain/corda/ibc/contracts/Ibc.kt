@@ -90,46 +90,6 @@ class Ibc : Contract {
             }
         }
 
-        data class ConnOpenTry(
-                val desiredIdentifier: Identifier,
-                val counterpartyConnectionIdentifier: Identifier,
-                val counterpartyPrefix: CommitmentPrefix,
-                val counterpartyClientIdentifier: Identifier,
-                val clientIdentifier: Identifier,
-                val counterpartyVersions: List<Version>,
-                val proofInit: CommitmentProof,
-                val proofConsensus: CommitmentProof,
-                val proofHeight: Height,
-                val consensusHeight: Height
-        ) : Commands {
-            override fun verify(tx: LedgerTransaction) = requireThat {
-                "Two or three states should be consumed" using (tx.inputs.size == 2 || tx.inputs.size == 3)
-                "Exactly three states should be created" using (tx.outputs.size == 3)
-                val host = tx.inputsOfType<Host>().single()
-                val client = tx.inputsOfType<ClientState>().single()
-                val conn = if (tx.inputs.size == 3) {
-                    tx.inputsOfType<Connection>().single()
-                } else {
-                    null
-                }
-                val newHost = tx.outputsOfType<Host>().single()
-                val newClient = tx.outputsOfType<ClientState>().single()
-                val newConn = tx.outputsOfType<Connection>().single()
-                val expected = Triple(host, client, conn).connOpenTry(
-                        desiredIdentifier,
-                        counterpartyConnectionIdentifier,
-                        counterpartyPrefix,
-                        counterpartyClientIdentifier,
-                        clientIdentifier,
-                        counterpartyVersions,
-                        proofInit,
-                        proofConsensus,
-                        proofHeight,
-                        consensusHeight)
-                "Outputs should be expected states" using (Triple(newHost, newClient, newConn) ==  expected)
-            }
-        }
-
         data class ConnOpenAck(
                 val identifier: Identifier,
                 val version: Version,

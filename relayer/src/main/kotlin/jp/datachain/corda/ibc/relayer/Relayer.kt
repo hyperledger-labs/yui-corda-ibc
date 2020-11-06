@@ -7,10 +7,7 @@ import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
-import jp.datachain.corda.ibc.types.Version
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.utilities.OpaqueBytes
-import java.util.*
 
 object Relayer {
     @JvmStatic
@@ -43,6 +40,7 @@ object Relayer {
                 null)
 
         ibcB.connOpenTry(
+                connBid,
                 connBid,
                 connAid,
                 ibcA.host().getCommitmentPrefix(),
