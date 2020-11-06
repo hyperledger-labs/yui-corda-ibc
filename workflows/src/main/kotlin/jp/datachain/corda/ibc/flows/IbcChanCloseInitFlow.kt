@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler.chanCloseInit
+import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.HandleChanCloseInit
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import net.corda.core.contracts.ReferencedStateAndRef
@@ -22,10 +22,6 @@ class IbcChanCloseInitFlow(
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
-        val builder = TransactionBuilder(notary)
-
         // query host from vault
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
@@ -38,20 +34,21 @@ class IbcChanCloseInitFlow(
         val connId = chan.state.data.end.connectionHops.single()
         val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
 
-        // calculate a newly created channel state and an updated host state
-        val newChan = Triple(host.state.data, conn.state.data, chan.state.data).chanCloseInit(
-                portIdentifier,
-                channelIdentifier)
+        // create command and outputs
+        val command = HandleChanCloseInit(portIdentifier, channelIdentifier)
+        val ctx = Context(setOf(chan.state.data), setOf(host, conn).map{it.state.data})
+        val signers = listOf(ourIdentity.owningKey)
+        command.execute(ctx, signers)
 
         // build tx
-        builder.addCommand(Ibc.Commands.ChanCloseInit(
-                portIdentifier,
-                channelIdentifier
-        ), ourIdentity.owningKey)
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+        val builder = TransactionBuilder(notary)
+                .addCommand(command, signers)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
-                .addOutputState(newChan)
+        ctx.outStates.forEach{builder.addOutputState(it)}
+
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}

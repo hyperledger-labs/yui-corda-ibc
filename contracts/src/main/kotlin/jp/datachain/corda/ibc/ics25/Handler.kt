@@ -440,13 +440,14 @@ object Handler {
         ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.OPEN)))
     }
 
-    fun Triple<Host, Connection, Channel>.chanCloseInit(
+    fun chanCloseInit(
+            ctx: Context,
             portIdentifier: Identifier,
             channelIdentifier: Identifier
-    ) : Channel {
-        val host = this.first
-        val conn = this.second
-        val chan = this.third
+    ) {
+        val host = ctx.getReference<Host>()
+        val conn = ctx.getReference<Connection>()
+        val chan = ctx.getInput<Channel>()
 
         require(host.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
@@ -456,10 +457,9 @@ object Handler {
         require(chan.end.state != ChannelState.CLOSED)
 
         require(conn.id == chan.end.connectionHops.single())
-
         require(conn.end.state == ConnectionState.OPEN)
 
-        return chan.copy(end = chan.end.copy(state = ChannelState.CLOSED))
+        ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.CLOSED)))
     }
 
     fun Quadruple<Host, ClientState, Connection, Channel>.chanCloseConfirm(
