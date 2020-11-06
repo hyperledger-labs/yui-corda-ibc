@@ -347,24 +347,35 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         assert(chan.packets[packet.sequence] == packet)
     }
 
-    fun recvPacket(
+    fun recvPacketOrdered(
             packet: Packet,
             proof: CommitmentProof,
-            proofHeight: Height,
-            acknowledgement: Acknowledgement
+            proofHeight: Height
     ) {
         val stx = executeFlow(IbcRecvPacketFlow(
                 baseId,
                 packet,
                 proof,
-                proofHeight,
-                acknowledgement
-        ))
+                proofHeight))
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceRecv == packet.sequence + 1)
     }
 
-    fun acknowledgePacket(
+    fun recvPacketUnordered(
+            packet: Packet,
+            proof: CommitmentProof,
+            proofHeight: Height
+    ) {
+        val stx = executeFlow(IbcRecvPacketFlow(
+                baseId,
+                packet,
+                proof,
+                proofHeight))
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.nextSequenceRecv == 1L)
+    }
+
+    fun acknowledgePacketOrdered(
             packet: Packet,
             acknowledgement: Acknowledgement,
             proof: CommitmentProof,
@@ -379,6 +390,24 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         ))
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceAck == packet.sequence + 1)
+        assert(!chan.packets.contains(packet.sequence))
+    }
+
+    fun acknowledgePacketUnordered(
+            packet: Packet,
+            acknowledgement: Acknowledgement,
+            proof: CommitmentProof,
+            proofHeight: Height
+    ) {
+        val stx = executeFlow(IbcAcknowledgePacketFlow(
+                baseId,
+                packet,
+                acknowledgement,
+                proof,
+                proofHeight
+        ))
+        val chan = stx.tx.outputsOfType<Channel>().single()
+        assert(chan.nextSequenceAck == 1L)
         assert(!chan.packets.contains(packet.sequence))
     }
 

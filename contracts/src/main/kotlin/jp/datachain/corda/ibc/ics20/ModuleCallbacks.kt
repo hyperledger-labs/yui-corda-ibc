@@ -31,7 +31,7 @@ class ModuleCallbacks: ModuleCallbacks {
     }
 
     override fun onAcknowledgePacket(ctx: Context, packet: Packet, acknowledgement: Acknowledgement) {
-        val ack = FungibleTokenPacketAcknowledgement.decode(acknowledgement.data.bytes)
+        val ack = FungibleTokenPacketAcknowledgement.decode(acknowledgement.data!!.bytes)
         if (!ack.success) {
             refundTokens(ctx, packet)
         }

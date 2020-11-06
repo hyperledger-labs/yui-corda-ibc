@@ -5,8 +5,18 @@ import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Version
+import jp.datachain.corda.ibc.ics20.ModuleCallbacks as Ics20ModuleCallbacks
 
 interface ModuleCallbacks {
+    companion object {
+        fun lookupModule(portIdentifier: Identifier): ModuleCallbacks {
+            return when(portIdentifier.id) {
+                "transfer" -> Ics20ModuleCallbacks()
+                else -> NullModuleCallbacks()
+            }
+        }
+    }
+
     fun onChanOpenInit(
             ctx: Context,
             order: ChannelOrder,

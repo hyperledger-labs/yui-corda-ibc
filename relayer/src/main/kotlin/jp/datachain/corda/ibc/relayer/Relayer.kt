@@ -118,16 +118,14 @@ object Relayer {
                     sequence)
             ibcA.sendPacket(packet)
 
-            val ack = Acknowledgement(OpaqueBytes("Thank you, Alice! (${sequence})".toByteArray()))
             ibcB.recvPacket(
                     packet,
                     ibcA.chanProof(),
-                    ibcA.host().getCurrentHeight(),
-                    ack)
+                    ibcA.host().getCurrentHeight())
 
             ibcA.acknowledgePacket(
                     packet,
-                    ack,
+                    Acknowledgement(),
                     ibcB.chanProof(),
                     ibcB.host().getCurrentHeight())
         }
@@ -144,16 +142,14 @@ object Relayer {
                     sequence)
             ibcB.sendPacket(packet)
 
-            val ack = Acknowledgement(OpaqueBytes("Thank you, Bob! (${sequence})".toByteArray()))
             ibcA.recvPacket(
                     packet,
                     ibcB.chanProof(),
-                    ibcB.host().getCurrentHeight(),
-                    ack)
+                    ibcB.host().getCurrentHeight())
 
             ibcB.acknowledgePacket(
                     packet,
-                    ack,
+                    Acknowledgement(),
                     ibcA.chanProof(),
                     ibcA.host().getCurrentHeight())
         }
