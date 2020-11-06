@@ -357,16 +357,14 @@ class CordaIbcClient(host: String, port: Int) {
     fun recvPacket(
             packet: Packet,
             proof: CommitmentProof,
-            proofHeight: Height,
-            acknowledgement: Acknowledgement
+            proofHeight: Height
     ) {
         val stx = ops().startFlow(
                 ::IbcRecvPacketFlow,
                 host().baseId,
                 packet,
                 proof,
-                proofHeight,
-                acknowledgement).returnValue.get()
+                proofHeight).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
         assert(state.nextSequenceRecv == packet.sequence + 1)
         updateChan(state, stx)

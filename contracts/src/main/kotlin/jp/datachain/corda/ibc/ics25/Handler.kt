@@ -16,7 +16,6 @@ import jp.datachain.corda.ibc.ics4.*
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
 import jp.datachain.corda.ibc.types.Height
-import jp.datachain.corda.ibc.types.Quadruple
 import jp.datachain.corda.ibc.types.Version
 
 object Handler {
@@ -536,16 +535,17 @@ object Handler {
                 packets = chan.packets + mapOf(packet.sequence to packet)))
     }
 
-    fun Quadruple<Host, ClientState, Connection, Channel>.recvPacket(
+    fun recvPacket(
+            ctx: Context,
             packet: Packet,
             proof: CommitmentProof,
             proofHeight: Height,
             acknowledgement: Acknowledgement
-    ) : Channel {
-        val host = this.first
-        val client = this.second
-        val conn = this.third
-        var chan = this.fourth
+    ) {
+        val host = ctx.getReference<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getReference<Connection>()
+        var chan = ctx.getInput<Channel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -574,7 +574,7 @@ object Handler {
                 packet.sequence,
                 packet))
 
-        if (acknowledgement.data.size > 0 || chan.end.ordering == ChannelOrder.UNORDERED) {
+        if (!acknowledgement.isEmpty() || chan.end.ordering == ChannelOrder.UNORDERED) {
             chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
         }
 
@@ -583,19 +583,20 @@ object Handler {
             chan = chan.copy(nextSequenceRecv = chan.nextSequenceRecv + 1)
         }
 
-        return chan
+        ctx.addOutput(chan)
     }
 
-    fun Quadruple<Host, ClientState, Connection, Channel>.acknowledgePacket(
+    fun acknowledgePacket(
+            ctx: Context,
             packet: Packet,
             acknowledgement: Acknowledgement,
             proof: CommitmentProof,
             proofHeight: Height
-    ) : Channel {
-        val host = this.first
-        val client = this.second
-        val conn = this.third
-        var chan = this.fourth
+    ) {
+        val host = ctx.getReference<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getReference<Connection>()
+        var chan = ctx.getInput<Channel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -630,6 +631,6 @@ object Handler {
         }
 
         chan = chan.copy(packets = chan.packets - packet.sequence)
-        return chan
+        ctx.addOutput(chan)
     }
 }

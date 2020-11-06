@@ -135,8 +135,9 @@ class IbcFlowTests {
         val chanAid = Identifier("channelA")
         val portBid = Identifier("portB")
         val chanBid = Identifier("channelB")
+        val order = ChannelOrder.UNORDERED
         ibcA.chanOpenInit(
-                ChannelOrder.ORDERED,
+                order,
                 listOf(connAid),
                 portAid,
                 chanAid,
@@ -145,7 +146,7 @@ class IbcFlowTests {
                 ibcA.conn(connAid).end.version)
 
         ibcB.chanOpenTry(
-                ChannelOrder.ORDERED,
+                order,
                 listOf(connBid),
                 portBid,
                 chanBid,
@@ -183,16 +184,14 @@ class IbcFlowTests {
                     sequence)
             ibcA.sendPacket(packet)
 
-            val ack = Acknowledgement(OpaqueBytes("Thank you, Alice! (${sequence})".toByteArray()))
-            ibcB.recvPacket(
+            ibcB.recvPacketUnordered(
                     packet,
                     ibcA.chanProof(chanAid),
-                    ibcA.host().getCurrentHeight(),
-                    ack)
+                    ibcA.host().getCurrentHeight())
 
-            ibcA.acknowledgePacket(
+            ibcA.acknowledgePacketUnordered(
                     packet,
-                    ack,
+                    Acknowledgement(),
                     ibcB.chanProof(chanBid),
                     ibcB.host().getCurrentHeight())
         }
@@ -209,16 +208,14 @@ class IbcFlowTests {
                     sequence)
             ibcB.sendPacket(packet)
 
-            val ack = Acknowledgement(OpaqueBytes("Thank you, Bob! (${sequence})".toByteArray()))
-            ibcA.recvPacket(
+            ibcA.recvPacketUnordered(
                     packet,
                     ibcB.chanProof(chanBid),
-                    ibcB.host().getCurrentHeight(),
-                    ack)
+                    ibcB.host().getCurrentHeight())
 
-            ibcB.acknowledgePacket(
+            ibcB.acknowledgePacketUnordered(
                     packet,
-                    ack,
+                    Acknowledgement(),
                     ibcA.chanProof(chanAid),
                     ibcA.host().getCurrentHeight())
         }
@@ -379,7 +376,7 @@ class IbcFlowTests {
         val idPortXYZ = Identifier("portXYZ")
         val idChanABC = Identifier("chanABC")
         val idChanXYZ = Identifier("chanXYZ")
-        val order = ChannelOrder.ORDERED
+        val order = ChannelOrder.UNORDERED
 
         ibcA.chanOpenInit(
                 order,

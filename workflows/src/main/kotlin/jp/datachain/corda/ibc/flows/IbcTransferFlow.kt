@@ -37,8 +37,6 @@ class IbcTransferFlow(
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-
         // query host from vault
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
@@ -79,6 +77,7 @@ class IbcTransferFlow(
         command.execute(ctx, signers)
 
         // build transaction
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
         builder.addCommand(command, signers)
                 .addReferenceState(ReferencedStateAndRef(host))
