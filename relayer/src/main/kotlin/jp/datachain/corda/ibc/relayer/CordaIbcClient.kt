@@ -24,7 +24,6 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.NetworkHostAndPort
-import java.util.*
 
 class CordaIbcClient(host: String, port: Int) {
     val cordaRPCClient = CordaRPCClient(NetworkHostAndPort(host, port))
@@ -242,6 +241,7 @@ class CordaIbcClient(host: String, port: Int) {
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
+            counterpartyChosenChannelIdentifer: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
             version: Version,
@@ -256,6 +256,7 @@ class CordaIbcClient(host: String, port: Int) {
                 connectionHops,
                 portIdentifier,
                 channelIdentifier,
+                counterpartyChosenChannelIdentifer,
                 counterpartyPortIdentifier,
                 counterpartyChannelIdentifier,
                 version,
