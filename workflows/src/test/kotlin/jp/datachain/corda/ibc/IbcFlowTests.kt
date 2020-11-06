@@ -10,7 +10,6 @@ import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.node.MockNetwork
@@ -20,7 +19,6 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.math.BigDecimal
 
 class IbcFlowTests {
     private val networkParam = MockNetworkParameters(
@@ -150,6 +148,7 @@ class IbcFlowTests {
                 ChannelOrder.ORDERED,
                 listOf(connBid),
                 portBid,
+                chanBid,
                 chanBid,
                 portAid,
                 chanAid,
@@ -393,6 +392,7 @@ class IbcFlowTests {
                 order,
                 listOf(idConnXYZ),
                 idPortXYZ,
+                idChanXYZ,
                 idChanXYZ,
                 idPortABC,
                 idChanABC,

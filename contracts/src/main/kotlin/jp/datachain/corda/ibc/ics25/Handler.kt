@@ -267,34 +267,38 @@ object Handler {
         ctx.addOutput(Channel(host, portIdentifier, channelIdentifier, end))
     }
 
-    fun Quadruple<Host, ClientState, Connection, Channel?>.chanOpenTry(
+    fun chanOpenTry(
+            ctx: Context,
             order: ChannelOrder,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
+            counterpartyChosenChannelIdentifer: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
             version: Version,
             counterpartyVersion: Version,
             proofInit: CommitmentProof,
             proofHeight: Height
-    ) : Pair<Host, Channel> {
-        val previous = this.fourth
-        val host = if (previous == null) {
-            this.first.addPortChannel(portIdentifier, channelIdentifier)
-        } else {
-            require(this.first.portChanIds.contains(Pair(portIdentifier, channelIdentifier)))
+    ) {
+        val host = ctx.getInput<Host>()
+        val client = ctx.getReference<ClientState>()
+        val conn = ctx.getReference<Connection>()
+        val previous = ctx.getInputOrNull<Channel>()
+
+        if (previous != null) {
+            require(host.portChanIds.contains(Pair(portIdentifier, channelIdentifier)))
             require(previous.portId == portIdentifier)
             require(previous.id == channelIdentifier)
-            this.first
         }
-        val client = this.second
-        val conn = this.third
-
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
         require(client.connIds.contains(conn.id))
         require(conn.id == connectionHops.single())
+        require(client.id == conn.end.clientIdentifier)
+
+        require(counterpartyChosenChannelIdentifer == Identifier("") ||
+                counterpartyChosenChannelIdentifer == channelIdentifier)
 
         require(previous == null ||
                 ( previous.end.state == ChannelState.INIT &&
@@ -310,7 +314,7 @@ object Handler {
                 ChannelState.INIT,
                 order,
                 portIdentifier,
-                channelIdentifier,
+                counterpartyChosenChannelIdentifer,
                 listOf(conn.end.counterpartyConnectionIdentifier),
                 counterpartyVersion)
         require(client.verifyChannelState(
@@ -329,7 +333,16 @@ object Handler {
                 connectionHops,
                 version)
 
-        return Pair(host, Channel(host, portIdentifier, channelIdentifier, end))
+        val chan = Channel(host, portIdentifier, channelIdentifier, end)
+        ctx.addOutput(host.addPortChannel(portIdentifier, channelIdentifier))
+        if (previous == null) {
+            ctx.addOutput(chan)
+        } else {
+            ctx.addOutput(chan.copy(
+                    nextSequenceAck = previous.nextSequenceAck,
+                    nextSequenceSend = previous.nextSequenceSend,
+                    nextSequenceRecv = previous.nextSequenceRecv))
+        }
     }
 
     fun Quadruple<Host, ClientState, Connection, Channel>.chanOpenAck(

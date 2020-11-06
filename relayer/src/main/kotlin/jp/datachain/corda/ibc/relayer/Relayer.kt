@@ -84,6 +84,7 @@ object Relayer {
                 listOf(ibcB.conn().id),
                 portBid,
                 chanBid,
+                chanBid,
                 portAid,
                 chanAid,
                 ibcB.conn().end.version,
