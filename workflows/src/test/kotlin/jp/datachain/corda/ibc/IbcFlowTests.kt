@@ -61,6 +61,8 @@ class IbcFlowTests {
             it.registerInitiatedFlow(IbcSendPacketResponderFlow::class.java)
             it.registerInitiatedFlow(IbcRecvPacketResponderFlow::class.java)
             it.registerInitiatedFlow(IbcAcknowledgePacketResponderFlow::class.java)
+
+            it.registerInitiatedFlow(IbcSendTransferResponderFlow::class.java)
         }
     }
 
@@ -419,7 +421,7 @@ class IbcFlowTests {
         val sourceChannel = idChanABC
         val timeoutHeight = Height(0)
         val timeoutTimestamp = Timestamp(0)
-        ibcC.transfer(
+        ibcC.sendTransfer(
                 denom,
                 amount,
                 cKey,
@@ -431,7 +433,7 @@ class IbcFlowTests {
                 timeoutHeight,
                 timeoutTimestamp
         )
-        ibcA.transfer(
+        ibcA.sendTransfer(
                 denom,
                 amount,
                 aKey,
@@ -443,7 +445,7 @@ class IbcFlowTests {
                 timeoutHeight,
                 timeoutTimestamp
         )
-        ibcB.transfer(
+        ibcB.sendTransfer(
                 denom,
                 amount,
                 bKey,

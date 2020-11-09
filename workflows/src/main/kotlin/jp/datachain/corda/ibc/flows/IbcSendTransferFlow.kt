@@ -21,7 +21,7 @@ import java.security.PublicKey
 
 @StartableByRPC
 @InitiatingFlow
-class IbcTransferFlow(
+class IbcSendTransferFlow(
         val baseId: StateRef,
         val denomination: Denom,
         val amount: Amount,
@@ -96,8 +96,8 @@ class IbcTransferFlow(
     }
 }
 
-@InitiatedBy(IbcTransferFlow::class)
-class IbcTransferResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(IbcSendTransferFlow::class)
+class IbcSendTransferResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))
