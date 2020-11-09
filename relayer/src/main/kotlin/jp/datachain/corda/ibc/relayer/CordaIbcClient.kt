@@ -364,7 +364,8 @@ class CordaIbcClient(host: String, port: Int) {
                 host().baseId,
                 packet,
                 proof,
-                proofHeight).returnValue.get()
+                proofHeight,
+                false).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
         assert(state.nextSequenceRecv == packet.sequence + 1)
         updateChan(state, stx)
@@ -382,7 +383,8 @@ class CordaIbcClient(host: String, port: Int) {
                 packet,
                 acknowledgement,
                 proof,
-                proofHeight).returnValue.get()
+                proofHeight,
+                false).returnValue.get()
         val state = stx.tx.outputsOfType<Channel>().single()
         assert(state.nextSequenceAck == packet.sequence + 1)
         assert(!state.packets.contains(packet.sequence))

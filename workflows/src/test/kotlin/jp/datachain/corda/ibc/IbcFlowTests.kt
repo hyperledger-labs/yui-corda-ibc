@@ -4,6 +4,7 @@ import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics20.FungibleTokenPacketAcknowledgement
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
@@ -19,6 +20,8 @@ import net.corda.testing.node.TestCordapp
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.ExecutionException
+import kotlin.test.assertFailsWith
 
 class IbcFlowTests {
     private val networkParam = MockNetworkParameters(
@@ -290,7 +293,7 @@ class IbcFlowTests {
     }
 
     @Test
-    fun `create outgoing packet`() {
+    fun `ics-20`() {
         val ibcA = TestCordaIbcClient(network, a)
         val ibcB = TestCordaIbcClient(network, b)
         val ibcC = TestCordaIbcClient(network, c)
@@ -305,24 +308,30 @@ class IbcFlowTests {
         val yKey = y.info.legalIdentities.single().owningKey
         val zKey = z.info.legalIdentities.single().owningKey
 
+        // create host&bank for the ABC group
         ibcA.createHostAndBank(listOf(
                 a.info.legalIdentities.single(),
                 b.info.legalIdentities.single(),
                 c.info.legalIdentities.single()
         ))
+        // create host&bank for the XYZ group
         ibcX.createHostAndBank(listOf(
                 x.info.legalIdentities.single(),
                 y.info.legalIdentities.single(),
                 z.info.legalIdentities.single()
         ))
+        // A, B and C share the same baseID
         ibcB._baseId = ibcA.baseId
         ibcC._baseId = ibcA.baseId
+        // X, Y and Z share the same baseID
         ibcY._baseId = ibcX.baseId
         ibcZ._baseId = ibcX.baseId
 
+        // allocate some JPYs for A, B and C
         ibcC.allocateFund(aKey, Denom("JPY"), Amount(1000))
         ibcC.allocateFund(bKey, Denom("JPY"), Amount(2000))
         ibcC.allocateFund(cKey, Denom("JPY"), Amount(3000))
+        // allocate some USDs for X, Y and Z
         ibcZ.allocateFund(xKey, Denom("USD"), Amount(10000))
         ibcZ.allocateFund(yKey, Denom("USD"), Amount(20000))
         ibcZ.allocateFund(zKey, Denom("USD"), Amount(30000))
@@ -330,10 +339,12 @@ class IbcFlowTests {
         val idCliABC = Identifier("clientABC")
         val idCliXYZ = Identifier("clientXYZ")
 
+        // ABC creates client for interacting with XYZ
         ibcA.createClient(
                 idCliABC,
                 ClientType.CordaClient,
                 ibcY.host().getConsensusState(Height(0)))
+        // XYZ creates client for interacting with ABC
         ibcX.createClient(
                 idCliXYZ,
                 ClientType.CordaClient,
@@ -342,6 +353,7 @@ class IbcFlowTests {
         val idConnABC = Identifier("connABC")
         val idConnXYZ = Identifier("connXYZ")
 
+        // ABC executes connOpenInit
         ibcB.connOpenInit(
                 idConnABC,
                 idConnXYZ,
@@ -349,6 +361,7 @@ class IbcFlowTests {
                 idCliABC,
                 idCliXYZ,
                 null)
+        // XYZ executes connOpenTry
         ibcY.connOpenTry(
                 idConnXYZ,
                 idConnXYZ,
@@ -361,6 +374,7 @@ class IbcFlowTests {
                 ibcC.clientProof(idCliABC),
                 ibcC.host().getCurrentHeight(),
                 ibcC.host().getCurrentHeight())
+        // ABC executes connOpenAck
         ibcC.connOpenAck(
                 idConnABC,
                 ibcX.conn(idConnXYZ).end.version,
@@ -369,17 +383,19 @@ class IbcFlowTests {
                 ibcX.clientProof(idCliXYZ),
                 ibcX.host().getCurrentHeight(),
                 ibcX.host().getCurrentHeight())
+        // XYZ executes connOpenConfirm
         ibcZ.connOpenConfirm(
                 idConnXYZ,
                 ibcA.connProof(idConnABC),
                 ibcA.host().getCurrentHeight())
 
-        val idPortABC = Identifier("portABC")
-        val idPortXYZ = Identifier("portXYZ")
+        val idPortABC = Identifier("transfer")
+        val idPortXYZ = Identifier("transfer")
         val idChanABC = Identifier("chanABC")
         val idChanXYZ = Identifier("chanXYZ")
         val order = ChannelOrder.UNORDERED
 
+        // ABC executes chanOpenInit
         ibcA.chanOpenInit(
                 order,
                 listOf(idConnABC),
@@ -388,6 +404,7 @@ class IbcFlowTests {
                 idPortXYZ,
                 idChanXYZ,
                 ibcB.conn(idConnABC).end.version)
+        // XYZ executes chanOpenTry
         ibcX.chanOpenTry(
                 order,
                 listOf(idConnXYZ),
@@ -400,6 +417,7 @@ class IbcFlowTests {
                 ibcB.chan(idChanABC).end.version,
                 ibcB.chanProof(idChanABC),
                 ibcB.host().getCurrentHeight())
+        // ABC executes chanOpenAck
         ibcB.chanOpenAck(
                 idPortABC,
                 idChanABC,
@@ -407,6 +425,7 @@ class IbcFlowTests {
                 idChanXYZ,
                 ibcZ.chanProof(idChanXYZ),
                 ibcZ.host().getCurrentHeight())
+        // XYZ executes chanOpenConfirm
         ibcY.chanOpenConfirm(
                 idPortXYZ,
                 idChanXYZ,
@@ -421,6 +440,8 @@ class IbcFlowTests {
         val sourceChannel = idChanABC
         val timeoutHeight = Height(0)
         val timeoutTimestamp = Timestamp(0)
+        // C sends 100 JPY to Z
+        val seqCtoZ = ibcC.chan(idChanABC).nextSequenceSend
         ibcC.sendTransfer(
                 denom,
                 amount,
@@ -431,8 +452,10 @@ class IbcFlowTests {
                 sourcePort,
                 sourceChannel,
                 timeoutHeight,
-                timeoutTimestamp
-        )
+                timeoutTimestamp,
+                seqCtoZ)
+        // A sends 100 JPY to X
+        val seqAtoX = ibcC.chan(idChanABC).nextSequenceSend
         ibcA.sendTransfer(
                 denom,
                 amount,
@@ -443,8 +466,10 @@ class IbcFlowTests {
                 sourcePort,
                 sourceChannel,
                 timeoutHeight,
-                timeoutTimestamp
-        )
+                timeoutTimestamp,
+                seqAtoX)
+        // B sends 100 JPY to Y
+        val seqBtoY = ibcC.chan(idChanABC).nextSequenceSend
         ibcB.sendTransfer(
                 denom,
                 amount,
@@ -455,7 +480,103 @@ class IbcFlowTests {
                 sourcePort,
                 sourceChannel,
                 timeoutHeight,
-                timeoutTimestamp
-        )
+                timeoutTimestamp,
+                seqBtoY)
+
+        // Z receives 100 JPY from C
+        val packetCtoZ = ibcC.chan(idChanABC).packets[seqCtoZ]!!
+        ibcZ.recvPacketUnordered(
+                packetCtoZ,
+                ibcC.chanProof(idChanABC),
+                ibcC.host().getCurrentHeight(),
+                forIcs20 = true)
+        // C receives ack from Z
+        val ackZtoC = ibcZ.chan(idChanXYZ).acknowledgements[seqCtoZ]!!
+        ibcC.acknowledgePacketUnordered(
+                packetCtoZ,
+                ackZtoC,
+                ibcZ.chanProof(idChanXYZ),
+                ibcZ.host().getCurrentHeight(),
+                forIcs20 = true)
+        // X receives 100 JPY from A
+        val packetAtoX = ibcA.chan(idChanABC).packets[seqAtoX]!!
+        ibcX.recvPacketUnordered(
+                packetAtoX,
+                ibcA.chanProof(idChanABC),
+                ibcA.host().getCurrentHeight(),
+                forIcs20 = true)
+        // A receives ack from X
+        val ackXtoA = ibcX.chan(idChanXYZ).acknowledgements[seqAtoX]!!
+        ibcA.acknowledgePacketUnordered(
+                packetAtoX,
+                ackXtoA,
+                ibcX.chanProof(idChanXYZ),
+                ibcX.host().getCurrentHeight(),
+                forIcs20 = true)
+        // Y receives 100 JPY from B
+        val packetBtoY = ibcB.chan(idChanABC).packets[seqBtoY]!!
+        ibcY.recvPacketUnordered(
+                packetBtoY,
+                ibcB.chanProof(idChanABC),
+                ibcB.host().getCurrentHeight(),
+                forIcs20 = true)
+        // B receives ack from Y
+        val ackYtoB = ibcY.chan(idChanXYZ).acknowledgements[seqBtoY]!!
+        ibcB.acknowledgePacketUnordered(
+                packetBtoY,
+                ackYtoB,
+                ibcY.chanProof(idChanXYZ),
+                ibcY.host().getCurrentHeight(),
+                forIcs20 = true)
+
+        assert(FungibleTokenPacketAcknowledgement.decode(ackXtoA.data!!.bytes).success)
+        assert(FungibleTokenPacketAcknowledgement.decode(ackYtoB.data!!.bytes).success)
+        assert(FungibleTokenPacketAcknowledgement.decode(ackZtoC.data!!.bytes).success)
+
+        // sending back
+        for (i in 0 until 2) {
+            val seqXtoA = ibcX.chan(idChanXYZ).nextSequenceSend
+            ibcX.sendTransfer(
+                    Denom("${idPortXYZ.id}/${idChanXYZ.id}/JPY"),
+                    Amount(50),
+                    xKey,
+                    aKey,
+                    idPortABC,
+                    idChanABC,
+                    idPortXYZ,
+                    idChanXYZ,
+                    Height(0),
+                    Timestamp(0),
+                    seqXtoA)
+            val packetXtoA = ibcX.chan(idChanXYZ).packets[seqXtoA]!!
+            ibcA.recvPacketUnordered(
+                    packetXtoA,
+                    ibcX.chanProof(idChanXYZ),
+                    ibcX.host().getCurrentHeight(),
+                    forIcs20 = true)
+            val ackAtoX = ibcA.chan(idChanABC).acknowledgements[seqXtoA]!!
+            ibcX.acknowledgePacketUnordered(
+                    packetXtoA,
+                    ackAtoX,
+                    ibcA.chanProof(idChanABC),
+                    ibcA.host().getCurrentHeight(),
+                    forIcs20 = true)
+        }
+
+        assertFailsWith<ExecutionException> {
+            val seqXtoA = ibcX.chan(idChanXYZ).nextSequenceSend
+            ibcX.sendTransfer(
+                    Denom("${idPortXYZ.id}/${idChanXYZ.id}/JPY"),
+                    Amount(1),
+                    xKey,
+                    aKey,
+                    idPortABC,
+                    idChanABC,
+                    idPortXYZ,
+                    idChanXYZ,
+                    Height(0),
+                    Timestamp(0),
+                    seqXtoA)
+        }
     }
 }

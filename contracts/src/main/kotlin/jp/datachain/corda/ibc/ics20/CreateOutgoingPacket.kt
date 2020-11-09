@@ -31,7 +31,7 @@ data class CreateOutgoingPacket(
         if (source) {
             ctx.addOutput(bank.lock(sender, denomination, amount))
         } else {
-            ctx.addOutput(bank.burn(sender, denomination, amount))
+            ctx.addOutput(bank.burn(sender, denomination.removePrefix(), amount))
         }
 
         val data = FungibleTokenPacketData(

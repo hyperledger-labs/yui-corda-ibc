@@ -45,7 +45,7 @@ data class Bank(
             : LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>> {
         val m: LinkedHashMap<PublicKey, Amount> = mm.get(denom) ?: throw IllegalArgumentException("unknown denomination")
         val balance = m.get(owner) ?: throw IllegalArgumentException("insufficient funds")
-        assert(balance >= amount)
+        require(balance >= amount)
         return mm.cloneAndPut(denom, m.cloneAndPut(owner, balance - amount))
     }
 

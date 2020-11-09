@@ -34,6 +34,8 @@ class ModuleCallbacks: ModuleCallbacks {
         val ack = FungibleTokenPacketAcknowledgement.decode(acknowledgement.data!!.bytes)
         if (!ack.success) {
             refundTokens(ctx, packet)
+        } else {
+            ctx.addOutput(ctx.getInput<Bank>().copy())
         }
     }
 
