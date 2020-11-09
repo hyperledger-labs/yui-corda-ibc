@@ -411,7 +411,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         assert(!chan.packets.contains(packet.sequence))
     }
 
-    fun transfer(
+    fun sendTransfer(
             denomination: Denom,
             amount: Amount,
             sender: PublicKey,
@@ -425,7 +425,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     ) {
         val prevBank = bank()
         val sequence = chan(sourceChannel).nextSequenceSend
-        val stx = executeFlow(IbcTransferFlow(
+        val stx = executeFlow(IbcSendTransferFlow(
                 baseId,
                 denomination,
                 amount,
