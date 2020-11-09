@@ -24,7 +24,8 @@ class IbcAcknowledgePacketFlow(
         val packet: Packet,
         val acknowledgement: Acknowledgement,
         val proof: CommitmentProof,
-        val proofHeight: Height
+        val proofHeight: Height,
+        val forIcs20: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -32,6 +33,13 @@ class IbcAcknowledgePacketFlow(
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
+
+        // query bank if necessary
+        val bankOrNull =
+                if (forIcs20)
+                    serviceHub.vaultService.queryIbcBank(baseId)!!
+                else
+                    null
 
         // query chan from vault
         val chanId = packet.sourceChannel
@@ -51,7 +59,14 @@ class IbcAcknowledgePacketFlow(
                 acknowledgement,
                 proof,
                 proofHeight)
-        val ctx = Context(setOf(chan.state.data), setOf(host, client, conn).map{it.state.data})
+        val ctx = Context(
+                if (bankOrNull != null) {
+                    setOf(chan.state.data, bankOrNull.state.data)
+                } else {
+                    setOf(chan.state.data)
+                },
+                setOf(host, client, conn).map{it.state.data}
+        )
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)
 
@@ -63,6 +78,7 @@ class IbcAcknowledgePacketFlow(
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
+        bankOrNull?.let{builder.addInputState(it)}
         ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)

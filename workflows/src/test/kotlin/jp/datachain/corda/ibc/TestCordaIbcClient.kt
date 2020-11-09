@@ -350,13 +350,15 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun recvPacketOrdered(
             packet: Packet,
             proof: CommitmentProof,
-            proofHeight: Height
+            proofHeight: Height,
+            forIcs20: Boolean = false
     ) {
         val stx = executeFlow(IbcRecvPacketFlow(
                 baseId,
                 packet,
                 proof,
-                proofHeight))
+                proofHeight,
+                forIcs20))
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceRecv == packet.sequence + 1)
     }
@@ -364,13 +366,15 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun recvPacketUnordered(
             packet: Packet,
             proof: CommitmentProof,
-            proofHeight: Height
+            proofHeight: Height,
+            forIcs20: Boolean = false
     ) {
         val stx = executeFlow(IbcRecvPacketFlow(
                 baseId,
                 packet,
                 proof,
-                proofHeight))
+                proofHeight,
+                forIcs20))
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceRecv == 1L)
     }
@@ -379,15 +383,16 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             packet: Packet,
             acknowledgement: Acknowledgement,
             proof: CommitmentProof,
-            proofHeight: Height
+            proofHeight: Height,
+            forIcs20: Boolean = false
     ) {
         val stx = executeFlow(IbcAcknowledgePacketFlow(
                 baseId,
                 packet,
                 acknowledgement,
                 proof,
-                proofHeight
-        ))
+                proofHeight,
+                forIcs20))
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceAck == packet.sequence + 1)
         assert(!chan.packets.contains(packet.sequence))
@@ -397,15 +402,16 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             packet: Packet,
             acknowledgement: Acknowledgement,
             proof: CommitmentProof,
-            proofHeight: Height
+            proofHeight: Height,
+            forIcs20: Boolean = false
     ) {
         val stx = executeFlow(IbcAcknowledgePacketFlow(
                 baseId,
                 packet,
                 acknowledgement,
                 proof,
-                proofHeight
-        ))
+                proofHeight,
+                forIcs20))
         val chan = stx.tx.outputsOfType<Channel>().single()
         assert(chan.nextSequenceAck == 1L)
         assert(!chan.packets.contains(packet.sequence))
@@ -421,10 +427,10 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             sourcePort: Identifier,
             sourceChannel: Identifier,
             timeoutHeight: Height,
-            timeoutTimestamp: Timestamp
+            timeoutTimestamp: Timestamp,
+            sequence: Long
     ) {
         val prevBank = bank()
-        val sequence = chan(sourceChannel).nextSequenceSend
         val stx = executeFlow(IbcSendTransferFlow(
                 baseId,
                 denomination,
@@ -456,7 +462,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         assert(data.receiver == receiver)
         val bank = stx.tx.outputsOfType<Bank>().single()
         if (denomination.hasPrefix(sourcePort, sourceChannel)) {
-            assert(prevBank.burn(sender, denomination, amount) == bank)
+            assert(prevBank.burn(sender, denomination.removePrefix(), amount) == bank)
         } else {
             assert(prevBank.lock(sender, denomination, amount) == bank)
         }
