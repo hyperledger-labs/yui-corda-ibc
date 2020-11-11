@@ -3,4 +3,4 @@ include 'contracts'
 include 'clients'
 include 'relayer'
 include 'cosmos-experiment'
-
+include 'grpc-adapter'
