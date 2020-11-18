@@ -9,10 +9,22 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
 
+    // gRPC dependencies
     implementation "io.grpc:grpc-protobuf:$grpc_version"
     implementation "io.grpc:grpc-stub:$grpc_version"
-
     runtimeOnly group: 'io.grpc', name: 'grpc-netty-shaded', version: "$grpc_version"
+
+    // Corda dependencies
+    compile "$corda_release_group:corda-rpc:$corda_release_version"
+
+    // CorDapp dependencies
+    compile project(":contracts")
+    compile project(":workflows")
+
+    // Logger dependencies
+    compile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
+    compile "org.apache.logging.log4j:log4j-web:${log4j_version}"
+    compile "org.slf4j:jul-to-slf4j:$slf4j_version"
 
     testImplementation "io.grpc:grpc-testing:$grpc_version"
     testImplementation "junit:junit:$junit_version"
@@ -41,4 +53,5 @@ sourceSets {
 task runGrpcAdapter(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'jp.datachain.corda.ibc.grpc.GrpcAdapter'
+    args = ['localhost', '10006', 'user1', 'test']
 }
