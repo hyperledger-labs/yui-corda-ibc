@@ -2,36 +2,55 @@ package jp.datachain.corda.ibc.grpc
 
 import io.grpc.ManagedChannelBuilder
 import io.grpc.ServerBuilder
-import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.ics20.Bank
+import jp.datachain.corda.ibc.ics24.Host
+import net.corda.core.contracts.StateRef
 import java.util.concurrent.TimeUnit
-
-class GreeterImpl: GreeterGrpc.GreeterImplBase() {
-    override fun sayHello(request: HelloRequest, responseObserver: StreamObserver<HelloReply>) {
-        val reply = HelloReply.newBuilder()
-                .setMessage("Hello, ${request.name!!}")
-                .build()
-        responseObserver.onNext(reply)
-        responseObserver.onCompleted()
-    }
-}
 
 object GrpcAdapter {
     @JvmStatic
     fun main(args: Array<String>) {
+        val hostname = args[0]
+        val port = args[1].toInt()
+        val username = args[2]
+        val password = args[3]
+
         val server = ServerBuilder.forPort(9999)
-                .addService(GreeterImpl())
+                .addService(GrpcCordaService(hostname, port, username, password))
+                .addService(GrpcIbcService(hostname, port, username, password))
                 .build()
                 .start()
         val channel = ManagedChannelBuilder.forTarget("localhost:9999")
                 .usePlaintext()
                 .build()
-        val blockingStub = GreeterGrpc.newBlockingStub(channel)
-        val request = HelloRequest.newBuilder()
-                .setName("Alice")
-                .build()
-        val response = blockingStub.sayHello(request)
+        val cordaService = CordaServiceGrpc.newBlockingStub(channel)
+        val ibcService = IbcServiceGrpc.newBlockingStub(channel)
+
+        val parties = listOf("PartyA", "PartyB", "Notary").map {
+            cordaService.partiesFromName(PartiesFromNameRequest.newBuilder()
+                    .setName(it)
+                    .setExactMatch(false)
+                    .build()).partiesList.single()
+        }
+
+        val stxGenesis = ibcService.createGenesis(Participants.newBuilder()
+                .addAllParticipants(parties)
+                .build()).into()
+
+        val baseId = StateRef(txhash = stxGenesis.id, index = 0)
+
+        val stxHostAndBank = ibcService.createHostAndBank(baseId.into()).into()
+
+        val host = ibcService.queryHost(baseId.into()).into()
+        val bank = ibcService.queryBank(baseId.into()).into()
+
         server.shutdown()
         server.awaitTermination(10, TimeUnit.SECONDS)
-        println(response.message)
+
+        println(host)
+        println(bank)
+
+        assert(stxHostAndBank.tx.outputsOfType<Host>().single() == host)
+        assert(stxHostAndBank.tx.outputsOfType<Bank>().single() == bank)
     }
 }

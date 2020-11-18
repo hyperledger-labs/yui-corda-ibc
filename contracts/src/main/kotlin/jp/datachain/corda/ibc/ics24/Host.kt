@@ -14,7 +14,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 
 @BelongsToContract(Ibc::class)
-data class Host private constructor (
+data class Host constructor (
         override val participants: List<AbstractParty>,
         override val baseId: StateRef,
         val notary: Party,

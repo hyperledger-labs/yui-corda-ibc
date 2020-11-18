@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "IbcProto";
+
+import "jp/datachain/corda/ibc/grpc/corda.proto";
+
+package jp.datachain.corda.ibc.grpc;
+
+service IbcService {
+  rpc CreateGenesis (Participants) returns (SignedTransaction);
+  rpc CreateHostAndBank (StateRef) returns (SignedTransaction);
+  rpc QueryHost (StateRef) returns (Host);
+  rpc QueryBank (StateRef) returns (Bank);
+}
+
+message Identifier {
+  string id = 1;
+}
+
+message Host {
+  message PortChannelIdentifier {
+    Identifier portId = 1;
+    Identifier channelId = 2;
+  }
+  repeated Party participants = 1;
+  StateRef base_id = 2;
+  Party notary = 3;
+  repeated Identifier client_ids = 4;
+  repeated Identifier conn_ids = 5;
+  repeated PortChannelIdentifier port_chan_ids = 6;
+  Identifier id = 7;
+}
+
+message Bank {
+  message BalanceMapPerDenom {
+    map<string, string> pubkeyToAmount = 1;
+  }
+
+  message BalanceMap {
+    map<string, BalanceMapPerDenom> denomToMap = 1;
+  }
+
+  repeated Party participants = 1;
+  StateRef baseId = 2;
+  BalanceMap allocated = 3;
+  BalanceMap locked = 4;
+  BalanceMap minted = 5;
+  Identifier id = 6;
+}
+
+message Participants {
+  repeated Party participants = 1;
+}
+
+message Void {}
