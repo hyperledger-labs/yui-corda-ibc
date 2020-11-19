@@ -1,12 +1,16 @@
 package jp.datachain.corda.ibc.grpc
 
-import com.google.common.primitives.SignedBytes
 import com.google.protobuf.ByteString
+import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
+import jp.datachain.corda.ibc.ics2.ClientType
+import jp.datachain.corda.ibc.ics2.ConsensusState
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
@@ -15,11 +19,10 @@ import net.corda.core.crypto.TransactionSignature
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.serialization.SerializedBytes
-import net.corda.core.transactions.CoreTransaction
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.parseAsHex
 import net.corda.core.utilities.toHex
+import java.lang.IllegalArgumentException
 import java.security.PublicKey
 import jp.datachain.corda.ibc.grpc.Host as GrpcHost
 import jp.datachain.corda.ibc.grpc.Bank as GrpcBank
@@ -32,6 +35,9 @@ import jp.datachain.corda.ibc.grpc.PublicKey as GrpcPublicKey
 import jp.datachain.corda.ibc.grpc.SignatureMetadata as GrpcSignatureMetadata
 import jp.datachain.corda.ibc.grpc.TransactionSignature as GrpcTransactionSignature
 import jp.datachain.corda.ibc.grpc.SignedTransaction as GrpcSignedTransaction
+import jp.datachain.corda.ibc.grpc.ClientType as GrpcClientType
+import jp.datachain.corda.ibc.grpc.ConsensusState as GrpcConsensusState
+import jp.datachain.corda.ibc.grpc.CordaConsensusState as GrpcCordaConsensusState
 
 fun Identifier.into(): GrpcIdentifier = GrpcIdentifier.newBuilder().setId(id).build()
 fun GrpcIdentifier.into() = Identifier(id)
@@ -97,7 +103,7 @@ fun GrpcHost.into() = Host(
         portChanIds = portChanIdsList.map{it.into()})
 
 fun LinkedHashMap<PublicKey, Amount>.into(): GrpcBank.BalanceMapPerDenom = GrpcBank.BalanceMapPerDenom.newBuilder()
-        .putAllPubkeyToAmount(this.mapKeys{it.key.encoded.toHex()}.mapValues{it.value.toString()})
+        .putAllPubkeyToAmount(this.mapKeys{it.key.encoded.toHex()}.mapValues{it.value.amount.toString()})
         .build()
 fun GrpcBank.BalanceMapPerDenom.into() = pubkeyToAmountMap
         .mapKeys{Crypto.decodePublicKey(it.key.parseAsHex())}
@@ -152,3 +158,45 @@ fun SignedTransaction.into(): GrpcSignedTransaction = GrpcSignedTransaction.newB
 fun GrpcSignedTransaction.into() = SignedTransaction(
         txBits = SerializedBytes(txBits.toByteArray()),
         sigs = sigsList.map{it.into()})
+
+fun ClientType.into() = when(this) {
+    ClientType.CordaClient -> GrpcClientType.CordaClient
+    ClientType.SoloMachineClient -> GrpcClientType.SoloMachineClient
+    ClientType.TendermintClient -> GrpcClientType.TendermintClient
+    ClientType.LoopbackClient -> GrpcClientType.LoopbackClient
+}
+fun GrpcClientType.into() = when(this) {
+    GrpcClientType.CordaClient -> ClientType.CordaClient
+    GrpcClientType.SoloMachineClient -> ClientType.SoloMachineClient
+    GrpcClientType.TendermintClient -> ClientType.TendermintClient
+    GrpcClientType.LoopbackClient -> ClientType.LoopbackClient
+    GrpcClientType.UNRECOGNIZED -> throw IllegalArgumentException()
+}
+
+fun CordaConsensusState.into(): GrpcCordaConsensusState = GrpcCordaConsensusState.newBuilder()
+        .setTimestamp(timestamp.timestamp)
+        .setHeight(height.height)
+        .setBaseId(baseId.into())
+        .setNotaryKey(notaryKey.into())
+        .build()
+fun GrpcCordaConsensusState.into() = CordaConsensusState(
+        timestamp = Timestamp(timestamp),
+        height = Height(height),
+        baseId = baseId.into(),
+        notaryKey = notaryKey.into())
+fun GrpcCordaConsensusState.asSuper(): GrpcConsensusState = GrpcConsensusState.newBuilder()
+        .setCordaConsensusState(this)
+        .build()
+
+fun ConsensusState.into(): GrpcConsensusState {
+    val builder = GrpcConsensusState.newBuilder()
+    when (this) {
+        is CordaConsensusState -> builder.cordaConsensusState = this.into()
+        else -> throw IllegalArgumentException()
+    }
+    return builder.build()
+}
+fun GrpcConsensusState.into(): ConsensusState = when(consensusStateCase) {
+    GrpcConsensusState.ConsensusStateCase.CORDA_CONSENSUS_STATE -> cordaConsensusState.into()
+    else -> throw IllegalArgumentException()
+}
