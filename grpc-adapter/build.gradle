@@ -55,3 +55,13 @@ task runGrpcAdapter(type: JavaExec) {
     main = 'jp.datachain.corda.ibc.grpc.GrpcAdapter'
     args = ['localhost', '10006', 'user1', 'test']
 }
+
+task testGrpcAdapter(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jp.datachain.corda.ibc.grpc.TestGrpcAdapter'
+}
+
+task shutdownGrpcAdapter(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jp.datachain.corda.ibc.grpc.ShutdownGrpcAdapter'
+}
