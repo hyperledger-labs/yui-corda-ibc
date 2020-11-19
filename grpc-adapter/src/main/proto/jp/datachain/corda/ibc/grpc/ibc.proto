@@ -10,6 +10,12 @@ package jp.datachain.corda.ibc.grpc;
 service IbcService {
   rpc CreateGenesis (Participants) returns (SignedTransaction);
   rpc CreateHostAndBank (StateRef) returns (SignedTransaction);
+  rpc AllocateFund (AllocateFundRequest) returns (SignedTransaction);
+
+  rpc CreateClient (CreateClientRequest) returns (SignedTransaction);
+//rpc HandleClientUpdate (HandleClientUpdateRequest) returns (SignedTransaction);
+//rpc HandleClientMisbehaviour (HandleClientMisbehaviourRequest) returns (SignedTransaction);
+
   rpc QueryHost (StateRef) returns (Host);
   rpc QueryBank (StateRef) returns (Bank);
 }
@@ -53,4 +59,36 @@ message Participants {
   repeated Party participants = 1;
 }
 
-message Void {}
+message AllocateFundRequest {
+  StateRef baseId = 1;
+  PublicKey owner = 2;
+  string denom = 3;
+  string amount = 4;
+}
+
+enum ClientType {
+  CordaClient = 0;
+  SoloMachineClient = 1;
+  TendermintClient = 2;
+  LoopbackClient = 3;
+}
+
+message CordaConsensusState {
+  int32 timestamp = 1;
+  int64 height = 2;
+  StateRef base_id = 3;
+  PublicKey notary_key = 4;
+}
+
+message ConsensusState {
+  oneof consensus_state {
+    CordaConsensusState corda_consensus_state = 1;
+  }
+}
+
+message CreateClientRequest {
+  StateRef base_id = 1;
+  Identifier id = 2;
+  ClientType client_type = 3;
+  ConsensusState consensus_state = 4;
+}

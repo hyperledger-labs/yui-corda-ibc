@@ -1,9 +1,13 @@
 package jp.datachain.corda.ibc.grpc
 
 import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.flows.IbcClientCreateFlow
+import jp.datachain.corda.ibc.flows.IbcFundAllocateFlow
 import jp.datachain.corda.ibc.flows.IbcGenesisCreateFlow
 import jp.datachain.corda.ibc.flows.IbcHostAndBankCreateFlow
+import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
+import jp.datachain.corda.ibc.ics20.Denom
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.node.services.vault.QueryCriteria
@@ -27,6 +31,28 @@ class GrpcIbcService(host: String, port: Int, username: String, password: String
 
     override fun createHostAndBank(request: StateRef, responseObserver: StreamObserver<GrpcSignedTransaction>) {
         val stx = ops.startFlow(::IbcHostAndBankCreateFlow, request.into()).returnValue.get()
+        responseObserver.onNext(stx.into())
+        responseObserver.onCompleted()
+    }
+
+    override fun allocateFund(request: AllocateFundRequest, responseObserver: StreamObserver<jp.datachain.corda.ibc.grpc.SignedTransaction>) {
+        val stx = ops.startFlow(::IbcFundAllocateFlow,
+                request.baseId.into(),
+                request.owner.into(),
+                Denom(request.denom),
+                Amount(request.amount.toBigDecimal())
+        ).returnValue.get()
+        responseObserver.onNext(stx.into())
+        responseObserver.onCompleted()
+    }
+
+    override fun createClient(request: CreateClientRequest, responseObserver: StreamObserver<jp.datachain.corda.ibc.grpc.SignedTransaction>) {
+        val stx = ops.startFlow(::IbcClientCreateFlow,
+                request.baseId.into(),
+                request.id.into(),
+                request.clientType.into(),
+                request.consensusState.into()
+        ).returnValue.get()
         responseObserver.onNext(stx.into())
         responseObserver.onCompleted()
     }
