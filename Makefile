@@ -1,6 +1,7 @@
 .PHONY: build
 .PHONY: deployNodes upNodes downNodes
-.PHONY: _testGrpcAdapter testGrpcAdapter
+.PHONY: startGrpcAdapter testGrpcAdapter shutdownGrpcAdapter
+.PHONY: intTestGrpcAdapter
 
 build:
 	./gradlew -x test clean build
@@ -17,7 +18,14 @@ downNodes:
 	-sshpass -p test ssh -p 2223 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown
 	-sshpass -p test ssh -p 2224 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown
 
-_testGrpcAdapter:
-	./gradlew :grpc-adapter:runGrpcAdapter
+startGrpcAdapter:
+	./gradlew :grpc-adapter:runGrpcAdapter&
+	sleep 5
 
-testGrpcAdapter: upNodes _testGrpcAdapter downNodes
+testGrpcAdapter:
+	./gradlew :grpc-adapter:testGrpcAdapter
+
+shutdownGrpcAdapter:
+	./gradlew :grpc-adapter:shutdownGrpcAdapter
+
+intTestGrpcAdapter: upNodes startGrpcAdapter testGrpcAdapter shutdownGrpcAdapter downNodes
