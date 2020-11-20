@@ -563,7 +563,7 @@ object Handler {
         require(conn.end.state == ConnectionState.OPEN)
 
         require(packet.timeoutHeight.height == 0L || host.getCurrentHeight().height < packet.timeoutHeight.height)
-        require(packet.timeoutTimestamp.timestamp == 0 || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
+        require(packet.timeoutTimestamp.timestamp == 0L || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
 
         require(client.verifyPacketData(
                 proofHeight,
