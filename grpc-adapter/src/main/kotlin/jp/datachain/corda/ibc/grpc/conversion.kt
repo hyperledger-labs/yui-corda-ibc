@@ -38,6 +38,7 @@ import jp.datachain.corda.ibc.grpc.SignedTransaction as GrpcSignedTransaction
 import jp.datachain.corda.ibc.grpc.ClientType as GrpcClientType
 import jp.datachain.corda.ibc.grpc.ConsensusState as GrpcConsensusState
 import jp.datachain.corda.ibc.grpc.CordaConsensusState as GrpcCordaConsensusState
+import jp.datachain.corda.ibc.grpc.Height as GrpcHeight
 
 fun Identifier.into(): GrpcIdentifier = GrpcIdentifier.newBuilder().setId(id).build()
 fun GrpcIdentifier.into() = Identifier(id)
@@ -173,15 +174,18 @@ fun GrpcClientType.into() = when(this) {
     GrpcClientType.UNRECOGNIZED -> throw IllegalArgumentException()
 }
 
+fun Height.into(): GrpcHeight = GrpcHeight.newBuilder().setHeight(height).build()
+fun GrpcHeight.into() = Height(height)
+
 fun CordaConsensusState.into(): GrpcCordaConsensusState = GrpcCordaConsensusState.newBuilder()
         .setTimestamp(timestamp.timestamp)
-        .setHeight(height.height)
+        .setHeight(height.into())
         .setBaseId(baseId.into())
         .setNotaryKey(notaryKey.into())
         .build()
 fun GrpcCordaConsensusState.into() = CordaConsensusState(
         timestamp = Timestamp(timestamp),
-        height = Height(height),
+        height = height.into(),
         baseId = baseId.into(),
         notaryKey = notaryKey.into())
 fun GrpcCordaConsensusState.asSuper(): GrpcConsensusState = GrpcConsensusState.newBuilder()

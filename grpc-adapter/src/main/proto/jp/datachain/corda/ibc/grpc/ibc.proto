@@ -73,9 +73,13 @@ enum ClientType {
   LoopbackClient = 3;
 }
 
+message Height {
+  uint64 height = 1;
+}
+
 message CordaConsensusState {
-  int32 timestamp = 1;
-  int64 height = 2;
+  uint64 timestamp = 1;
+  Height height = 2;
   StateRef base_id = 3;
   PublicKey notary_key = 4;
 }
