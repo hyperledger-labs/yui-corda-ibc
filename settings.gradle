@@ -4,3 +4,5 @@ include 'clients'
 include 'relayer'
 include 'cosmos-experiment'
 include 'grpc-adapter'
+include 'proto'
+
