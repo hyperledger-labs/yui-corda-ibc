@@ -1,8 +1,8 @@
 package jp.datachain.corda.ibc.ics24
 
-import jp.datachain.corda.ibc.clients.corda.CordaCommitmentPrefix
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Height
 import jp.datachain.corda.ibc.types.Timestamp
@@ -42,7 +42,7 @@ data class Host constructor (
         return CordaConsensusState(Timestamp(0), Height(0), baseId, notary.owningKey)
     }
 
-    fun getCommitmentPrefix() = CordaCommitmentPrefix()
+    fun getCommitmentPrefix() = CommitmentPrefix(baseId.toString().toByteArray(charset = Charsets.US_ASCII))
 
     fun currentTimestamp() = Timestamp(0)
 

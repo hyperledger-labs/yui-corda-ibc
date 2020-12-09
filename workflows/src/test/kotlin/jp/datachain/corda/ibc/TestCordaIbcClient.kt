@@ -1,8 +1,8 @@
 package jp.datachain.corda.ibc
 
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.clients.corda.CordaCommitmentProof
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
+import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
@@ -40,15 +40,11 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
 
     fun bank() = mockNode.services.vaultService.queryIbcBank(baseId)!!.state.data
 
-    inline fun <reified T: IbcState> queryStateWithProof(id: Identifier): Pair<T, CordaCommitmentProof> {
+    inline fun <reified T: IbcState> queryStateWithProof(id: Identifier): Pair<T, CommitmentProof> {
         val stateAndRef = mockNode.services.vaultService.queryIbcState<T>(baseId, id)!!
         val stx = mockNode.services.validatedTransactions.getTransaction(stateAndRef.ref.txhash)!!
         val state = stateAndRef.state.data
-        val proof = CordaCommitmentProof(
-                stx.coreTransaction,
-                stx.sigs.filter{it.by == mockNet.defaultNotaryIdentity.owningKey}.single()
-        )
-        return Pair(state, proof)
+        return Pair(state, stx.toProof())
     }
 
     fun client(id: Identifier) = queryStateWithProof<ClientState>(id).first

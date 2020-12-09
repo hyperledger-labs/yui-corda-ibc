@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.relayer
 
-import jp.datachain.corda.ibc.clients.corda.CordaCommitmentProof
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
+import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
@@ -43,26 +43,22 @@ class CordaIbcClient(host: String, port: Int) {
     private fun insertHost(v: Host) { assert(host == null); host = v }
     private fun updateHost(v: Host) { assert(host != null); host = v }
 
-    private fun makeProof(stx: SignedTransaction) = CordaCommitmentProof(
-            stx.coreTransaction,
-            stx.sigs.filter{it.by == host().notary.owningKey}.single())
-
     fun client() = client!!.first
-    fun clientProof() = makeProof(client!!.second)
+    fun clientProof() = client!!.second.toProof()
     private fun insertClient(v: ClientState, stx: SignedTransaction) { assert(client == null); client = Pair(v, stx)}
     private fun updateClient(v: ClientState, stx: SignedTransaction) { assert(client != null); client = Pair(v, stx)}
 
     fun conn(id: Identifier) = conns[id]!!.first
-    fun connProof(id: Identifier) = makeProof(conns[id]!!.second)
+    fun connProof(id: Identifier) = conns[id]!!.second.toProof()
     fun conn() = conns.values.single().first
-    fun connProof() = makeProof(conns.values.single().second)
+    fun connProof() = conns.values.single().second.toProof()
     fun insertConn(v: Connection, stx: SignedTransaction) { assert(!conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
     fun updateConn(v: Connection, stx: SignedTransaction) { assert(conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
 
     fun chan(id: Identifier) = chans[id]!!.first
-    fun chanProof(id: Identifier) = makeProof(chans[id]!!.second)
+    fun chanProof(id: Identifier) = chans[id]!!.second.toProof()
     fun chan() = chans.values.single().first
-    fun chanProof() = makeProof(chans.values.single().second)
+    fun chanProof() = chans.values.single().second.toProof()
     fun insertChan(v: Channel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
     fun updateChan(v: Channel, stx: SignedTransaction) { assert(chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
 
