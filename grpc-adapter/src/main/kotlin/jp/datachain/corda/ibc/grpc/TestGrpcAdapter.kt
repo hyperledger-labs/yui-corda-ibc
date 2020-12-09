@@ -12,7 +12,11 @@ import net.corda.core.utilities.NetworkHostAndPort
 object TestGrpcAdapter {
     @JvmStatic
     fun main(args: Array<String>) {
-        CordaRPCClient(NetworkHostAndPort("localhost", 65535))
+        for (port in listOf(10003, 10006, 10009)) {
+            CordaRPCClient(NetworkHostAndPort("localhost", port))
+                    .start("user1", "test")
+                    .close()
+        }
 
         val channel = ManagedChannelBuilder.forTarget("localhost:9999")
                 .usePlaintext()

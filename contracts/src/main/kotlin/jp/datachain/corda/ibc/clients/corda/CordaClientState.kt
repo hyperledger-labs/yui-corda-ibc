@@ -49,12 +49,11 @@ data class CordaClientState private constructor(
     override fun verifyClientConsensusState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, clientIdentifier: Identifier, consensusStateHeight: Height, consensusState: ConsensusState): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
-        val proof = proof as CordaCommitmentProof
+        val stx = proof.toSignedTransaction()
         val consensusState = consensusState as CordaConsensusState
-        val client = proof.tx.outputsOfType<CordaClientState>().singleOrNull() ?: return false
+        val client = stx.tx.outputsOfType<CordaClientState>().singleOrNull() ?: return false
 
-        return proof.sig.by == notaryKey &&
-                proof.sig.verify(proof.tx.id) &&
+        return stx.notary!!.owningKey == notaryKey &&
                 client.baseId == baseId &&
                 client.id == clientIdentifier &&
                 client.consensusStates.get(consensusStateHeight) == consensusState
@@ -63,11 +62,10 @@ data class CordaClientState private constructor(
     override fun verifyConnectionState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, connectionIdentifier: Identifier, connectionEnd: ConnectionEnd): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
-        val proof = proof as CordaCommitmentProof
-        val conn = proof.tx.outputsOfType<Connection>().singleOrNull() ?: return false
+        val stx = proof.toSignedTransaction()
+        val conn = stx.tx.outputsOfType<Connection>().singleOrNull() ?: return false
 
-        return proof.sig.by == notaryKey &&
-                proof.sig.verify(proof.tx.id) &&
+        return stx.notary!!.owningKey == notaryKey &&
                 conn.baseId == baseId &&
                 conn.id == connectionIdentifier &&
                 conn.end == connectionEnd
@@ -76,11 +74,10 @@ data class CordaClientState private constructor(
     override fun verifyChannelState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelEnd): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
-        val proof = proof as CordaCommitmentProof
-        val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val stx = proof.toSignedTransaction()
+        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
-        return proof.sig.by == notaryKey &&
-                proof.sig.verify(proof.tx.id) &&
+        return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
@@ -90,11 +87,10 @@ data class CordaClientState private constructor(
     override fun verifyPacketData(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, packet: Packet): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
-        val proof = proof as CordaCommitmentProof
-        val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val stx = proof.toSignedTransaction()
+        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
-        return proof.sig.by == notaryKey &&
-                proof.sig.verify(proof.tx.id) &&
+        return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
@@ -104,11 +100,10 @@ data class CordaClientState private constructor(
     override fun verifyPacketAcknowledgement(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, acknowledgement: Acknowledgement): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
-        val proof = proof as CordaCommitmentProof
-        val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val stx = proof.toSignedTransaction()
+        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
-        return proof.sig.by == notaryKey &&
-                proof.sig.verify(proof.tx.id) &&
+        return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
@@ -122,11 +117,10 @@ data class CordaClientState private constructor(
     override fun verifyNextSequenceRecv(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: Long): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
-        val proof = proof as CordaCommitmentProof
-        val chan = proof.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val stx = proof.toSignedTransaction()
+        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
 
-        return proof.sig.by == notaryKey &&
-                proof.sig.verify(proof.tx.id) &&
+        return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
                 chan.portId == portIdentifier &&
                 chan.id == channelIdentifier &&
