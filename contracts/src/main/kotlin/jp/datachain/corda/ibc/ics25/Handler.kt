@@ -15,7 +15,7 @@ import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.*
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
-import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Version
 
 object Handler {

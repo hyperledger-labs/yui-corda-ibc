@@ -9,7 +9,7 @@ import jp.datachain.corda.ibc.ics26.HandleChanOpenTry
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
-import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
