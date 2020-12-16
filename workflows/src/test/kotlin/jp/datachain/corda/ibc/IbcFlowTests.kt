@@ -9,7 +9,7 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.OpaqueBytes

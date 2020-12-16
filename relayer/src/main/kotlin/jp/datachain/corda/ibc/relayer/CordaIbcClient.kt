@@ -16,7 +16,7 @@ import jp.datachain.corda.ibc.ics4.ChannelState
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
-import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Version
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.CordaRPCConnection

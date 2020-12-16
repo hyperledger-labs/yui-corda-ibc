@@ -8,7 +8,7 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenTry
 import jp.datachain.corda.ibc.states.Connection
-import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*

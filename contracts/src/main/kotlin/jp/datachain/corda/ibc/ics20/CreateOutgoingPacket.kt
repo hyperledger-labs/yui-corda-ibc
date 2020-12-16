@@ -5,7 +5,7 @@ import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.types.Height
+import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey

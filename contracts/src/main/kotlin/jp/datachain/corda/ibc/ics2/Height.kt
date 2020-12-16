@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc.types
+package jp.datachain.corda.ibc.ics2
 
 import net.corda.core.serialization.CordaSerializable
 

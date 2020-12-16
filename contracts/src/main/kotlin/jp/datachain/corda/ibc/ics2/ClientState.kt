@@ -8,7 +8,6 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcState
-import jp.datachain.corda.ibc.types.Height
 
 interface ClientState : IbcState {
     val consensusStates: Map<Height, ConsensusState>
