@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc.grpc
+package jp.datachain.corda.ibc.grpc_adapter
 
 import com.google.protobuf.ByteString
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
@@ -9,7 +9,6 @@ import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.Crypto
@@ -38,7 +37,6 @@ import jp.datachain.corda.ibc.grpc.SignedTransaction as GrpcSignedTransaction
 import jp.datachain.corda.ibc.grpc.ClientType as GrpcClientType
 import jp.datachain.corda.ibc.grpc.ConsensusState as GrpcConsensusState
 import jp.datachain.corda.ibc.grpc.CordaConsensusState as GrpcCordaConsensusState
-import jp.datachain.corda.ibc.grpc.Height as GrpcHeight
 
 fun Identifier.into(): GrpcIdentifier = GrpcIdentifier.newBuilder().setId(id).build()
 fun GrpcIdentifier.into() = Identifier(id)
@@ -174,18 +172,15 @@ fun GrpcClientType.into() = when(this) {
     GrpcClientType.UNRECOGNIZED -> throw IllegalArgumentException()
 }
 
-fun Height.into(): GrpcHeight = GrpcHeight.newBuilder().setHeight(height).build()
-fun GrpcHeight.into() = Height(height)
-
 fun CordaConsensusState.into(): GrpcCordaConsensusState = GrpcCordaConsensusState.newBuilder()
         .setTimestamp(timestamp.timestamp)
-        .setHeight(height.into())
+        .setHeight(height)
         .setBaseId(baseId.into())
         .setNotaryKey(notaryKey.into())
         .build()
 fun GrpcCordaConsensusState.into() = CordaConsensusState(
         timestamp = Timestamp(timestamp),
-        height = height.into(),
+        height = height,
         baseId = baseId.into(),
         notaryKey = notaryKey.into())
 fun GrpcCordaConsensusState.asSuper(): GrpcConsensusState = GrpcConsensusState.newBuilder()

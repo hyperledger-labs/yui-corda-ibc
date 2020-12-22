@@ -1,7 +1,9 @@
-package jp.datachain.corda.ibc.grpc
+package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusRuntimeException
+import jp.datachain.corda.ibc.grpc.AdminServiceGrpc
+import jp.datachain.corda.ibc.grpc.Void
 
 object ShutdownGrpcAdapter {
     @JvmStatic

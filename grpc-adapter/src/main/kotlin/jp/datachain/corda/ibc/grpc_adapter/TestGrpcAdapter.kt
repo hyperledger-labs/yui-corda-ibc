@@ -1,6 +1,7 @@
-package jp.datachain.corda.ibc.grpc
+package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.ManagedChannelBuilder
+import jp.datachain.corda.ibc.grpc.*
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics24.Host

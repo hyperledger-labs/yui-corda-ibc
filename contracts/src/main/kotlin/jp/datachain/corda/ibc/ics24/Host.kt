@@ -1,10 +1,10 @@
 package jp.datachain.corda.ibc.ics24
 
+import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.states.IbcState
-import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.BelongsToContract
@@ -33,13 +33,13 @@ data class Host constructor (
             emptyList()
     )
 
-    fun getCurrentHeight() = Height(0)
+    fun getCurrentHeight() = Height.getDefaultInstance()
 
     fun getStoredRecentConsensusStateCount() = 1
 
     fun getConsensusState(height: Height) : CordaConsensusState {
-        require(height.height == 0L)
-        return CordaConsensusState(Timestamp(0), Height(0), baseId, notary.owningKey)
+        require(height == getCurrentHeight())
+        return CordaConsensusState(Timestamp(0), height, baseId, notary.owningKey)
     }
 
     fun getCommitmentPrefix() = CommitmentPrefix(baseId.toString().toByteArray(charset = Charsets.US_ASCII))

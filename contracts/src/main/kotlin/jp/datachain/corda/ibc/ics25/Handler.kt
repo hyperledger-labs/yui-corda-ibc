@@ -1,5 +1,8 @@
 package jp.datachain.corda.ibc.ics25
 
+import ibc.core.client.v1.Client.Height
+import ibc.core.client.v1.compareTo
+import ibc.core.client.v1.isZero
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics2.ConsensusState
@@ -15,7 +18,6 @@ import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.*
 import jp.datachain.corda.ibc.states.Channel
 import jp.datachain.corda.ibc.states.Connection
-import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Version
 
 object Handler {
@@ -526,7 +528,7 @@ object Handler {
 
         require(conn.end.clientIdentifier == client.id)
         val latestClientHeight = client.latestClientHeight()
-        require(packet.timeoutHeight.height == 0L || latestClientHeight.height < packet.timeoutHeight.height)
+        require(packet.timeoutHeight.isZero() || latestClientHeight < packet.timeoutHeight)
 
         require(packet.sequence == chan.nextSequenceSend)
 
@@ -562,7 +564,7 @@ object Handler {
         require(conn.id == chan.end.connectionHops.single())
         require(conn.end.state == ConnectionState.OPEN)
 
-        require(packet.timeoutHeight.height == 0L || host.getCurrentHeight().height < packet.timeoutHeight.height)
+        require(packet.timeoutHeight.isZero() || host.getCurrentHeight() < packet.timeoutHeight)
         require(packet.timeoutTimestamp.timestamp == 0L || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
 
         require(client.verifyPacketData(

@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc.grpc
+package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.ServerBuilder
 

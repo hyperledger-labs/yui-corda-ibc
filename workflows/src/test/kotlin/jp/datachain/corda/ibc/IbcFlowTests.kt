@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc
 
+import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Amount
@@ -9,7 +10,6 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.OpaqueBytes
@@ -92,11 +92,11 @@ class IbcFlowTests {
         ))
 
         val clientAid = Identifier("clientA")
-        val consensusStateB = ibcB.host().getConsensusState(Height(0))
+        val consensusStateB = ibcB.host().getConsensusState(Height.getDefaultInstance())
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
         val clientBid = Identifier("clientB")
-        val consensusStateA = ibcA.host().getConsensusState(Height(0))
+        val consensusStateA = ibcA.host().getConsensusState(Height.getDefaultInstance())
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
         val connAid = Identifier("connectionA")
@@ -184,7 +184,7 @@ class IbcFlowTests {
                     chanAid,
                     portBid,
                     chanBid,
-                    Height(0),
+                    Height.getDefaultInstance(),
                     Timestamp(0),
                     sequence)
             ibcA.sendPacket(packet)
@@ -208,7 +208,7 @@ class IbcFlowTests {
                     chanBid,
                     portAid,
                     chanAid,
-                    Height(0),
+                    Height.getDefaultInstance(),
                     Timestamp(0),
                     sequence)
             ibcB.sendPacket(packet)
@@ -343,12 +343,12 @@ class IbcFlowTests {
         ibcA.createClient(
                 idCliABC,
                 ClientType.CordaClient,
-                ibcY.host().getConsensusState(Height(0)))
+                ibcY.host().getConsensusState(Height.getDefaultInstance()))
         // XYZ creates client for interacting with ABC
         ibcX.createClient(
                 idCliXYZ,
                 ClientType.CordaClient,
-                ibcB.host().getConsensusState(Height(0)))
+                ibcB.host().getConsensusState(Height.getDefaultInstance()))
 
         val idConnABC = Identifier("connABC")
         val idConnXYZ = Identifier("connXYZ")
@@ -438,7 +438,7 @@ class IbcFlowTests {
         val destChannel = idChanXYZ
         val sourcePort = idPortABC
         val sourceChannel = idChanABC
-        val timeoutHeight = Height(0)
+        val timeoutHeight = Height.getDefaultInstance()
         val timeoutTimestamp = Timestamp(0)
         // C sends 100 JPY to Z
         val seqCtoZ = ibcC.chan(idChanABC).nextSequenceSend
@@ -545,7 +545,7 @@ class IbcFlowTests {
                     idChanABC,
                     idPortXYZ,
                     idChanXYZ,
-                    Height(0),
+                    Height.getDefaultInstance(),
                     Timestamp(0),
                     seqXtoA)
             val packetXtoA = ibcX.chan(idChanXYZ).packets[seqXtoA]!!
@@ -574,7 +574,7 @@ class IbcFlowTests {
                     idChanABC,
                     idPortXYZ,
                     idChanXYZ,
-                    Height(0),
+                    Height.getDefaultInstance(),
                     Timestamp(0),
                     seqXtoA)
         }

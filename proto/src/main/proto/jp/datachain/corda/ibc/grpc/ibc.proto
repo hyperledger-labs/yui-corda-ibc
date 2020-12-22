@@ -1,11 +1,11 @@
 syntax = "proto3";
+package jp.datachain.corda.ibc.grpc;
 
 option java_multiple_files = true;
 option java_outer_classname = "IbcProto";
 
+import "ibc/core/client/v1/client.proto";
 import "jp/datachain/corda/ibc/grpc/corda.proto";
-
-package jp.datachain.corda.ibc.grpc;
 
 service IbcService {
   rpc CreateGenesis (Participants) returns (SignedTransaction);
@@ -73,13 +73,9 @@ enum ClientType {
   LoopbackClient = 3;
 }
 
-message Height {
-  uint64 height = 1;
-}
-
 message CordaConsensusState {
   uint64 timestamp = 1;
-  Height height = 2;
+  .ibc.core.client.v1.Height height = 2;
   StateRef base_id = 3;
   PublicKey notary_key = 4;
 }
