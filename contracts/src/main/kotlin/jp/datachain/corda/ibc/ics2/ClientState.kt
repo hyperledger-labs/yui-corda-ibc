@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.ics2
 
+import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics3.ConnectionEnd
 import jp.datachain.corda.ibc.ics23.CommitmentPrefix

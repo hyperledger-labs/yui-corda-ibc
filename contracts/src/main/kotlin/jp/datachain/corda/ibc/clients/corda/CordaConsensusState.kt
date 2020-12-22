@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.clients.corda
 
+import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.ics2.ConsensusState
-import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.StateRef
 import java.security.PublicKey

@@ -71,6 +71,7 @@ allprojects {
         reproducibleFileOrder = true
         jar {
             from sourceSets.main.kotlin
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         }
     }
 }

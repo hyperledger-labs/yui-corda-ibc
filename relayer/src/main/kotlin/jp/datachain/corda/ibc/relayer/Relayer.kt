@@ -1,11 +1,11 @@
 package jp.datachain.corda.ibc.relayer
 
+import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.ics2.Height
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.utilities.OpaqueBytes
 
@@ -22,11 +22,11 @@ object Relayer {
         ibcB.createHost(listOf("PartyB"))
 
         val clientAid = Identifier("client")
-        val consensusStateB = ibcB.host().getConsensusState(Height(0))
+        val consensusStateB = ibcB.host().getConsensusState(Height.getDefaultInstance())
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
         val clientBid = Identifier("client")
-        val consensusStateA = ibcA.host().getConsensusState(Height(0))
+        val consensusStateA = ibcA.host().getConsensusState(Height.getDefaultInstance())
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
         val connAid = Identifier("connection")
@@ -113,7 +113,7 @@ object Relayer {
                     chanAid,
                     portBid,
                     chanBid,
-                    Height(0),
+                    Height.getDefaultInstance(),
                     Timestamp(0),
                     sequence)
             ibcA.sendPacket(packet)
@@ -137,7 +137,7 @@ object Relayer {
                     chanBid,
                     portAid,
                     chanAid,
-                    Height(0),
+                    Height.getDefaultInstance(),
                     Timestamp(0),
                     sequence)
             ibcB.sendPacket(packet)

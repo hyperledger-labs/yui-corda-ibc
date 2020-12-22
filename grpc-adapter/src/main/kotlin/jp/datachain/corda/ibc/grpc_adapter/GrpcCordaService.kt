@@ -1,6 +1,9 @@
-package jp.datachain.corda.ibc.grpc
+package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.grpc.CordaServiceGrpc
+import jp.datachain.corda.ibc.grpc.Parties
+import jp.datachain.corda.ibc.grpc.PartiesFromNameRequest
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.utilities.NetworkHostAndPort
 

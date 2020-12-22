@@ -3,9 +3,7 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-
-    implementation project(":proto")
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     // gRPC dependencies
     runtimeOnly group: 'io.grpc', name: 'grpc-netty-shaded', version: "$grpc_version"
@@ -28,16 +26,16 @@ dependencies {
 
 task runGrpcAdapter(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'jp.datachain.corda.ibc.grpc.GrpcAdapter'
+    main = 'jp.datachain.corda.ibc.grpc_adapter.GrpcAdapter'
     args = ['localhost', '10006', 'user1', 'test']
 }
 
 task testGrpcAdapter(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'jp.datachain.corda.ibc.grpc.TestGrpcAdapter'
+    main = 'jp.datachain.corda.ibc.grpc_adapter.TestGrpcAdapter'
 }
 
 task shutdownGrpcAdapter(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'jp.datachain.corda.ibc.grpc.ShutdownGrpcAdapter'
+    main = 'jp.datachain.corda.ibc.grpc_adapter.ShutdownGrpcAdapter'
 }

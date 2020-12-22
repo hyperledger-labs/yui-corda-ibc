@@ -1,10 +1,11 @@
-package jp.datachain.corda.ibc.grpc
+package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.flows.IbcClientCreateFlow
 import jp.datachain.corda.ibc.flows.IbcFundAllocateFlow
 import jp.datachain.corda.ibc.flows.IbcGenesisCreateFlow
 import jp.datachain.corda.ibc.flows.IbcHostAndBankCreateFlow
+import jp.datachain.corda.ibc.grpc.*
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
