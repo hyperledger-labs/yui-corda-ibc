@@ -7,8 +7,8 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanCloseConfirm
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -33,11 +33,11 @@ class IbcChanCloseConfirmFlow(
         require(participants.contains(ourIdentity))
 
         // query chan from vault
-        val chan = serviceHub.vaultService.queryIbcState<Channel>(baseId, channelIdentifier)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, channelIdentifier)!!
 
         // query conn from vault
         val connId = chan.state.data.end.connectionHops.single()
-        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
         val clientId = conn.state.data.end.clientIdentifier

@@ -4,8 +4,8 @@ import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanCloseInit
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -28,11 +28,11 @@ class IbcChanCloseInitFlow(
         require(participants.contains(ourIdentity))
 
         // query channel from vault
-        val chan = serviceHub.vaultService.queryIbcState<Channel>(baseId, channelIdentifier)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, channelIdentifier)!!
 
         // query connection from vault
         val connId = chan.state.data.end.connectionHops.single()
-        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // create command and outputs
         val command = HandleChanCloseInit(portIdentifier, channelIdentifier)

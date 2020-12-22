@@ -15,8 +15,8 @@ import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.ChannelState
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Version
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.CordaRPCConnection
@@ -31,8 +31,8 @@ class CordaIbcClient(host: String, port: Int) {
 
     var host: Host? = null
     var client: Pair<ClientState, SignedTransaction>? = null
-    val conns = mutableMapOf<Identifier, Pair<Connection, SignedTransaction>>()
-    val chans = mutableMapOf<Identifier, Pair<Channel, SignedTransaction>>()
+    val conns = mutableMapOf<Identifier, Pair<IbcConnection, SignedTransaction>>()
+    val chans = mutableMapOf<Identifier, Pair<IbcChannel, SignedTransaction>>()
 
     fun start(username: String = "user1", password: String = "test") {
         cordaRPCConnection = cordaRPCClient.start(username, password)
@@ -52,15 +52,15 @@ class CordaIbcClient(host: String, port: Int) {
     fun connProof(id: Identifier) = conns[id]!!.second.toProof()
     fun conn() = conns.values.single().first
     fun connProof() = conns.values.single().second.toProof()
-    fun insertConn(v: Connection, stx: SignedTransaction) { assert(!conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
-    fun updateConn(v: Connection, stx: SignedTransaction) { assert(conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
+    fun insertConn(v: IbcConnection, stx: SignedTransaction) { assert(!conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
+    fun updateConn(v: IbcConnection, stx: SignedTransaction) { assert(conns.contains(v.id)); conns.put(v.id, Pair(v, stx))}
 
     fun chan(id: Identifier) = chans[id]!!.first
     fun chanProof(id: Identifier) = chans[id]!!.second.toProof()
     fun chan() = chans.values.single().first
     fun chanProof() = chans.values.single().second.toProof()
-    fun insertChan(v: Channel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
-    fun updateChan(v: Channel, stx: SignedTransaction) { assert(chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
+    fun insertChan(v: IbcChannel, stx: SignedTransaction) { assert(!chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
+    fun updateChan(v: IbcChannel, stx: SignedTransaction) { assert(chans.contains(v.id)); chans.put(v.id, Pair(v, stx))}
 
     fun createHost(participantNames: List<String>) {
         val participants = participantNames.map{ops().partiesFromName(it, false).single()}
@@ -120,7 +120,7 @@ class CordaIbcClient(host: String, port: Int) {
         val clientState = stx.tx.outputsOfType<ClientState>().single()
         updateClient(clientState, stx)
 
-        val connState = stx.tx.outputsOfType<Connection>().single()
+        val connState = stx.tx.outputsOfType<IbcConnection>().single()
         assert(connState.end.state == ConnectionState.INIT)
         insertConn(connState, stx)
     }
@@ -159,7 +159,7 @@ class CordaIbcClient(host: String, port: Int) {
         val clientState = stx.tx.outputsOfType<ClientState>().single()
         updateClient(clientState, stx)
 
-        val connState = stx.tx.outputsOfType<Connection>().single()
+        val connState = stx.tx.outputsOfType<IbcConnection>().single()
         assert(connState.end.state == ConnectionState.TRYOPEN)
         insertConn(connState, stx)
     }
@@ -183,7 +183,7 @@ class CordaIbcClient(host: String, port: Int) {
                 proofConsensus,
                 proofHeight,
                 consensusHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Connection>().single()
+        val state = stx.tx.outputsOfType<IbcConnection>().single()
         assert(state.end.state == ConnectionState.OPEN)
         updateConn(state, stx)
     }
@@ -199,7 +199,7 @@ class CordaIbcClient(host: String, port: Int) {
                 identifier,
                 proofAck,
                 proofHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Connection>().single()
+        val state = stx.tx.outputsOfType<IbcConnection>().single()
         assert(state.end.state == ConnectionState.OPEN)
         updateConn(state, stx)
     }
@@ -227,7 +227,7 @@ class CordaIbcClient(host: String, port: Int) {
         val hostState = stx.tx.outputsOfType<Host>().single()
         updateHost(hostState)
 
-        val chanState = stx.tx.outputsOfType<Channel>().single()
+        val chanState = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chanState.end.state == ChannelState.INIT)
         insertChan(chanState, stx)
     }
@@ -263,7 +263,7 @@ class CordaIbcClient(host: String, port: Int) {
         val hostState = stx.tx.outputsOfType<Host>().single()
         updateHost(hostState)
 
-        val chanState = stx.tx.outputsOfType<Channel>().single()
+        val chanState = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chanState.end.state == ChannelState.TRYOPEN)
         insertChan(chanState, stx)
     }
@@ -285,7 +285,7 @@ class CordaIbcClient(host: String, port: Int) {
                 counterpartyChannelIdentifier,
                 proofTry,
                 proofHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.end.state == ChannelState.OPEN)
         updateChan(state, stx)
     }
@@ -303,7 +303,7 @@ class CordaIbcClient(host: String, port: Int) {
                 channelIdentifier,
                 proofAck,
                 proofHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.end.state == ChannelState.OPEN)
         updateChan(state, stx)
     }
@@ -317,7 +317,7 @@ class CordaIbcClient(host: String, port: Int) {
                 host().baseId,
                 portIdentifier,
                 channelIdentifier).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.end.state == ChannelState.CLOSED)
         updateChan(state, stx)
     }
@@ -335,7 +335,7 @@ class CordaIbcClient(host: String, port: Int) {
                 channelIdentifier,
                 proofInit,
                 proofHeight).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.end.state == ChannelState.CLOSED)
         updateChan(state, stx)
     }
@@ -344,7 +344,7 @@ class CordaIbcClient(host: String, port: Int) {
             packet: Packet
     ) {
         val stx = ops().startFlow(::IbcSendPacketFlow, host().baseId, packet).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.nextSequenceSend == packet.sequence + 1)
         assert(state.packets[packet.sequence] == packet)
         updateChan(state, stx)
@@ -362,7 +362,7 @@ class CordaIbcClient(host: String, port: Int) {
                 proof,
                 proofHeight,
                 false).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.nextSequenceRecv == packet.sequence + 1)
         updateChan(state, stx)
     }
@@ -381,7 +381,7 @@ class CordaIbcClient(host: String, port: Int) {
                 proof,
                 proofHeight,
                 false).returnValue.get()
-        val state = stx.tx.outputsOfType<Channel>().single()
+        val state = stx.tx.outputsOfType<IbcChannel>().single()
         assert(state.nextSequenceAck == packet.sequence + 1)
         assert(!state.packets.contains(packet.sequence))
         updateChan(state, stx)

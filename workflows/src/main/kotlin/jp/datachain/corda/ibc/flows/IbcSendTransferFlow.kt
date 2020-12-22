@@ -8,8 +8,8 @@ import jp.datachain.corda.ibc.ics20.CreateOutgoingPacket
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -43,11 +43,11 @@ class IbcSendTransferFlow(
         require(participants.contains(ourIdentity))
 
         // query chan from vault
-        val chan = serviceHub.vaultService.queryIbcState<Channel>(baseId, sourceChannel)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, sourceChannel)!!
 
         // query conn from vault
         val connId = chan.state.data.end.connectionHops.single()
-        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
         val clientId = conn.state.data.end.clientIdentifier
