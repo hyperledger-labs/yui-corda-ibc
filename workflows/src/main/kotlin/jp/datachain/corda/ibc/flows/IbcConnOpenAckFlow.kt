@@ -7,7 +7,7 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenAck
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -36,7 +36,7 @@ class IbcConnOpenAckFlow(
         require(participants.contains(ourIdentity))
 
         // query conn state
-        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, identifier)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, identifier)!!
         // query client state
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, conn.state.data.end.clientIdentifier)!!
 

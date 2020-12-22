@@ -8,8 +8,8 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanOpenTry
 import jp.datachain.corda.ibc.ics4.ChannelOrder
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -43,14 +43,14 @@ class IbcChanOpenTryFlow(
 
         // query conn from vault
         val connId = connectionHops.single()
-        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
         val clientId = conn.state.data.end.clientIdentifier
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // (optional) channel from vault
-        val chanOrNull = serviceHub.vaultService.queryIbcState<Channel>(baseId, channelIdentifier)
+        val chanOrNull = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, channelIdentifier)
 
         // create command and outputs
         val command = HandleChanOpenTry(

@@ -11,7 +11,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 
 @BelongsToContract(Ibc::class)
-data class Channel private constructor (
+data class IbcChannel private constructor (
         override val participants: List<AbstractParty>,
         override val baseId: StateRef,
         override val id: Identifier,

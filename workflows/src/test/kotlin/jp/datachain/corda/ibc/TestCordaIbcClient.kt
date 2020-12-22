@@ -20,8 +20,8 @@ import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.ChannelState
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Timestamp
 import jp.datachain.corda.ibc.types.Version
@@ -50,11 +50,11 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun client(id: Identifier) = queryStateWithProof<ClientState>(id).first
     fun clientProof(id: Identifier) = queryStateWithProof<ClientState>(id).second
 
-    fun conn(id: Identifier) = queryStateWithProof<Connection>(id).first
-    fun connProof(id: Identifier) = queryStateWithProof<Connection>(id).second
+    fun conn(id: Identifier) = queryStateWithProof<IbcConnection>(id).first
+    fun connProof(id: Identifier) = queryStateWithProof<IbcConnection>(id).second
 
-    fun chan(id: Identifier) = queryStateWithProof<Channel>(id).first
-    fun chanProof(id: Identifier) = queryStateWithProof<Channel>(id).second
+    fun chan(id: Identifier) = queryStateWithProof<IbcChannel>(id).first
+    fun chanProof(id: Identifier) = queryStateWithProof<IbcChannel>(id).second
 
     private fun <T> executeFlow(logic: net.corda.core.flows.FlowLogic<T>) : T {
         val future = mockNode.startFlow(logic)
@@ -123,7 +123,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 counterpartyClientIdentifier,
                 version
         ))
-        val conn = stx.tx.outputsOfType<Connection>().single()
+        val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == identifier)
         assert(conn.end.state == ConnectionState.INIT)
     }
@@ -155,7 +155,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofHeight,
                 consensusHeight
         ))
-        val conn = stx.tx.outputsOfType<Connection>().single()
+        val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == desiredIdentifier)
         assert(conn.end.state == ConnectionState.TRYOPEN)
     }
@@ -179,7 +179,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofHeight,
                 consensusHeight
         ))
-        val conn = stx.tx.outputsOfType<Connection>().single()
+        val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == identifier)
         assert(conn.end.state == ConnectionState.OPEN)
     }
@@ -195,7 +195,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofAck,
                 proofHeight
         ))
-        val conn = stx.tx.outputsOfType<Connection>().single()
+        val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == identifier)
         assert(conn.end.state == ConnectionState.OPEN)
     }
@@ -219,7 +219,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 counterpartyChannelIdentifier,
                 version
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
         assert(chan.end.state == ChannelState.INIT)
@@ -252,7 +252,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofInit,
                 proofHeight
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
         assert(chan.end.state == ChannelState.TRYOPEN)
@@ -275,7 +275,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofTry,
                 proofHeight
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
         assert(chan.end.state == ChannelState.OPEN)
@@ -294,7 +294,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofAck,
                 proofHeight
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
         assert(chan.end.state == ChannelState.OPEN)
@@ -309,7 +309,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 portIdentifier,
                 channelIdentifier
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
         assert(chan.end.state == ChannelState.CLOSED)
@@ -328,7 +328,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proofInit,
                 proofHeight
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
         assert(chan.end.state == ChannelState.CLOSED)
@@ -338,7 +338,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             packet: Packet
     ) {
         val stx = executeFlow(IbcSendPacketFlow(baseId, packet))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceSend == packet.sequence + 1)
         assert(chan.packets[packet.sequence] == packet)
     }
@@ -355,7 +355,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proof,
                 proofHeight,
                 forIcs20))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceRecv == packet.sequence + 1)
     }
 
@@ -371,7 +371,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proof,
                 proofHeight,
                 forIcs20))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceRecv == 1L)
     }
 
@@ -389,7 +389,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proof,
                 proofHeight,
                 forIcs20))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceAck == packet.sequence + 1)
         assert(!chan.packets.contains(packet.sequence))
     }
@@ -408,7 +408,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 proof,
                 proofHeight,
                 forIcs20))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceAck == 1L)
         assert(!chan.packets.contains(packet.sequence))
     }
@@ -441,7 +441,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
                 timeoutTimestamp,
                 sequence
         ))
-        val chan = stx.tx.outputsOfType<Channel>().single()
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceSend == sequence + 1)
         val packet = chan.packets[sequence]!!
         assert(packet.destPort == destPort)

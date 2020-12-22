@@ -11,8 +11,8 @@ import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
@@ -63,7 +63,7 @@ data class CordaClientState private constructor(
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
-        val conn = stx.tx.outputsOfType<Connection>().singleOrNull() ?: return false
+        val conn = stx.tx.outputsOfType<IbcConnection>().singleOrNull() ?: return false
 
         return stx.notary!!.owningKey == notaryKey &&
                 conn.baseId == baseId &&
@@ -75,7 +75,7 @@ data class CordaClientState private constructor(
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
-        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val chan = stx.tx.outputsOfType<IbcChannel>().singleOrNull() ?: return false
 
         return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
@@ -88,7 +88,7 @@ data class CordaClientState private constructor(
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
-        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val chan = stx.tx.outputsOfType<IbcChannel>().singleOrNull() ?: return false
 
         return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
@@ -101,7 +101,7 @@ data class CordaClientState private constructor(
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
-        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val chan = stx.tx.outputsOfType<IbcChannel>().singleOrNull() ?: return false
 
         return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&
@@ -118,7 +118,7 @@ data class CordaClientState private constructor(
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
-        val chan = stx.tx.outputsOfType<Channel>().singleOrNull() ?: return false
+        val chan = stx.tx.outputsOfType<IbcChannel>().singleOrNull() ?: return false
 
         return stx.notary!!.owningKey == notaryKey &&
                 chan.baseId == baseId &&

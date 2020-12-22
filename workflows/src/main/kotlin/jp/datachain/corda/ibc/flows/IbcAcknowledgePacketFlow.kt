@@ -8,8 +8,8 @@ import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -43,11 +43,11 @@ class IbcAcknowledgePacketFlow(
 
         // query chan from vault
         val chanId = packet.sourceChannel
-        val chan = serviceHub.vaultService.queryIbcState<Channel>(baseId, chanId)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, chanId)!!
 
         // query conn from vault
         val connId = chan.state.data.end.connectionHops.single()
-        val conn = serviceHub.vaultService.queryIbcState<Connection>(baseId, connId)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
         val clientId = conn.state.data.end.clientIdentifier

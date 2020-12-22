@@ -8,7 +8,7 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenTry
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -43,7 +43,7 @@ class IbcConnOpenTryFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
 
         // query conn state
-        val connOrNull = serviceHub.vaultService.queryIbcState<Connection>(baseId, desiredIdentifier)
+        val connOrNull = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, desiredIdentifier)
 
         val command = HandleConnOpenTry(
                 desiredIdentifier,

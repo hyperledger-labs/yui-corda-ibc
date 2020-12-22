@@ -16,8 +16,8 @@ import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics3.ConnectionEnd
 import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.*
-import jp.datachain.corda.ibc.states.Channel
-import jp.datachain.corda.ibc.states.Connection
+import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Version
 
 object Handler {
@@ -72,7 +72,7 @@ object Handler {
 
         ctx.addOutput(host)
         ctx.addOutput(client)
-        ctx.addOutput(Connection(host, identifier, end))
+        ctx.addOutput(IbcConnection(host, identifier, end))
     }
 
     fun connOpenTry(
@@ -91,7 +91,7 @@ object Handler {
     ) {
         val host = ctx.getInput<Host>()
         val client = ctx.getInput<ClientState>()
-        val previous = ctx.getInputOrNull<Connection>()
+        val previous = ctx.getInputOrNull<IbcConnection>()
 
         if (previous != null) {
             require(host.connIds.contains(desiredIdentifier)){"unknown connection in host"}
@@ -146,7 +146,7 @@ object Handler {
                 clientIdentifier,
                 counterpartyClientIdentifier,
                 version)
-        ctx.addOutput(Connection(host, identifier, connectionEnd))
+        ctx.addOutput(IbcConnection(host, identifier, connectionEnd))
         ctx.addOutput(host.addConnection(identifier))
         ctx.addOutput(client.addConnection(identifier))
     }
@@ -163,7 +163,7 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getInput<Connection>()
+        val conn = ctx.getInput<IbcConnection>()
 
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
@@ -211,7 +211,7 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getInput<Connection>()
+        val conn = ctx.getInput<IbcConnection>()
 
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
@@ -250,7 +250,7 @@ object Handler {
         // TODO: port authentication should be added somehow
 
         val host = ctx.getInput<Host>()
-        val conn = ctx.getReference<Connection>()
+        val conn = ctx.getReference<IbcConnection>()
 
         require(host.connIds.contains(conn.id))
 
@@ -265,7 +265,7 @@ object Handler {
                 version)
 
         ctx.addOutput(host.addPortChannel(portIdentifier, channelIdentifier))
-        ctx.addOutput(Channel(host, portIdentifier, channelIdentifier, end))
+        ctx.addOutput(IbcChannel(host, portIdentifier, channelIdentifier, end))
     }
 
     fun chanOpenTry(
@@ -284,8 +284,8 @@ object Handler {
     ) {
         val host = ctx.getInput<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        val previous = ctx.getInputOrNull<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        val previous = ctx.getInputOrNull<IbcChannel>()
 
         if (previous != null) {
             require(host.portChanIds.contains(Pair(portIdentifier, channelIdentifier)))
@@ -334,7 +334,7 @@ object Handler {
                 connectionHops,
                 version)
 
-        val chan = Channel(host, portIdentifier, channelIdentifier, end)
+        val chan = IbcChannel(host, portIdentifier, channelIdentifier, end)
         ctx.addOutput(host.addPortChannel(portIdentifier, channelIdentifier))
         if (previous == null) {
             ctx.addOutput(chan)
@@ -357,8 +357,8 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        val chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        val chan = ctx.getInput<IbcChannel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -407,8 +407,8 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        val chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        val chan = ctx.getInput<IbcChannel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -447,8 +447,8 @@ object Handler {
             channelIdentifier: Identifier
     ) {
         val host = ctx.getReference<Host>()
-        val conn = ctx.getReference<Connection>()
-        val chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        val chan = ctx.getInput<IbcChannel>()
 
         require(host.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
@@ -472,8 +472,8 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        val chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        val chan = ctx.getInput<IbcChannel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -509,8 +509,8 @@ object Handler {
     fun sendPacket(ctx: Context, packet: Packet) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        val chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        val chan = ctx.getInput<IbcChannel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -546,8 +546,8 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        var chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        var chan = ctx.getInput<IbcChannel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
@@ -597,8 +597,8 @@ object Handler {
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
-        val conn = ctx.getReference<Connection>()
-        var chan = ctx.getInput<Channel>()
+        val conn = ctx.getReference<IbcConnection>()
+        var chan = ctx.getInput<IbcChannel>()
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
