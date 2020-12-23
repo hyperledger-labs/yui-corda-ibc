@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.ics2
 
 import ibc.core.client.v1.Client.Height
+import ibc.core.commitment.v1.Commitment
+import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics4.ChannelEnd
-import jp.datachain.corda.ibc.ics3.ConnectionEnd
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
@@ -23,7 +23,7 @@ interface ClientState : IbcState {
 
     fun verifyClientConsensusState(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             clientIdentifier: Identifier,
             consensusStateHeight: Height,
@@ -31,14 +31,14 @@ interface ClientState : IbcState {
 
     fun verifyConnectionState(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             connectionIdentifier: Identifier,
-            connectionEnd: ConnectionEnd) : Boolean
+            connectionEnd: Connection.ConnectionEnd) : Boolean
 
     fun verifyChannelState(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
@@ -46,7 +46,7 @@ interface ClientState : IbcState {
 
     fun verifyPacketData(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
@@ -55,7 +55,7 @@ interface ClientState : IbcState {
 
     fun verifyPacketAcknowledgement(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
@@ -64,7 +64,7 @@ interface ClientState : IbcState {
 
     fun verifyPacketAcknowledgementAbsence(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
@@ -72,7 +72,7 @@ interface ClientState : IbcState {
 
     fun verifyNextSequenceRecv(
             height: Height,
-            prefix: CommitmentPrefix,
+            prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,

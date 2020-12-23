@@ -1,9 +1,8 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client.Height
+import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenConfirm
@@ -19,9 +18,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcConnOpenConfirmFlow(
         val baseId: StateRef,
-        val identifier: Identifier,
-        val proofAck: CommitmentProof,
-        val proofHeight: Height
+        val msg: Tx.MsgConnectionOpenConfirm
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -31,12 +28,12 @@ class IbcConnOpenConfirmFlow(
         require(participants.contains(ourIdentity))
 
         // query conn state
-        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, identifier)!!
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, Identifier(msg.connectionId))!!
         // query client state
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, conn.state.data.end.clientIdentifier)!!
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(conn.state.data.end.clientId))!!
 
         // create command and outputs
-        val command = HandleConnOpenConfirm(identifier, proofAck, proofHeight)
+        val command = HandleConnOpenConfirm(msg)
         val ctx = Context(setOf(conn.state.data), setOf(host, client).map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)

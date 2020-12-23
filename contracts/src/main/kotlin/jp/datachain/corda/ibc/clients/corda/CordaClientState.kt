@@ -1,12 +1,12 @@
 package jp.datachain.corda.ibc.clients.corda
 
 import ibc.core.client.v1.Client.Height
+import ibc.core.commitment.v1.Commitment
+import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.*
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics3.ConnectionEnd
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics4.Packet
@@ -46,7 +46,7 @@ data class CordaClientState private constructor(
         throw NotImplementedError()
     }
 
-    override fun verifyClientConsensusState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, clientIdentifier: Identifier, consensusStateHeight: Height, consensusState: ConsensusState): Boolean {
+    override fun verifyClientConsensusState(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, clientIdentifier: Identifier, consensusStateHeight: Height, consensusState: ConsensusState): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
@@ -59,7 +59,7 @@ data class CordaClientState private constructor(
                 client.consensusStates.get(consensusStateHeight) == consensusState
     }
 
-    override fun verifyConnectionState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, connectionIdentifier: Identifier, connectionEnd: ConnectionEnd): Boolean {
+    override fun verifyConnectionState(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, connectionIdentifier: Identifier, connectionEnd: Connection.ConnectionEnd): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
@@ -71,7 +71,7 @@ data class CordaClientState private constructor(
                 conn.end == connectionEnd
     }
 
-    override fun verifyChannelState(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelEnd): Boolean {
+    override fun verifyChannelState(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelEnd): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
@@ -84,7 +84,7 @@ data class CordaClientState private constructor(
                 chan.end == channelEnd
     }
 
-    override fun verifyPacketData(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, packet: Packet): Boolean {
+    override fun verifyPacketData(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, packet: Packet): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
@@ -97,7 +97,7 @@ data class CordaClientState private constructor(
                 chan.packets.get(sequence) == packet
     }
 
-    override fun verifyPacketAcknowledgement(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, acknowledgement: Acknowledgement): Boolean {
+    override fun verifyPacketAcknowledgement(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, acknowledgement: Acknowledgement): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
@@ -110,11 +110,11 @@ data class CordaClientState private constructor(
                 chan.acknowledgements.get(sequence) == acknowledgement
     }
 
-    override fun verifyPacketAcknowledgementAbsence(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long): Boolean {
+    override fun verifyPacketAcknowledgementAbsence(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long): Boolean {
         throw NotImplementedError()
     }
 
-    override fun verifyNextSequenceRecv(height: Height, prefix: CommitmentPrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: Long): Boolean {
+    override fun verifyNextSequenceRecv(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, nextSequenceRecv: Long): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()

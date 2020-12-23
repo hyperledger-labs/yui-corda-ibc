@@ -1,12 +1,12 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanOpenInit
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.states.IbcConnection
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -24,7 +24,7 @@ class IbcChanOpenInitFlow(
         val channelIdentifier: Identifier,
         val counterpartyPortIdentifier: Identifier,
         val counterpartyChannelIdentifier: Identifier,
-        val version: Version
+        val version: Connection.Version
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {

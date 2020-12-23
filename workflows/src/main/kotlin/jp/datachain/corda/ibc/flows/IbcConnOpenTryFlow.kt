@@ -1,15 +1,12 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client.Height
+import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
-import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenTry
 import jp.datachain.corda.ibc.states.IbcConnection
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -20,17 +17,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcConnOpenTryFlow(
         val baseId: StateRef,
-        val desiredIdentifier: Identifier,
-        val counterpartyChosenConnectionIdentifer: Identifier,
-        val counterpartyConnectionIdentifier: Identifier,
-        val counterpartyPrefix: CommitmentPrefix,
-        val counterpartyClientIdentifier: Identifier,
-        val clientIdentifier: Identifier,
-        val counterpartyVersions: List<Version>,
-        val proofInit: CommitmentProof,
-        val proofConsensus: CommitmentProof,
-        val proofHeight: Height,
-        val consensusHeight: Height
+        val msg: Tx.MsgConnectionOpenTry
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -40,23 +27,12 @@ class IbcConnOpenTryFlow(
         require(participants.contains(ourIdentity))
 
         // query client state
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(msg.clientId))!!
 
         // query conn state
-        val connOrNull = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, desiredIdentifier)
+        val connOrNull = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, Identifier(msg.desiredConnectionId))
 
-        val command = HandleConnOpenTry(
-                desiredIdentifier,
-                counterpartyChosenConnectionIdentifer,
-                counterpartyConnectionIdentifier,
-                counterpartyPrefix,
-                counterpartyClientIdentifier,
-                clientIdentifier,
-                counterpartyVersions,
-                proofInit,
-                proofConsensus,
-                proofHeight,
-                consensusHeight)
+        val command = HandleConnOpenTry(msg)
         val inStates =
                 if (connOrNull == null)
                     setOf(host.state.data, client.state.data)
