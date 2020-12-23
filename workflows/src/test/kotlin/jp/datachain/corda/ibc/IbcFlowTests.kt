@@ -124,7 +124,7 @@ class IbcFlowTests {
 
         ibcA.connOpenAck(
                 connAid,
-                ibcB.conn(connBid).end.version,
+                ibcB.conn(connBid).end.versionsList.single(),
                 connBid,
                 ibcB.connProof(connBid),
                 ibcB.clientProof(clientBid),
@@ -148,7 +148,7 @@ class IbcFlowTests {
                 chanAid,
                 portBid,
                 chanBid,
-                ibcA.conn(connAid).end.version)
+                ibcA.conn(connAid).end.versionsList.single())
 
         ibcB.chanOpenTry(
                 order,
@@ -158,8 +158,8 @@ class IbcFlowTests {
                 chanBid,
                 portAid,
                 chanAid,
-                ibcB.conn(connBid).end.version,
-                ibcA.conn(connAid).end.version,
+                ibcB.conn(connBid).end.versionsList.single(),
+                ibcA.conn(connAid).end.versionsList.single(),
                 ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
 
@@ -377,7 +377,7 @@ class IbcFlowTests {
         // ABC executes connOpenAck
         ibcC.connOpenAck(
                 idConnABC,
-                ibcX.conn(idConnXYZ).end.version,
+                ibcX.conn(idConnXYZ).end.versionsList.single(),
                 idConnXYZ,
                 ibcX.connProof(idConnXYZ),
                 ibcX.clientProof(idCliXYZ),
@@ -403,7 +403,7 @@ class IbcFlowTests {
                 idChanABC,
                 idPortXYZ,
                 idChanXYZ,
-                ibcB.conn(idConnABC).end.version)
+                ibcB.conn(idConnABC).end.versionsList.single())
         // XYZ executes chanOpenTry
         ibcX.chanOpenTry(
                 order,
@@ -413,7 +413,7 @@ class IbcFlowTests {
                 idChanXYZ,
                 idPortABC,
                 idChanABC,
-                ibcY.conn(idConnXYZ).end.version,
+                ibcY.conn(idConnXYZ).end.versionsList.single(),
                 ibcB.chan(idChanABC).end.version,
                 ibcB.chanProof(idChanABC),
                 ibcB.host().getCurrentHeight())

@@ -3,22 +3,20 @@ package jp.datachain.corda.ibc.ics25
 import ibc.core.client.v1.Client.Height
 import ibc.core.client.v1.compareTo
 import ibc.core.client.v1.isZero
+import ibc.core.connection.v1.Connection
+import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics2.ConsensusState
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics3.ConnectionEnd
-import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.*
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
-import jp.datachain.corda.ibc.types.Version
 
 object Handler {
     fun createClient(
@@ -40,127 +38,97 @@ object Handler {
         }
     }
 
-    fun connOpenInit(
-            ctx: Context,
-            identifier: Identifier,
-            desiredCounterpartyConnectionIdentifier: Identifier,
-            counterpartyPrefix: CommitmentPrefix,
-            clientIdentifier: Identifier,
-            counterpartyClientIdentifier: Identifier,
-            version: Version?
-    ) {
-        val host = ctx.getInput<Host>().addConnection(identifier)
-        val client = ctx.getInput<ClientState>().addConnection(identifier)
+    fun connOpenInit(ctx: Context, msg: Tx.MsgConnectionOpenInit) {
+        val host = ctx.getInput<Host>().addConnection(Identifier(msg.connectionId))
+        val client = ctx.getInput<ClientState>().addConnection(Identifier(msg.connectionId))
 
-        require(host.clientIds.contains(clientIdentifier)){"unknown client"}
-        require(client.id == clientIdentifier){"mismatch client"}
+        require(host.clientIds.contains(Identifier(msg.clientId))){"unknown client"}
+        require(client.id == Identifier(msg.clientId)){"mismatch client"}
 
-        val versions = if (version != null) {
-            require(host.getCompatibleVersions().contains(version)){"incompatible version"}
-            listOf(version)
+        val versions = if (msg.hasVersion()) {
+            require(host.getCompatibleVersions().contains(msg.version)){"incompatible version"}
+            listOf(msg.version)
         } else {
             host.getCompatibleVersions()
         }
-        val end = ConnectionEnd(
-                ConnectionState.INIT,
-                desiredCounterpartyConnectionIdentifier,
-                counterpartyPrefix,
-                clientIdentifier,
-                counterpartyClientIdentifier,
-                versions
-        )
+        val end = Connection.ConnectionEnd.newBuilder()
+                .setClientId(msg.clientId)
+                .addAllVersions(versions)
+                .setState(Connection.State.STATE_INIT)
+                .setCounterparty(msg.counterparty)
+                .build()
 
         ctx.addOutput(host)
         ctx.addOutput(client)
-        ctx.addOutput(IbcConnection(host, identifier, end))
+        ctx.addOutput(IbcConnection(host, Identifier(msg.connectionId), end))
     }
 
-    fun connOpenTry(
-            ctx: Context,
-            desiredIdentifier: Identifier,
-            counterpartyChosenConnectionIdentifier: Identifier,
-            counterpartyConnectionIdentifier: Identifier,
-            counterpartyPrefix: CommitmentPrefix,
-            counterpartyClientIdentifier: Identifier,
-            clientIdentifier: Identifier,
-            counterpartyVersions: List<Version>,
-            proofInit: CommitmentProof,
-            proofConsensus: CommitmentProof,
-            proofHeight: Height,
-            consensusHeight: Height
-    ) {
+    fun connOpenTry(ctx: Context, msg: Tx.MsgConnectionOpenTry) {
         val host = ctx.getInput<Host>()
         val client = ctx.getInput<ClientState>()
         val previous = ctx.getInputOrNull<IbcConnection>()
 
         if (previous != null) {
-            require(host.connIds.contains(desiredIdentifier)){"unknown connection in host"}
-            require(client.connIds.contains(desiredIdentifier)){"unknown connection in client"}
-            require(previous.id == desiredIdentifier){"mismatch connection"}
+            require(host.connIds.contains(Identifier(msg.desiredConnectionId))){"unknown connection in host"}
+            require(client.connIds.contains(Identifier(msg.desiredConnectionId))){"unknown connection in client"}
+            require(previous.id == Identifier(msg.desiredConnectionId)){"mismatch connection"}
         }
         require(host.clientIds.contains(client.id)){"unknown client"}
-        require(clientIdentifier == client.id){"mismatch client"}
+        require(Identifier(msg.clientId) == client.id){"mismatch client"}
 
-        require(counterpartyChosenConnectionIdentifier == Identifier("") ||
-                counterpartyChosenConnectionIdentifier == desiredIdentifier)
+        require(msg.counterpartyChosenConnectionId == "" ||
+                msg.counterpartyChosenConnectionId == msg.desiredConnectionId)
 
         require(previous == null ||
-                (previous.end.state == ConnectionState.INIT &&
-                        previous.end.counterpartyConnectionIdentifier == counterpartyConnectionIdentifier &&
-                        previous.end.counterpartyPrefix == counterpartyPrefix &&
-                        previous.end.clientIdentifier == clientIdentifier &&
-                        previous.end.counterpartyClientIdentifier == counterpartyClientIdentifier)
+                (previous.end.state == Connection.State.STATE_INIT &&
+                        previous.end.counterparty.connectionId == msg.counterparty.connectionId &&
+                        previous.end.counterparty.prefix == msg.counterparty.prefix &&
+                        previous.end.clientId == msg.clientId &&
+                        previous.end.counterparty.clientId == msg.counterparty.clientId)
         ){"invalid previous state"}
 
-        val versionsIntersection = counterpartyVersions.intersect(if (previous != null) { previous.end.versions } else { host.getCompatibleVersions() })
+        val versionsIntersection = msg.counterpartyVersionsList.intersect(if (previous != null) { previous.end.versionsList } else { host.getCompatibleVersions() })
         val version = host.pickVersion(versionsIntersection)
 
-        val expected = ConnectionEnd(
-                ConnectionState.INIT,
-                counterpartyChosenConnectionIdentifier,
-                host.getCommitmentPrefix(),
-                counterpartyClientIdentifier,
-                clientIdentifier,
-                counterpartyVersions)
+        val expected = Connection.ConnectionEnd.newBuilder()
+                .setClientId(msg.counterparty.clientId)
+                .addAllVersions(msg.counterpartyVersionsList)
+                .setState(Connection.State.STATE_INIT)
+                .setCounterparty(Connection.Counterparty.newBuilder()
+                        .setClientId(msg.clientId)
+                        .setConnectionId(msg.counterpartyChosenConnectionId)
+                        .setPrefix(host.getCommitmentPrefix())
+                        .build())
+                .build()
         require(client.verifyConnectionState(
-                proofHeight,
-                counterpartyPrefix,
-                proofInit,
-                counterpartyConnectionIdentifier,
+                msg.proofHeight,
+                msg.counterparty.prefix,
+                CommitmentProof(msg.proofInit),
+                Identifier(msg.counterparty.connectionId),
                 expected)){"connection verification failure"}
 
-        val expectedConsensusState = host.getConsensusState(consensusHeight)
+        val expectedConsensusState = host.getConsensusState(msg.consensusHeight)
         require(client.verifyClientConsensusState(
-                proofHeight,
-                counterpartyPrefix,
-                proofConsensus,
-                counterpartyClientIdentifier,
-                consensusHeight,
+                msg.proofHeight,
+                msg.counterparty.prefix,
+                CommitmentProof(msg.proofConsensus),
+                Identifier(msg.counterparty.clientId),
+                msg.consensusHeight,
                 expectedConsensusState)){"client consensus verification failure"}
 
-        val identifier = desiredIdentifier
-        val connectionEnd = ConnectionEnd(
-                ConnectionState.TRYOPEN,
-                counterpartyConnectionIdentifier,
-                counterpartyPrefix,
-                clientIdentifier,
-                counterpartyClientIdentifier,
-                version)
-        ctx.addOutput(IbcConnection(host, identifier, connectionEnd))
-        ctx.addOutput(host.addConnection(identifier))
-        ctx.addOutput(client.addConnection(identifier))
+        val identifier = msg.desiredConnectionId
+        val connectionEnd = Connection.ConnectionEnd.newBuilder()
+                .setClientId(msg.clientId)
+                .addAllVersions(listOf(version))
+                .setState(Connection.State.STATE_TRYOPEN)
+                .setCounterparty(msg.counterparty)
+                .build()
+        ctx.addOutput(IbcConnection(host, Identifier(identifier), connectionEnd))
+        ctx.addOutput(host.addConnection(Identifier(identifier)))
+        ctx.addOutput(client.addConnection(Identifier(identifier)))
     }
 
-    fun connOpenAck(
-            ctx: Context,
-            identifier: Identifier,
-            version: Version,
-            counterpartyIdentifier: Identifier,
-            proofTry: CommitmentProof,
-            proofConsensus: CommitmentProof,
-            proofHeight: Height,
-            consensusHeight: Height
-    ) {
+    fun connOpenAck(ctx: Context, msg: Tx.MsgConnectionOpenAck) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
         val conn = ctx.getInput<IbcConnection>()
@@ -168,47 +136,49 @@ object Handler {
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
         require(client.connIds.contains(conn.id)){"unknown connection in client"}
-        require(conn.id == identifier){"mismatch connection"}
-        require(client.id == conn.end.clientIdentifier){"mismatch client"}
+        require(conn.id == Identifier(msg.connectionId)){"mismatch connection"}
+        require(client.id == Identifier(conn.end.clientId)){"mismatch client"}
 
-        require(consensusHeight <= host.getCurrentHeight()){"unknown height"}
-        require(conn.end.counterpartyConnectionIdentifier == Identifier("") ||
-                counterpartyIdentifier == conn.end.counterpartyConnectionIdentifier)
-        require(conn.end.state == ConnectionState.INIT && conn.end.versions.contains(version) ||
-                conn.end.state == ConnectionState.TRYOPEN || conn.end.version == version){"invalid connection state"}
+        require(msg.consensusHeight <= host.getCurrentHeight()){"unknown height"}
+        require(conn.end.counterparty.connectionId == "" ||
+                msg.counterpartyConnectionId == conn.end.counterparty.connectionId)
+        require(conn.end.state == Connection.State.STATE_INIT && conn.end.versionsList.contains(msg.version) ||
+                conn.end.state == Connection.State.STATE_TRYOPEN || conn.end.versionsList.single() == msg.version){"invalid connection state"}
 
-        val expected = ConnectionEnd(
-                ConnectionState.TRYOPEN,
-                identifier,
-                host.getCommitmentPrefix(),
-                conn.end.counterpartyClientIdentifier,
-                conn.end.clientIdentifier,
-                version)
+        val expected = Connection.ConnectionEnd.newBuilder()
+                .setClientId(conn.end.counterparty.clientId)
+                .addAllVersions(listOf(msg.version))
+                .setState(Connection.State.STATE_TRYOPEN)
+                .setCounterparty(Connection.Counterparty.newBuilder()
+                        .setClientId(conn.end.clientId)
+                        .setConnectionId(msg.connectionId)
+                        .setPrefix(host.getCommitmentPrefix())
+                        .build())
+                .build()
         require(client.verifyConnectionState(
-                proofHeight,
-                conn.end.counterpartyPrefix,
-                proofTry,
-                counterpartyIdentifier,
+                msg.proofHeight,
+                conn.end.counterparty.prefix,
+                CommitmentProof(msg.proofTry),
+                Identifier(msg.counterpartyConnectionId),
                 expected)){"connection verification failure"}
 
-        val expectedConsensusState = host.getConsensusState(consensusHeight)
+        val expectedConsensusState = host.getConsensusState(msg.consensusHeight)
         require(client.verifyClientConsensusState(
-                proofHeight,
-                conn.end.counterpartyPrefix,
-                proofConsensus,
-                conn.end.counterpartyClientIdentifier,
-                consensusHeight,
+                msg.proofHeight,
+                conn.end.counterparty.prefix,
+                CommitmentProof(msg.proofConsensus),
+                Identifier(conn.end.counterparty.clientId),
+                msg.consensusHeight,
                 expectedConsensusState)){"client consensus verification failure"}
 
-        ctx.addOutput(conn.copy(end = conn.end.copy(state = ConnectionState.OPEN,  versions = listOf(version))))
+        ctx.addOutput(conn.copy(end = conn.end.toBuilder()
+                .setState(Connection.State.STATE_OPEN)
+                .clearVersions()
+                .addAllVersions(listOf(msg.version))
+                .build()))
     }
 
-    fun connOpenConfirm(
-            ctx: Context,
-            identifier: Identifier,
-            proofAck: CommitmentProof,
-            proofHeight: Height
-    ) {
+    fun connOpenConfirm(ctx: Context, msg: Tx.MsgConnectionOpenConfirm) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
         val conn = ctx.getInput<IbcConnection>()
@@ -216,25 +186,31 @@ object Handler {
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
         require(client.connIds.contains(conn.id)){"unknown connection in client"}
-        require(conn.id == identifier){"mismatch connection"}
-        require(client.id == conn.end.clientIdentifier){"mismatch client"}
+        require(conn.id == Identifier(msg.connectionId)){"mismatch connection"}
+        require(client.id == Identifier(conn.end.clientId)){"mismatch client"}
 
-        require(conn.end.state == ConnectionState.TRYOPEN){"invalid connection state"}
-        val expected = ConnectionEnd(
-                ConnectionState.OPEN,
-                identifier,
-                host.getCommitmentPrefix(),
-                conn.end.counterpartyClientIdentifier,
-                conn.end.clientIdentifier,
-                conn.end.version)
+        require(conn.end.state == Connection.State.STATE_TRYOPEN){"invalid connection state"}
+        val expected = Connection.ConnectionEnd.newBuilder()
+                .setClientId(conn.end.counterparty.clientId)
+                .addAllVersions(conn.end.versionsList)
+                .setState(Connection.State.STATE_OPEN)
+                .setCounterparty(Connection.Counterparty.newBuilder()
+                        .setClientId(conn.end.clientId)
+                        .setConnectionId(msg.connectionId)
+                        .setPrefix(host.getCommitmentPrefix())
+                        .build())
+                .build()
         require(client.verifyConnectionState(
-                proofHeight,
-                conn.end.counterpartyPrefix,
-                proofAck,
-                conn.end.counterpartyConnectionIdentifier,
+                msg.proofHeight,
+                conn.end.counterparty.prefix,
+                CommitmentProof(msg.proofAck),
+                Identifier(conn.end.counterparty.connectionId),
                 expected)){"connection verification failure"}
 
-        ctx.addOutput(conn.copy(end = conn.end.copy(state = ConnectionState.OPEN)))
+        ctx.addOutput(conn.copy(end = conn.end.toBuilder()
+                .setState(Connection.State.STATE_OPEN)
+                .build()
+        ))
     }
 
     fun chanOpenInit(
@@ -245,7 +221,7 @@ object Handler {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version
+            version: Connection.Version
     ) {
         // TODO: port authentication should be added somehow
 
@@ -277,8 +253,8 @@ object Handler {
             counterpartyChosenChannelIdentifer: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version,
-            counterpartyVersion: Version,
+            version: Connection.Version,
+            counterpartyVersion: Connection.Version,
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
@@ -296,7 +272,7 @@ object Handler {
         require(host.connIds.contains(conn.id))
         require(client.connIds.contains(conn.id))
         require(conn.id == connectionHops.single())
-        require(client.id == conn.end.clientIdentifier)
+        require(client.id == Identifier(conn.end.clientId))
 
         require(counterpartyChosenChannelIdentifer == Identifier("") ||
                 counterpartyChosenChannelIdentifer == channelIdentifier)
@@ -309,18 +285,18 @@ object Handler {
                         previous.end.connectionHops == connectionHops &&
                         previous.end.version == version))
 
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         val expected = ChannelEnd(
                 ChannelState.INIT,
                 order,
                 portIdentifier,
                 counterpartyChosenChannelIdentifer,
-                listOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(Identifier(conn.end.counterparty.connectionId)),
                 counterpartyVersion)
         require(client.verifyChannelState(
                 proofHeight,
-                conn.end.counterpartyPrefix,
+                conn.end.counterparty.prefix,
                 proofInit,
                 counterpartyPortIdentifier,
                 counterpartyChannelIdentifier,
@@ -350,7 +326,7 @@ object Handler {
             ctx: Context,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            counterpartyVersion: Version,
+            counterpartyVersion: Connection.Version,
             counterpartyChannelIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofHeight: Height
@@ -366,7 +342,7 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == portIdentifier)
         require(chan.id == channelIdentifier)
-        require(client.id == conn.end.clientIdentifier)
+        require(client.id == Identifier(conn.end.clientId))
 
         require(chan.end.state == ChannelState.INIT || chan.end.state == ChannelState.TRYOPEN)
 
@@ -374,18 +350,18 @@ object Handler {
                 counterpartyChannelIdentifier == chan.end.counterpartyChannelIdentifier)
 
         require(conn.id == chan.end.connectionHops.single())
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         val expected = ChannelEnd(
                 ChannelState.TRYOPEN,
                 chan.end.ordering,
                 portIdentifier,
                 channelIdentifier,
-                listOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(Identifier(conn.end.counterparty.connectionId)),
                 counterpartyVersion)
         require(client.verifyChannelState(
                 proofHeight,
-                conn.end.counterpartyPrefix,
+                conn.end.counterparty.prefix,
                 proofTry,
                 chan.end.counterpartyPortIdentifier,
                 chan.end.counterpartyChannelIdentifier,
@@ -416,23 +392,23 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == portIdentifier)
         require(chan.id == channelIdentifier)
-        require(client.id == conn.end.clientIdentifier)
+        require(client.id == Identifier(conn.end.clientId))
 
         require(chan.end.state == ChannelState.TRYOPEN)
 
         require(conn.id == chan.end.connectionHops.single())
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         val expected = ChannelEnd(
                 ChannelState.OPEN,
                 chan.end.ordering,
                 portIdentifier,
                 channelIdentifier,
-                listOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(Identifier(conn.end.counterparty.connectionId)),
                 chan.end.version)
         require(client.verifyChannelState(
                 proofHeight,
-                conn.end.counterpartyPrefix,
+                conn.end.counterparty.prefix,
                 proofAck,
                 chan.end.counterpartyPortIdentifier,
                 chan.end.counterpartyChannelIdentifier,
@@ -458,7 +434,7 @@ object Handler {
         require(chan.end.state != ChannelState.CLOSED)
 
         require(conn.id == chan.end.connectionHops.single())
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.CLOSED)))
     }
@@ -481,23 +457,23 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == portIdentifier)
         require(chan.id == channelIdentifier)
-        require(client.id == conn.end.clientIdentifier)
+        require(client.id == Identifier(conn.end.clientId))
 
         require(chan.end.state != ChannelState.CLOSED)
 
         require(conn.id == chan.end.connectionHops.single())
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         val expected = ChannelEnd(
                 ChannelState.CLOSED,
                 chan.end.ordering,
                 portIdentifier,
                 channelIdentifier,
-                listOf(conn.end.counterpartyConnectionIdentifier),
+                listOf(Identifier(conn.end.counterparty.connectionId)),
                 chan.end.version)
         require(client.verifyChannelState(
                 proofHeight,
-                conn.end.counterpartyPrefix,
+                conn.end.counterparty.prefix,
                 proofInit,
                 chan.end.counterpartyPortIdentifier,
                 chan.end.counterpartyChannelIdentifier,
@@ -526,7 +502,7 @@ object Handler {
 
         require(conn.id == chan.end.connectionHops.single())
 
-        require(conn.end.clientIdentifier == client.id)
+        require(Identifier(conn.end.clientId) == client.id)
         val latestClientHeight = client.latestClientHeight()
         require(packet.timeoutHeight.isZero() || latestClientHeight < packet.timeoutHeight)
 
@@ -562,14 +538,14 @@ object Handler {
         require(packet.sourceChannel == chan.end.counterpartyChannelIdentifier)
 
         require(conn.id == chan.end.connectionHops.single())
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         require(packet.timeoutHeight.isZero() || host.getCurrentHeight() < packet.timeoutHeight)
         require(packet.timeoutTimestamp.timestamp == 0L || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
 
         require(client.verifyPacketData(
                 proofHeight,
-                conn.end.counterpartyPrefix,
+                conn.end.counterparty.prefix,
                 proof,
                 packet.sourcePort,
                 packet.sourceChannel,
@@ -614,13 +590,13 @@ object Handler {
         require(packet.destChannel == chan.end.counterpartyChannelIdentifier)
 
         require(conn.id == chan.end.connectionHops.single())
-        require(conn.end.state == ConnectionState.OPEN)
+        require(conn.end.state == Connection.State.STATE_OPEN)
 
         require(chan.packets[packet.sequence] == packet)
 
         require(client.verifyPacketAcknowledgement(
                 proofHeight,
-                conn.end.counterpartyPrefix,
+                conn.end.counterparty.prefix,
                 proof,
                 packet.destPort,
                 packet.destChannel,

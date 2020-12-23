@@ -1,12 +1,12 @@
 package jp.datachain.corda.ibc.ics24
 
 import ibc.core.client.v1.Client.Height
+import ibc.core.commitment.v1.Commitment
+import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Timestamp
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -42,12 +42,12 @@ data class Host constructor (
         return CordaConsensusState(Timestamp(0), height, baseId, notary.owningKey)
     }
 
-    fun getCommitmentPrefix() = CommitmentPrefix(baseId.toString().toByteArray(charset = Charsets.US_ASCII))
+    fun getCommitmentPrefix() = Commitment.MerklePrefix.getDefaultInstance()!!
 
     fun currentTimestamp() = Timestamp(0)
 
-    fun getCompatibleVersions() = listOf(Version(""))
-    fun pickVersion(versions: Collection<Version>) = versions.single()
+    fun getCompatibleVersions() = listOf(Connection.Version.getDefaultInstance()!!)
+    fun pickVersion(versions: Collection<Connection.Version>) = versions.single()
 
     fun addClient(id: Identifier) : Host {
         require(!clientIds.contains(id))

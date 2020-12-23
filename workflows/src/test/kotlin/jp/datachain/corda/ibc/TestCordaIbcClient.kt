@@ -1,6 +1,9 @@
 package jp.datachain.corda.ibc
 
 import ibc.core.client.v1.Client.Height
+import ibc.core.commitment.v1.Commitment
+import ibc.core.connection.v1.Connection
+import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.clients.corda.toProof
@@ -11,11 +14,9 @@ import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.FungibleTokenPacketData
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics3.ConnectionState
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.ChannelState
@@ -24,7 +25,6 @@ import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Timestamp
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
 import net.corda.testing.node.MockNetwork
@@ -109,79 +109,87 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun connOpenInit(
             identifier: Identifier,
             desiredConnectionIdentifier: Identifier,
-            counterpartyPrefix: CommitmentPrefix,
+            counterpartyPrefix: Commitment.MerklePrefix,
             clientIdentifier: Identifier,
             counterpartyClientIdentifier: Identifier,
-            version: Version?
+            version: Connection.Version?
     ) {
-        val stx = executeFlow(IbcConnOpenInitFlow(
-                baseId,
-                identifier,
-                desiredConnectionIdentifier,
-                counterpartyPrefix,
-                clientIdentifier,
-                counterpartyClientIdentifier,
-                version
-        ))
+        val msg = Tx.MsgConnectionOpenInit.newBuilder()
+                .setClientId(clientIdentifier.id)
+                .setConnectionId(identifier.id)
+                .setCounterparty(Connection.Counterparty.newBuilder()
+                        .setClientId(counterpartyClientIdentifier.id)
+                        .setConnectionId(desiredConnectionIdentifier.id)
+                        .setPrefix(counterpartyPrefix)
+                        .build())
+                .apply{if (version != null) setVersion(version)}
+                .build()
+        val stx = executeFlow(IbcConnOpenInitFlow(baseId, msg))
         val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == identifier)
-        assert(conn.end.state == ConnectionState.INIT)
+        assert(conn.end.state == Connection.State.STATE_INIT)
     }
 
     fun connOpenTry(
             desiredIdentifier: Identifier,
             counterpartyChosenConnectionIdentifer: Identifier,
             counterpartyConnectionIdentifier: Identifier,
-            counterpartyPrefix: CommitmentPrefix,
+            counterpartyPrefix: Commitment.MerklePrefix,
             counterpartyClientIdentifier: Identifier,
             clientIdentifier: Identifier,
-            counterpartyVersions: List<Version>,
+            counterpartyVersions: List<Connection.Version>,
             proofInit: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
             consensusHeight: Height
     ) {
-        val stx = executeFlow(IbcConnOpenTryFlow(
-                baseId,
-                desiredIdentifier,
-                counterpartyChosenConnectionIdentifer,
-                counterpartyConnectionIdentifier,
-                counterpartyPrefix,
-                counterpartyClientIdentifier,
-                clientIdentifier,
-                counterpartyVersions,
-                proofInit,
-                proofConsensus,
-                proofHeight,
-                consensusHeight
-        ))
+        val msg = Tx.MsgConnectionOpenTry.newBuilder()
+                .setClientId(clientIdentifier.id)
+                .setDesiredConnectionId(desiredIdentifier.id)
+                .setCounterpartyChosenConnectionId(counterpartyChosenConnectionIdentifer.id)
+                //.setClientState(...)
+                .setCounterparty(Connection.Counterparty.newBuilder()
+                        .setClientId(counterpartyClientIdentifier.id)
+                        .setConnectionId(counterpartyConnectionIdentifier.id)
+                        .setPrefix(counterpartyPrefix)
+                        .build())
+                .addAllCounterpartyVersions(counterpartyVersions)
+                .setProofHeight(proofHeight)
+                .setProofInit(proofInit.toByteString())
+                //.setProofClient(...)
+                .setProofConsensus(proofConsensus.toByteString())
+                .setConsensusHeight(consensusHeight)
+                .build()
+        val stx = executeFlow(IbcConnOpenTryFlow(baseId, msg))
         val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == desiredIdentifier)
-        assert(conn.end.state == ConnectionState.TRYOPEN)
+        assert(conn.end.state == Connection.State.STATE_TRYOPEN)
     }
 
     fun connOpenAck(
             identifier: Identifier,
-            version: Version,
+            version: Connection.Version,
             counterpartyIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofConsensus: CommitmentProof,
             proofHeight: Height,
             consensusHeight: Height
     ) {
-        val stx = executeFlow(IbcConnOpenAckFlow(
-                baseId,
-                identifier,
-                version,
-                counterpartyIdentifier,
-                proofTry,
-                proofConsensus,
-                proofHeight,
-                consensusHeight
-        ))
+        val msg = Tx.MsgConnectionOpenAck.newBuilder()
+                .setConnectionId(identifier.id)
+                .setCounterpartyConnectionId(counterpartyIdentifier.id)
+                .setVersion(version)
+                //.setClientState(...)
+                .setProofHeight(proofHeight)
+                .setProofTry(proofTry.toByteString())
+                //.setProofClient(...)
+                .setProofConsensus(proofConsensus.toByteString())
+                .setConsensusHeight(consensusHeight)
+                .build()
+        val stx = executeFlow(IbcConnOpenAckFlow(baseId, msg))
         val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == identifier)
-        assert(conn.end.state == ConnectionState.OPEN)
+        assert(conn.end.state == Connection.State.STATE_OPEN)
     }
 
     fun connOpenConfirm(
@@ -189,15 +197,15 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofAck: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = executeFlow(IbcConnOpenConfirmFlow(
-                baseId,
-                identifier,
-                proofAck,
-                proofHeight
-        ))
+        val msg = Tx.MsgConnectionOpenConfirm.newBuilder()
+                .setConnectionId(identifier.id)
+                .setProofAck(proofAck.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcConnOpenConfirmFlow(baseId, msg))
         val conn = stx.tx.outputsOfType<IbcConnection>().single()
         assert(conn.id == identifier)
-        assert(conn.end.state == ConnectionState.OPEN)
+        assert(conn.end.state == Connection.State.STATE_OPEN)
     }
 
     fun chanOpenInit(
@@ -207,7 +215,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version
+            version: Connection.Version
     ) {
         val stx = executeFlow(IbcChanOpenInitFlow(
                 baseId,
@@ -233,8 +241,8 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             counterpartyChosenChannelIdentifer: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version,
-            counterpartyVersion: Version,
+            version: Connection.Version,
+            counterpartyVersion: Connection.Version,
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
@@ -261,7 +269,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     fun chanOpenAck(
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            counterpartyVersion: Version,
+            counterpartyVersion: Connection.Version,
             counterpartyChannelIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofHeight: Height

@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement
 import jp.datachain.corda.ibc.ics4.Acknowledgement
@@ -50,7 +51,7 @@ class IbcAcknowledgePacketFlow(
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
-        val clientId = conn.state.data.end.clientIdentifier
+        val clientId = Identifier(conn.state.data.end.clientId)
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // create command and outputs

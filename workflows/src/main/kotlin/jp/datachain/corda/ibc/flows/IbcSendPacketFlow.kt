@@ -3,6 +3,7 @@ package jp.datachain.corda.ibc.flows
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics4.Packet
@@ -41,7 +42,7 @@ class IbcSendPacketFlow(
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
-        val clientId = conn.state.data.end.clientIdentifier
+        val clientId = Identifier(conn.state.data.end.clientId)
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         val ctx = Context(setOf(chan.state.data), setOf(host.state.data, client.state.data, conn.state.data))

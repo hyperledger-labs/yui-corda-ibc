@@ -1,10 +1,10 @@
 package jp.datachain.corda.ibc.ics26
 
+import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.types.Version
 import jp.datachain.corda.ibc.ics20.ModuleCallbacks as Ics20ModuleCallbacks
 
 interface ModuleCallbacks {
@@ -25,7 +25,7 @@ interface ModuleCallbacks {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version
+            version: Connection.Version
     ){
         throw NotImplementedError()
     }
@@ -38,8 +38,8 @@ interface ModuleCallbacks {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version,
-            counterpartyVersion: Version
+            version: Connection.Version,
+            counterpartyVersion: Connection.Version
     ) {
         throw NotImplementedError()
     }
@@ -48,7 +48,7 @@ interface ModuleCallbacks {
             ctx: Context,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            version: Version
+            version: Connection.Version
     ) {
         throw NotImplementedError()
     }

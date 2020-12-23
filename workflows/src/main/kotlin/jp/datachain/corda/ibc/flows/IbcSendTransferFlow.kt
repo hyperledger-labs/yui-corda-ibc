@@ -50,7 +50,7 @@ class IbcSendTransferFlow(
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
-        val clientId = conn.state.data.end.clientIdentifier
+        val clientId = Identifier(conn.state.data.end.clientId)
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // query bank from vault

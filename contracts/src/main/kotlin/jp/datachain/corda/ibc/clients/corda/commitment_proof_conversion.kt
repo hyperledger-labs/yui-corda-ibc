@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.clients.corda
 
+import com.google.protobuf.ByteString
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureMetadata
@@ -28,7 +29,7 @@ fun SignedTransaction.toProof(): CommitmentProof {
         out.writeInt(it.signatureMetadata.schemeNumberID)
     }
     out.flush()
-    return CommitmentProof(rawOut.toByteArray())
+    return CommitmentProof(ByteString.copyFrom(rawOut.toByteArray()))
 }
 
 fun CommitmentProof.toSignedTransaction(): SignedTransaction {

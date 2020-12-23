@@ -1,12 +1,11 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics23.CommitmentPrefix
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenInit
-import jp.datachain.corda.ibc.types.Version
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -17,12 +16,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcConnOpenInitFlow(
         val baseId: StateRef,
-        val identifier: Identifier,
-        val desiredConnectionIdentifier: Identifier,
-        val counterpartyPrefix: CommitmentPrefix,
-        val clientIdentifier: Identifier,
-        val counterpartyClientIdentifier: Identifier,
-        val version: Version?
+        val msg: Tx.MsgConnectionOpenInit
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -30,15 +24,9 @@ class IbcConnOpenInitFlow(
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientIdentifier)!!
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(msg.clientId))!!
 
-        val command = HandleConnOpenInit(
-                identifier,
-                desiredConnectionIdentifier,
-                counterpartyPrefix,
-                clientIdentifier,
-                counterpartyClientIdentifier,
-                version)
+        val command = HandleConnOpenInit(msg)
         val ctx = Context(setOf(host.state.data, client.state.data), emptySet())
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)

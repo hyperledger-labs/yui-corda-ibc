@@ -1,10 +1,10 @@
 package jp.datachain.corda.ibc.ics26
 
+import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
 import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
-import jp.datachain.corda.ibc.types.Version
 
 class NullModuleCallbacks: ModuleCallbacks {
     override fun onChanOpenInit(
@@ -15,7 +15,7 @@ class NullModuleCallbacks: ModuleCallbacks {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version){}
+            version: Connection.Version){}
 
     override fun onChanOpenTry(
             ctx: Context,
@@ -25,14 +25,14 @@ class NullModuleCallbacks: ModuleCallbacks {
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Version,
-            counterpartyVersion: Version) {}
+            version: Connection.Version,
+            counterpartyVersion: Connection.Version) {}
 
     override fun onChanOpenAck(
             ctx: Context,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            version: Version){}
+            version: Connection.Version){}
 
     override fun onChanOpenConfirm(
             ctx: Context,
