@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.contracts
 
+import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
@@ -8,7 +9,6 @@ import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.DatagramHandler
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.*
 import net.corda.core.contracts.Requirements.using
@@ -67,7 +67,7 @@ class Ibc : Contract {
             }
         }
 
-        data class SendPacket(val packet: Packet) : Commands {
+        data class SendPacket(val packet: ChannelOuterClass.Packet) : Commands {
             override fun verify(tx: LedgerTransaction) {
                 val ctx = Context(tx.inputsOfType<IbcState>(), tx.referenceInputsOfType<IbcState>())
                 Handler.sendPacket(ctx, packet)

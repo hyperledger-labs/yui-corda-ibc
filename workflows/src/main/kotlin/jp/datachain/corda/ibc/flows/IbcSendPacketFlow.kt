@@ -1,12 +1,12 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
@@ -20,7 +20,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcSendPacketFlow(
         val baseId: StateRef,
-        val packet: Packet
+        val packet: ChannelOuterClass.Packet
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -34,7 +34,7 @@ class IbcSendPacketFlow(
         require(participants.contains(ourIdentity))
 
         // query chan from vault
-        val chanId = packet.sourceChannel
+        val chanId = Identifier(packet.sourceChannel)
         val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, chanId)!!
 
         // query conn from vault

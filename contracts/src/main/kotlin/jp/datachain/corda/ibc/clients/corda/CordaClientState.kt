@@ -8,8 +8,6 @@ import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
@@ -84,7 +82,7 @@ data class CordaClientState private constructor(
                 chan.end == channelEnd
     }
 
-    override fun verifyPacketData(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, packet: Packet): Boolean {
+    override fun verifyPacketData(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, packet: ChannelOuterClass.Packet): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()
@@ -97,7 +95,7 @@ data class CordaClientState private constructor(
                 chan.packets.get(sequence) == packet
     }
 
-    override fun verifyPacketAcknowledgement(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, acknowledgement: Acknowledgement): Boolean {
+    override fun verifyPacketAcknowledgement(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, sequence: Long, acknowledgement: ChannelOuterClass.Acknowledgement): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()

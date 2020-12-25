@@ -3,8 +3,6 @@ package jp.datachain.corda.ibc.ics26
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.Packet
 
 class NullModuleCallbacks: ModuleCallbacks {
     override fun onChanOpenInit(
@@ -51,19 +49,19 @@ class NullModuleCallbacks: ModuleCallbacks {
 
     override fun onRecvPacket(
             ctx: Context,
-            packet: Packet
-    ) = Acknowledgement()
+            packet: ChannelOuterClass.Packet
+    ) = ChannelOuterClass.Acknowledgement.getDefaultInstance()
 
     override fun onTimeoutPacket(
             ctx: Context,
-            packet: Packet){}
+            packet: ChannelOuterClass.Packet){}
 
     override fun onAcknowledgePacket(
             ctx: Context,
-            packet: Packet,
-            acknowledgement: Acknowledgement){}
+            packet: ChannelOuterClass.Packet,
+            acknowledgement: ChannelOuterClass.Acknowledgement){}
 
     override fun onTimeoutPacketClose(
             ctx: Context,
-            packet: Packet){}
+            packet: ChannelOuterClass.Packet){}
 }

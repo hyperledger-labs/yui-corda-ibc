@@ -6,8 +6,6 @@ import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcState
 
 interface ClientState : IbcState {
@@ -51,7 +49,7 @@ interface ClientState : IbcState {
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             sequence: Long,
-            packet: Packet) : Boolean
+            packet: ChannelOuterClass.Packet) : Boolean
 
     fun verifyPacketAcknowledgement(
             height: Height,
@@ -60,7 +58,7 @@ interface ClientState : IbcState {
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             sequence: Long,
-            acknowledgement: Acknowledgement) : Boolean
+            acknowledgement: ChannelOuterClass.Acknowledgement) : Boolean
 
     fun verifyPacketAcknowledgementAbsence(
             height: Height,

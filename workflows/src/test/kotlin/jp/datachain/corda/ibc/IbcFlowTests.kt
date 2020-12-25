@@ -1,18 +1,15 @@
 package jp.datachain.corda.ibc
 
+import com.google.protobuf.ByteString
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
-import jp.datachain.corda.ibc.ics20.FungibleTokenPacketAcknowledgement
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.identity.CordaX500Name
-import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkNotarySpec
 import net.corda.testing.node.MockNetworkParameters
@@ -178,15 +175,16 @@ class IbcFlowTests {
                 ibcA.host().getCurrentHeight())
 
         for (sequence in 1L..10) {
-            val packet = Packet(
-                    OpaqueBytes("Hello, Bob! (${sequence})".toByteArray()),
-                    portAid,
-                    chanAid,
-                    portBid,
-                    chanBid,
-                    Height.getDefaultInstance(),
-                    Timestamp(0),
-                    sequence)
+            val packet = ChannelOuterClass.Packet.newBuilder()
+                    .setSequence(sequence)
+                    .setSourcePort(portAid.id)
+                    .setSourceChannel(chanAid.id)
+                    .setDestinationPort(portBid.id)
+                    .setDestinationChannel(chanBid.id)
+                    .setData(ByteString.copyFromUtf8("Hello, Bob! (${sequence})"))
+                    .setTimeoutHeight(Height.getDefaultInstance())
+                    .setTimeoutTimestamp(0)
+                    .build()
             ibcA.sendPacket(packet)
 
             ibcB.recvPacketUnordered(
@@ -196,21 +194,22 @@ class IbcFlowTests {
 
             ibcA.acknowledgePacketUnordered(
                     packet,
-                    Acknowledgement(),
+                    ChannelOuterClass.Acknowledgement.getDefaultInstance(),
                     ibcB.chanProof(chanBid),
                     ibcB.host().getCurrentHeight())
         }
 
         for (sequence in 1L..10) {
-            val packet = Packet(
-                    OpaqueBytes("Hello, Alice! (${sequence})".toByteArray()),
-                    portBid,
-                    chanBid,
-                    portAid,
-                    chanAid,
-                    Height.getDefaultInstance(),
-                    Timestamp(0),
-                    sequence)
+            val packet = ChannelOuterClass.Packet.newBuilder()
+                    .setSequence(sequence)
+                    .setSourcePort(portBid.id)
+                    .setSourceChannel(chanBid.id)
+                    .setDestinationPort(portAid.id)
+                    .setDestinationChannel(chanAid.id)
+                    .setData(ByteString.copyFromUtf8("Hello, Alice! (${sequence})"))
+                    .setTimeoutHeight(Height.getDefaultInstance())
+                    .setTimeoutTimestamp(0)
+                    .build()
             ibcB.sendPacket(packet)
 
             ibcA.recvPacketUnordered(
@@ -220,7 +219,7 @@ class IbcFlowTests {
 
             ibcB.acknowledgePacketUnordered(
                     packet,
-                    Acknowledgement(),
+                    ChannelOuterClass.Acknowledgement.getDefaultInstance(),
                     ibcA.chanProof(chanAid),
                     ibcA.host().getCurrentHeight())
         }
@@ -529,9 +528,9 @@ class IbcFlowTests {
                 ibcY.host().getCurrentHeight(),
                 forIcs20 = true)
 
-        assert(FungibleTokenPacketAcknowledgement.decode(ackXtoA.data!!.bytes).success)
-        assert(FungibleTokenPacketAcknowledgement.decode(ackYtoB.data!!.bytes).success)
-        assert(FungibleTokenPacketAcknowledgement.decode(ackZtoC.data!!.bytes).success)
+        assert(ackXtoA.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
+        assert(ackYtoB.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
+        assert(ackZtoC.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
 
         // sending back
         for (i in 0 until 2) {
