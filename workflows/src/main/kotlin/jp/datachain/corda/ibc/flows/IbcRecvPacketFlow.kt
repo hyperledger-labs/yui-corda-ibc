@@ -1,13 +1,11 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client.Height
+import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketRecv
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
@@ -21,9 +19,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcRecvPacketFlow(
         val baseId: StateRef,
-        val packet: Packet,
-        val proof: CommitmentProof,
-        val proofHeight: Height,
+        val msg: Tx.MsgRecvPacket,
         val forIcs20: Boolean = false
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
@@ -41,7 +37,7 @@ class IbcRecvPacketFlow(
                     null
 
         // query chan from vault
-        val chanId = packet.destChannel
+        val chanId = Identifier(msg.packet.destinationChannel)
         val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, chanId)!!
 
         // query conn from vault
@@ -53,7 +49,7 @@ class IbcRecvPacketFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // create command and outputs
-        val command = HandlePacketRecv(packet, proof, proofHeight)
+        val command = HandlePacketRecv(msg)
         val ctx = Context(
                 if (bankOrNull != null) {
                     setOf(chan.state.data, bankOrNull.state.data)

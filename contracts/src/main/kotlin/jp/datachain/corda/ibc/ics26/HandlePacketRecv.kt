@@ -1,24 +1,20 @@
 package jp.datachain.corda.ibc.ics26
 
-import ibc.core.client.v1.Client.Height
+import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.ics23.CommitmentProof
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler
-import jp.datachain.corda.ibc.ics4.Packet
 import java.security.PublicKey
 
-data class HandlePacketRecv(
-        val packet: Packet,
-        val proof: CommitmentProof,
-        val proofHeight: Height
-): DatagramHandler {
+data class HandlePacketRecv(val msg: Tx.MsgRecvPacket): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
-        val module = ModuleCallbacks.lookupModule(packet.destPort)
-        val acknowledgement = module.onRecvPacket(ctx, packet)
+        val module = ModuleCallbacks.lookupModule(Identifier(msg.packet.destinationPort))
+        val acknowledgement = module.onRecvPacket(ctx, msg.packet)
         Handler.recvPacket(
                 ctx,
-                packet,
-                proof,
-                proofHeight,
+                msg.packet,
+                CommitmentProof(msg.proof),
+                msg.proofHeight,
                 acknowledgement)
     }
 }

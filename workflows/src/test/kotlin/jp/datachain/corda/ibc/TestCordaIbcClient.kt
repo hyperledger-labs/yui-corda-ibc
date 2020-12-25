@@ -18,8 +18,6 @@ import jp.datachain.corda.ibc.ics20.FungibleTokenPacketData
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
@@ -346,7 +344,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     }
 
     fun sendPacket(
-            packet: Packet
+            packet: ChannelOuterClass.Packet
     ) {
         val stx = executeFlow(IbcSendPacketFlow(baseId, packet))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
@@ -355,70 +353,70 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     }
 
     fun recvPacketOrdered(
-            packet: Packet,
+            packet: ChannelOuterClass.Packet,
             proof: CommitmentProof,
             proofHeight: Height,
             forIcs20: Boolean = false
     ) {
-        val stx = executeFlow(IbcRecvPacketFlow(
-                baseId,
-                packet,
-                proof,
-                proofHeight,
-                forIcs20))
+        val msg = ibc.core.channel.v1.Tx.MsgRecvPacket.newBuilder()
+                .setPacket(packet)
+                .setProof(proof.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcRecvPacketFlow(baseId, msg, forIcs20))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceRecv == packet.sequence + 1)
     }
 
     fun recvPacketUnordered(
-            packet: Packet,
+            packet: ChannelOuterClass.Packet,
             proof: CommitmentProof,
             proofHeight: Height,
             forIcs20: Boolean = false
     ) {
-        val stx = executeFlow(IbcRecvPacketFlow(
-                baseId,
-                packet,
-                proof,
-                proofHeight,
-                forIcs20))
+        val msg = ibc.core.channel.v1.Tx.MsgRecvPacket.newBuilder()
+                .setPacket(packet)
+                .setProof(proof.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcRecvPacketFlow(baseId, msg, forIcs20))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceRecv == 1L)
     }
 
     fun acknowledgePacketOrdered(
-            packet: Packet,
-            acknowledgement: Acknowledgement,
+            packet: ChannelOuterClass.Packet,
+            acknowledgement: ChannelOuterClass.Acknowledgement,
             proof: CommitmentProof,
             proofHeight: Height,
             forIcs20: Boolean = false
     ) {
-        val stx = executeFlow(IbcAcknowledgePacketFlow(
-                baseId,
-                packet,
-                acknowledgement,
-                proof,
-                proofHeight,
-                forIcs20))
+        val msg = ibc.core.channel.v1.Tx.MsgAcknowledgement.newBuilder()
+                .setPacket(packet)
+                .setAcknowledgement(acknowledgement.toByteString())
+                .setProof(proof.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcAcknowledgePacketFlow(baseId, msg, forIcs20))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceAck == packet.sequence + 1)
         assert(!chan.packets.contains(packet.sequence))
     }
 
     fun acknowledgePacketUnordered(
-            packet: Packet,
-            acknowledgement: Acknowledgement,
+            packet: ChannelOuterClass.Packet,
+            acknowledgement: ChannelOuterClass.Acknowledgement,
             proof: CommitmentProof,
             proofHeight: Height,
             forIcs20: Boolean = false
     ) {
-        val stx = executeFlow(IbcAcknowledgePacketFlow(
-                baseId,
-                packet,
-                acknowledgement,
-                proof,
-                proofHeight,
-                forIcs20))
+        val msg = ibc.core.channel.v1.Tx.MsgAcknowledgement.newBuilder()
+                .setPacket(packet)
+                .setAcknowledgement(acknowledgement.toByteString())
+                .setProof(proof.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcAcknowledgePacketFlow(baseId, msg, forIcs20))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceAck == 1L)
         assert(!chan.packets.contains(packet.sequence))
@@ -455,14 +453,14 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.nextSequenceSend == sequence + 1)
         val packet = chan.packets[sequence]!!
-        assert(packet.destPort == destPort)
-        assert(packet.destChannel == destChannel)
-        assert(packet.sourcePort == sourcePort)
-        assert(packet.sourceChannel == sourceChannel)
+        assert(Identifier(packet.destinationPort) == destPort)
+        assert(Identifier(packet.destinationChannel) == destChannel)
+        assert(Identifier(packet.sourcePort) == sourcePort)
+        assert(Identifier(packet.sourceChannel) == sourceChannel)
         assert(packet.timeoutHeight == timeoutHeight)
-        assert(packet.timeoutTimestamp == timeoutTimestamp)
+        assert(packet.timeoutTimestamp == timeoutTimestamp.timestamp)
         assert(packet.sequence == sequence)
-        val data = FungibleTokenPacketData.decode(packet.data.bytes)
+        val data = FungibleTokenPacketData.decode(packet.data.toByteArray())
         assert(data.denomination == denomination)
         assert(data.amount == amount)
         assert(data.sender == sender)

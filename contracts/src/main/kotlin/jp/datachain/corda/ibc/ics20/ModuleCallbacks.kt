@@ -1,47 +1,50 @@
 package jp.datachain.corda.ibc.ics20
 
+import com.google.protobuf.ByteString
+import ibc.core.channel.v1.ChannelOuterClass
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.ModuleCallbacks
-import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.Packet
-import net.corda.core.utilities.OpaqueBytes
 
 class ModuleCallbacks: ModuleCallbacks {
-    override fun onRecvPacket(ctx: Context, packet: Packet): Acknowledgement {
-        val data = FungibleTokenPacketData.decode(packet.data.bytes)
-        var ack = FungibleTokenPacketAcknowledgement()
-        val source = data.denomination.hasPrefix(packet.sourcePort, packet.sourceChannel)
+    override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
+        val data = FungibleTokenPacketData.decode(packet.data.toByteArray())
+        val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
+        val source = data.denomination.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         val bank: Bank = ctx.getInput<Bank>()
         if (source) {
             try {
                 ctx.addOutput(bank.unlock(data.receiver, data.denomination, data.amount))
+                ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
-                ack = FungibleTokenPacketAcknowledgement(e.message!!)
+                ackBuilder.error = e.message!!
             }
         } else {
             try {
                 ctx.addOutput(bank.mint(data.receiver, data.denomination, data.amount))
+                ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
-                ack = FungibleTokenPacketAcknowledgement(e.message!!)
+                ackBuilder.error = e.message!!
             }
         }
-        return Acknowledgement(OpaqueBytes(ack.encode()))
+        return ackBuilder.build()
     }
 
-    override fun onAcknowledgePacket(ctx: Context, packet: Packet, acknowledgement: Acknowledgement) {
-        val ack = FungibleTokenPacketAcknowledgement.decode(acknowledgement.data!!.bytes)
-        if (!ack.success) {
-            refundTokens(ctx, packet)
-        } else {
-            ctx.addOutput(ctx.getInput<Bank>().copy())
+    override fun onAcknowledgePacket(ctx: Context, packet: ChannelOuterClass.Packet, acknowledgement: ChannelOuterClass.Acknowledgement) {
+        when (acknowledgement.responseCase) {
+            ChannelOuterClass.Acknowledgement.ResponseCase.RESULT ->
+                ctx.addOutput(ctx.getInput<Bank>().copy())
+            ChannelOuterClass.Acknowledgement.ResponseCase.ERROR ->
+                refundTokens(ctx, packet)
+            else -> throw java.lang.IllegalArgumentException()
         }
     }
 
-    private fun refundTokens(ctx: Context, packet: Packet) {
-        val data = FungibleTokenPacketData.decode(packet.data.bytes)
-        val source = !data.denomination.hasPrefix(packet.sourcePort, packet.sourceChannel)
+    private fun refundTokens(ctx: Context, packet: ChannelOuterClass.Packet) {
+        val data = FungibleTokenPacketData.decode(packet.data.toByteArray())
+        val source = !data.denomination.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         val bank: Bank = ctx.getInput<Bank>()
         if (source) {
             ctx.addOutput(bank.unlock(data.sender, data.denomination, data.amount))

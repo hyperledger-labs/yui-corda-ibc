@@ -15,9 +15,10 @@ import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics4.*
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
+import jp.datachain.corda.ibc.types.Timestamp
+import java.lang.IllegalArgumentException
 
 object Handler {
     fun createClient(
@@ -477,7 +478,7 @@ object Handler {
         ))
     }
 
-    fun sendPacket(ctx: Context, packet: Packet) {
+    fun sendPacket(ctx: Context, packet: ChannelOuterClass.Packet) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
         val conn = ctx.getReference<IbcConnection>()
@@ -490,10 +491,10 @@ object Handler {
 
         require(chan.end.state != ChannelOuterClass.State.STATE_CLOSED)
 
-        require(packet.sourcePort == chan.portId)
-        require(packet.sourceChannel == chan.id)
-        require(packet.destPort == Identifier(chan.end.counterparty.portId))
-        require(packet.destChannel == Identifier(chan.end.counterparty.channelId))
+        require(Identifier(packet.sourcePort) == chan.portId)
+        require(Identifier(packet.sourceChannel) == chan.id)
+        require(packet.destinationPort == chan.end.counterparty.portId)
+        require(packet.destinationChannel == chan.end.counterparty.channelId)
 
         require(conn.id == Identifier(chan.end.connectionHopsList.single()))
 
@@ -510,10 +511,10 @@ object Handler {
 
     fun recvPacket(
             ctx: Context,
-            packet: Packet,
+            packet: ChannelOuterClass.Packet,
             proof: CommitmentProof,
             proofHeight: Height,
-            acknowledgement: Acknowledgement
+            acknowledgement: ChannelOuterClass.Acknowledgement
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
@@ -525,35 +526,40 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(client.connIds.contains(conn.id))
 
-        require(packet.destPort == chan.portId)
-        require(packet.destChannel == chan.id)
+        require(Identifier(packet.destinationPort) == chan.portId)
+        require(Identifier(packet.destinationChannel) == chan.id)
 
         require(chan.end.state == ChannelOuterClass.State.STATE_OPEN)
-        require(packet.sourcePort == Identifier(chan.end.counterparty.portId))
-        require(packet.sourceChannel == Identifier(chan.end.counterparty.channelId))
+        require(packet.sourcePort == chan.end.counterparty.portId)
+        require(packet.sourceChannel == chan.end.counterparty.channelId)
 
         require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
         require(packet.timeoutHeight.isZero() || host.getCurrentHeight() < packet.timeoutHeight)
-        require(packet.timeoutTimestamp.timestamp == 0L || host.currentTimestamp().timestamp < packet.timeoutTimestamp.timestamp)
+        require(packet.timeoutTimestamp == 0L || host.currentTimestamp() < Timestamp(packet.timeoutTimestamp))
 
         require(client.verifyPacketData(
                 proofHeight,
                 conn.end.counterparty.prefix,
                 proof,
-                packet.sourcePort,
-                packet.sourceChannel,
+                Identifier(packet.sourcePort),
+                Identifier(packet.sourceChannel),
                 packet.sequence,
                 packet))
 
-        if (!acknowledgement.isEmpty() || chan.end.ordering == ChannelOuterClass.Order.ORDER_UNORDERED) {
-            chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
-        }
+        chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
 
-        if (chan.end.ordering == ChannelOuterClass.Order.ORDER_ORDERED) {
-            require(packet.sequence == chan.nextSequenceRecv)
-            chan = chan.copy(nextSequenceRecv = chan.nextSequenceRecv + 1)
+        chan = when (chan.end.ordering) {
+            ChannelOuterClass.Order.ORDER_UNORDERED -> {
+                require(!chan.receipts.contains(packet.sequence))
+                chan.copy(receipts = chan.receipts + packet.sequence)
+            }
+            ChannelOuterClass.Order.ORDER_ORDERED -> {
+                require(packet.sequence == chan.nextSequenceRecv)
+                chan.copy(nextSequenceRecv = chan.nextSequenceRecv + 1)
+            }
+            else -> throw IllegalArgumentException()
         }
 
         ctx.addOutput(chan)
@@ -561,8 +567,8 @@ object Handler {
 
     fun acknowledgePacket(
             ctx: Context,
-            packet: Packet,
-            acknowledgement: Acknowledgement,
+            packet: ChannelOuterClass.Packet,
+            acknowledgement: ChannelOuterClass.Acknowledgement,
             proof: CommitmentProof,
             proofHeight: Height
     ) {
@@ -576,13 +582,13 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(client.connIds.contains(conn.id))
 
-        require(packet.sourcePort == chan.portId)
-        require(packet.sourceChannel == chan.id)
+        require(Identifier(packet.sourcePort) == chan.portId)
+        require(Identifier(packet.sourceChannel) == chan.id)
 
         require(chan.end.state == ChannelOuterClass.State.STATE_OPEN)
 
-        require(packet.destPort == Identifier(chan.end.counterparty.portId))
-        require(packet.destChannel == Identifier(chan.end.counterparty.channelId))
+        require(packet.destinationPort == chan.end.counterparty.portId)
+        require(packet.destinationChannel == chan.end.counterparty.channelId)
 
         require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
@@ -593,8 +599,8 @@ object Handler {
                 proofHeight,
                 conn.end.counterparty.prefix,
                 proof,
-                packet.destPort,
-                packet.destChannel,
+                Identifier(packet.destinationPort),
+                Identifier(packet.destinationChannel),
                 packet.sequence,
                 acknowledgement))
 

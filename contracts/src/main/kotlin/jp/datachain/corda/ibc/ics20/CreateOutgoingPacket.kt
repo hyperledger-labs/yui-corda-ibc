@@ -1,13 +1,13 @@
 package jp.datachain.corda.ibc.ics20
 
+import com.google.protobuf.ByteString
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Timestamp
-import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
 
 data class CreateOutgoingPacket(
@@ -40,16 +40,16 @@ data class CreateOutgoingPacket(
                 sender = sender,
                 receiver = receiver
         )
-        val packet = Packet(
-                data = OpaqueBytes(data.encode()),
-                sourcePort = sourcePort,
-                sourceChannel = sourceChannel,
-                destPort = destPort,
-                destChannel = destChannel,
-                timeoutHeight = timeoutHeight,
-                timeoutTimestamp = timeoutTimestamp,
-                sequence = sequence
-        )
+        val packet = ChannelOuterClass.Packet.newBuilder()
+                .setSequence(sequence)
+                .setSourcePort(sourcePort.id)
+                .setSourceChannel(sourceChannel.id)
+                .setDestinationPort(destPort.id)
+                .setDestinationChannel(destChannel.id)
+                .setData(ByteString.copyFrom(data.encode()))
+                .setTimeoutHeight(timeoutHeight)
+                .setTimeoutTimestamp(timeoutTimestamp.timestamp)
+                .build()
         Handler.sendPacket(ctx, packet)
     }
 }
