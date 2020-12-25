@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.ics25
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import ibc.core.client.v1.compareTo
 import ibc.core.client.v1.isZero
@@ -215,13 +216,7 @@ object Handler {
 
     fun chanOpenInit(
             ctx: Context,
-            order: ChannelOrder,
-            connectionHops: List<Identifier>,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            counterpartyPortIdentifier: Identifier,
-            counterpartyChannelIdentifier: Identifier,
-            version: Connection.Version
+            msg: ibc.core.channel.v1.Tx.MsgChannelOpenInit
     ) {
         // TODO: port authentication should be added somehow
 
@@ -230,33 +225,23 @@ object Handler {
 
         require(host.connIds.contains(conn.id))
 
-        require(conn.id == connectionHops.single())
+        require(conn.id == Identifier(msg.channel.connectionHopsList.single()))
 
-        val end = ChannelEnd(
-                ChannelState.INIT,
-                order,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
-                connectionHops,
-                version)
+        val end = ChannelOuterClass.Channel.newBuilder()
+                .setState(ChannelOuterClass.State.STATE_INIT)
+                .setOrdering(msg.channel.ordering)
+                .setCounterparty(msg.channel.counterparty)
+                .addAllConnectionHops(msg.channel.connectionHopsList)
+                .setVersion(msg.channel.version)
+                .build()
 
-        ctx.addOutput(host.addPortChannel(portIdentifier, channelIdentifier))
-        ctx.addOutput(IbcChannel(host, portIdentifier, channelIdentifier, end))
+        ctx.addOutput(host.addPortChannel(Identifier(msg.portId), Identifier(msg.channelId)))
+        ctx.addOutput(IbcChannel(host, Identifier(msg.portId), Identifier(msg.channelId), end))
     }
 
     fun chanOpenTry(
             ctx: Context,
-            order: ChannelOrder,
-            connectionHops: List<Identifier>,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            counterpartyChosenChannelIdentifer: Identifier,
-            counterpartyPortIdentifier: Identifier,
-            counterpartyChannelIdentifier: Identifier,
-            version: Connection.Version,
-            counterpartyVersion: Connection.Version,
-            proofInit: CommitmentProof,
-            proofHeight: Height
+            msg: ibc.core.channel.v1.Tx.MsgChannelOpenTry
     ) {
         val host = ctx.getInput<Host>()
         val client = ctx.getReference<ClientState>()
@@ -264,54 +249,57 @@ object Handler {
         val previous = ctx.getInputOrNull<IbcChannel>()
 
         if (previous != null) {
-            require(host.portChanIds.contains(Pair(portIdentifier, channelIdentifier)))
-            require(previous.portId == portIdentifier)
-            require(previous.id == channelIdentifier)
+            require(host.portChanIds.contains(Pair(Identifier(msg.portId), Identifier(msg.desiredChannelId))))
+            require(previous.portId == Identifier(msg.portId))
+            require(previous.id == Identifier(msg.desiredChannelId))
         }
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
         require(client.connIds.contains(conn.id))
-        require(conn.id == connectionHops.single())
+        require(conn.id == Identifier(msg.channel.connectionHopsList.single()))
         require(client.id == Identifier(conn.end.clientId))
 
-        require(counterpartyChosenChannelIdentifer == Identifier("") ||
-                counterpartyChosenChannelIdentifer == channelIdentifier)
+        require(msg.counterpartyChosenChannelId == "" ||
+                msg.counterpartyChosenChannelId == msg.desiredChannelId)
 
         require(previous == null ||
-                ( previous.end.state == ChannelState.INIT &&
-                        previous.end.ordering == order &&
-                        previous.end.counterpartyPortIdentifier == counterpartyPortIdentifier &&
-                        previous.end.counterpartyChannelIdentifier == counterpartyChannelIdentifier &&
-                        previous.end.connectionHops == connectionHops &&
-                        previous.end.version == version))
+                ( previous.end.state == ChannelOuterClass.State.STATE_INIT &&
+                        previous.end.ordering == msg.channel.ordering &&
+                        previous.end.counterparty.portId == msg.channel.counterparty.portId &&
+                        previous.end.counterparty.channelId == msg.channel.counterparty.channelId &&
+                        previous.end.connectionHopsList == msg.channel.connectionHopsList &&
+                        previous.end.version == msg.channel.version))
 
         require(conn.end.state == Connection.State.STATE_OPEN)
 
-        val expected = ChannelEnd(
-                ChannelState.INIT,
-                order,
-                portIdentifier,
-                counterpartyChosenChannelIdentifer,
-                listOf(Identifier(conn.end.counterparty.connectionId)),
-                counterpartyVersion)
+        val expected = ChannelOuterClass.Channel.newBuilder()
+                .setState(ChannelOuterClass.State.STATE_INIT)
+                .setOrdering(msg.channel.ordering)
+                .setCounterparty(ChannelOuterClass.Counterparty.newBuilder()
+                        .setPortId(msg.portId)
+                        .setChannelId(msg.counterpartyChosenChannelId)
+                        .build())
+                .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
+                .setVersion(msg.counterpartyVersion)
+                .build()
         require(client.verifyChannelState(
-                proofHeight,
+                msg.proofHeight,
                 conn.end.counterparty.prefix,
-                proofInit,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
+                CommitmentProof(msg.proofInit),
+                Identifier(msg.channel.counterparty.portId),
+                Identifier(msg.channel.counterparty.channelId),
                 expected))
 
-        val end = ChannelEnd(
-                ChannelState.TRYOPEN,
-                order,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
-                connectionHops,
-                version)
+        val end = ChannelOuterClass.Channel.newBuilder()
+                .setState(ChannelOuterClass.State.STATE_TRYOPEN)
+                .setOrdering(msg.channel.ordering)
+                .setCounterparty(msg.channel.counterparty)
+                .addAllConnectionHops(msg.channel.connectionHopsList)
+                .setVersion(msg.channel.version)
+                .build()
 
-        val chan = IbcChannel(host, portIdentifier, channelIdentifier, end)
-        ctx.addOutput(host.addPortChannel(portIdentifier, channelIdentifier))
+        val chan = IbcChannel(host, Identifier(msg.portId), Identifier(msg.desiredChannelId), end)
+        ctx.addOutput(host.addPortChannel(Identifier(msg.portId), Identifier(msg.desiredChannelId)))
         if (previous == null) {
             ctx.addOutput(chan)
         } else {
@@ -324,12 +312,7 @@ object Handler {
 
     fun chanOpenAck(
             ctx: Context,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            counterpartyVersion: Connection.Version,
-            counterpartyChannelIdentifier: Identifier,
-            proofTry: CommitmentProof,
-            proofHeight: Height
+            msg: ibc.core.channel.v1.Tx.MsgChannelOpenAck
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
@@ -340,46 +323,47 @@ object Handler {
         require(host.connIds.contains(conn.id))
         require(client.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(chan.portId == portIdentifier)
-        require(chan.id == channelIdentifier)
+        require(chan.portId == Identifier(msg.portId))
+        require(chan.id == Identifier(msg.channelId))
         require(client.id == Identifier(conn.end.clientId))
 
-        require(chan.end.state == ChannelState.INIT || chan.end.state == ChannelState.TRYOPEN)
+        require(chan.end.state == ChannelOuterClass.State.STATE_INIT || chan.end.state == ChannelOuterClass.State.STATE_TRYOPEN)
 
-        require(chan.end.counterpartyChannelIdentifier == Identifier("") ||
-                counterpartyChannelIdentifier == chan.end.counterpartyChannelIdentifier)
+        require(chan.end.counterparty.channelId == "" ||
+                msg.counterpartyChannelId == chan.end.counterparty.channelId)
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
-        val expected = ChannelEnd(
-                ChannelState.TRYOPEN,
-                chan.end.ordering,
-                portIdentifier,
-                channelIdentifier,
-                listOf(Identifier(conn.end.counterparty.connectionId)),
-                counterpartyVersion)
+        val expected = ChannelOuterClass.Channel.newBuilder()
+                .setState(ChannelOuterClass.State.STATE_TRYOPEN)
+                .setOrdering(chan.end.ordering)
+                .setCounterparty(ChannelOuterClass.Counterparty.newBuilder()
+                        .setPortId(msg.portId)
+                        .setChannelId(msg.channelId)
+                        .build())
+                .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
+                .setVersion(msg.counterpartyVersion)
+                .build()
         require(client.verifyChannelState(
-                proofHeight,
+                msg.proofHeight,
                 conn.end.counterparty.prefix,
-                proofTry,
-                chan.end.counterpartyPortIdentifier,
-                chan.end.counterpartyChannelIdentifier,
+                CommitmentProof(msg.proofTry),
+                Identifier(chan.end.counterparty.portId),
+                Identifier(chan.end.counterparty.channelId),
                 expected))
 
-        ctx.addOutput(chan.copy(end = chan.end.copy(
-                state = ChannelState.OPEN,
-                version = counterpartyVersion,
-                counterpartyChannelIdentifier = counterpartyChannelIdentifier
-        )))
+        ctx.addOutput(chan.copy(end = chan.end.toBuilder()
+                .setState(ChannelOuterClass.State.STATE_OPEN)
+                .setVersion(msg.counterpartyVersion)
+                .apply{counterpartyBuilder.channelId = msg.counterpartyChannelId}
+                .build()
+        ))
     }
 
     fun chanOpenConfirm(
             ctx: Context,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            proofAck: CommitmentProof,
-            proofHeight: Height
+            msg: ibc.core.channel.v1.Tx.MsgChannelOpenConfirm
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
@@ -390,37 +374,42 @@ object Handler {
         require(host.connIds.contains(conn.id))
         require(client.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(chan.portId == portIdentifier)
-        require(chan.id == channelIdentifier)
+        require(chan.portId == Identifier(msg.portId))
+        require(chan.id == Identifier(msg.channelId))
         require(client.id == Identifier(conn.end.clientId))
 
-        require(chan.end.state == ChannelState.TRYOPEN)
+        require(chan.end.state == ChannelOuterClass.State.STATE_TRYOPEN)
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
-        val expected = ChannelEnd(
-                ChannelState.OPEN,
-                chan.end.ordering,
-                portIdentifier,
-                channelIdentifier,
-                listOf(Identifier(conn.end.counterparty.connectionId)),
-                chan.end.version)
+        val expected = ChannelOuterClass.Channel.newBuilder()
+                .setState(ChannelOuterClass.State.STATE_OPEN)
+                .setOrdering(chan.end.ordering)
+                .setCounterparty(ChannelOuterClass.Counterparty.newBuilder()
+                        .setPortId(msg.portId)
+                        .setChannelId(msg.channelId)
+                        .build())
+                .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
+                .setVersion(chan.end.version)
+                .build()
         require(client.verifyChannelState(
-                proofHeight,
+                msg.proofHeight,
                 conn.end.counterparty.prefix,
-                proofAck,
-                chan.end.counterpartyPortIdentifier,
-                chan.end.counterpartyChannelIdentifier,
+                CommitmentProof(msg.proofAck),
+                Identifier(chan.end.counterparty.portId),
+                Identifier(chan.end.counterparty.channelId),
                 expected))
 
-        ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.OPEN)))
+        ctx.addOutput(chan.copy(end = chan.end.toBuilder()
+                .setState(ChannelOuterClass.State.STATE_OPEN)
+                .build()
+        ))
     }
 
     fun chanCloseInit(
             ctx: Context,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier
+            msg: ibc.core.channel.v1.Tx.MsgChannelCloseInit
     ) {
         val host = ctx.getReference<Host>()
         val conn = ctx.getReference<IbcConnection>()
@@ -428,23 +417,23 @@ object Handler {
 
         require(host.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(chan.portId == portIdentifier)
-        require(chan.id == channelIdentifier)
+        require(chan.portId == Identifier(msg.portId))
+        require(chan.id == Identifier(msg.channelId))
 
-        require(chan.end.state != ChannelState.CLOSED)
+        require(chan.end.state != ChannelOuterClass.State.STATE_CLOSED)
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
-        ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.CLOSED)))
+        ctx.addOutput(chan.copy(end = chan.end.toBuilder()
+                .setState(ChannelOuterClass.State.STATE_CLOSED)
+                .build()
+        ))
     }
 
     fun chanCloseConfirm(
             ctx: Context,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            proofInit: CommitmentProof,
-            proofHeight: Height
+            msg: ibc.core.channel.v1.Tx.MsgChannelCloseConfirm
     ) {
         val host = ctx.getReference<Host>()
         val client = ctx.getReference<ClientState>()
@@ -455,31 +444,37 @@ object Handler {
         require(host.connIds.contains(conn.id))
         require(client.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(chan.portId == portIdentifier)
-        require(chan.id == channelIdentifier)
+        require(chan.portId == Identifier(msg.portId))
+        require(chan.id == Identifier(msg.channelId))
         require(client.id == Identifier(conn.end.clientId))
 
-        require(chan.end.state != ChannelState.CLOSED)
+        require(chan.end.state != ChannelOuterClass.State.STATE_CLOSED)
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
-        val expected = ChannelEnd(
-                ChannelState.CLOSED,
-                chan.end.ordering,
-                portIdentifier,
-                channelIdentifier,
-                listOf(Identifier(conn.end.counterparty.connectionId)),
-                chan.end.version)
+        val expected = ChannelOuterClass.Channel.newBuilder()
+                .setState(ChannelOuterClass.State.STATE_CLOSED)
+                .setOrdering(chan.end.ordering)
+                .apply {
+                    counterpartyBuilder.portId = msg.portId
+                    counterpartyBuilder.channelId = msg.channelId
+                }
+                .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
+                .setVersion(chan.end.version)
+                .build()
         require(client.verifyChannelState(
-                proofHeight,
+                msg.proofHeight,
                 conn.end.counterparty.prefix,
-                proofInit,
-                chan.end.counterpartyPortIdentifier,
-                chan.end.counterpartyChannelIdentifier,
+                CommitmentProof(msg.proofInit),
+                Identifier(chan.end.counterparty.portId),
+                Identifier(chan.end.counterparty.channelId),
                 expected))
 
-        ctx.addOutput(chan.copy(end = chan.end.copy(state = ChannelState.CLOSED)))
+        ctx.addOutput(chan.copy(end = chan.end.toBuilder()
+                .setState(ChannelOuterClass.State.STATE_CLOSED)
+                .build()
+        ))
     }
 
     fun sendPacket(ctx: Context, packet: Packet) {
@@ -493,14 +488,14 @@ object Handler {
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(client.connIds.contains(conn.id))
 
-        require(chan.end.state != ChannelState.CLOSED)
+        require(chan.end.state != ChannelOuterClass.State.STATE_CLOSED)
 
         require(packet.sourcePort == chan.portId)
         require(packet.sourceChannel == chan.id)
-        require(packet.destPort == chan.end.counterpartyPortIdentifier)
-        require(packet.destChannel == chan.end.counterpartyChannelIdentifier)
+        require(packet.destPort == Identifier(chan.end.counterparty.portId))
+        require(packet.destChannel == Identifier(chan.end.counterparty.channelId))
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
 
         require(Identifier(conn.end.clientId) == client.id)
         val latestClientHeight = client.latestClientHeight()
@@ -533,11 +528,11 @@ object Handler {
         require(packet.destPort == chan.portId)
         require(packet.destChannel == chan.id)
 
-        require(chan.end.state == ChannelState.OPEN)
-        require(packet.sourcePort == chan.end.counterpartyPortIdentifier)
-        require(packet.sourceChannel == chan.end.counterpartyChannelIdentifier)
+        require(chan.end.state == ChannelOuterClass.State.STATE_OPEN)
+        require(packet.sourcePort == Identifier(chan.end.counterparty.portId))
+        require(packet.sourceChannel == Identifier(chan.end.counterparty.channelId))
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
         require(packet.timeoutHeight.isZero() || host.getCurrentHeight() < packet.timeoutHeight)
@@ -552,11 +547,11 @@ object Handler {
                 packet.sequence,
                 packet))
 
-        if (!acknowledgement.isEmpty() || chan.end.ordering == ChannelOrder.UNORDERED) {
+        if (!acknowledgement.isEmpty() || chan.end.ordering == ChannelOuterClass.Order.ORDER_UNORDERED) {
             chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
         }
 
-        if (chan.end.ordering == ChannelOrder.ORDERED) {
+        if (chan.end.ordering == ChannelOuterClass.Order.ORDER_ORDERED) {
             require(packet.sequence == chan.nextSequenceRecv)
             chan = chan.copy(nextSequenceRecv = chan.nextSequenceRecv + 1)
         }
@@ -584,12 +579,12 @@ object Handler {
         require(packet.sourcePort == chan.portId)
         require(packet.sourceChannel == chan.id)
 
-        require(chan.end.state == ChannelState.OPEN)
+        require(chan.end.state == ChannelOuterClass.State.STATE_OPEN)
 
-        require(packet.destPort == chan.end.counterpartyPortIdentifier)
-        require(packet.destChannel == chan.end.counterpartyChannelIdentifier)
+        require(packet.destPort == Identifier(chan.end.counterparty.portId))
+        require(packet.destChannel == Identifier(chan.end.counterparty.channelId))
 
-        require(conn.id == chan.end.connectionHops.single())
+        require(conn.id == Identifier(chan.end.connectionHopsList.single()))
         require(conn.end.state == Connection.State.STATE_OPEN)
 
         require(chan.packets[packet.sequence] == packet)
@@ -603,7 +598,7 @@ object Handler {
                 packet.sequence,
                 acknowledgement))
 
-        if (chan.end.ordering == ChannelOrder.ORDERED) {
+        if (chan.end.ordering == ChannelOuterClass.Order.ORDER_ORDERED) {
             require(packet.sequence == chan.nextSequenceAck)
             chan = chan.copy(nextSequenceAck = chan.nextSequenceAck + 1)
         }

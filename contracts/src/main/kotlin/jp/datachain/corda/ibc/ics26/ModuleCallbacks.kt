@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.ics26
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.ics20.ModuleCallbacks as Ics20ModuleCallbacks
 
@@ -19,7 +19,7 @@ interface ModuleCallbacks {
 
     fun onChanOpenInit(
             ctx: Context,
-            order: ChannelOrder,
+            order: ChannelOuterClass.Order,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
@@ -32,7 +32,7 @@ interface ModuleCallbacks {
 
     fun onChanOpenTry(
             ctx: Context,
-            order: ChannelOrder,
+            order: ChannelOuterClass.Order,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,

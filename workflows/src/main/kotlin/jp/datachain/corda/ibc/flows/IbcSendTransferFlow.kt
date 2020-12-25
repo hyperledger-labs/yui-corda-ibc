@@ -46,7 +46,7 @@ class IbcSendTransferFlow(
         val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, sourceChannel)!!
 
         // query conn from vault
-        val connId = chan.state.data.end.connectionHops.single()
+        val connId = Identifier(chan.state.data.end.connectionHopsList.single())
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault

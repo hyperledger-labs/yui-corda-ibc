@@ -1,15 +1,15 @@
 package jp.datachain.corda.ibc.ics26
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 
 class NullModuleCallbacks: ModuleCallbacks {
     override fun onChanOpenInit(
             ctx: Context,
-            order: ChannelOrder,
+            order: ChannelOuterClass.Order,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
@@ -19,7 +19,7 @@ class NullModuleCallbacks: ModuleCallbacks {
 
     override fun onChanOpenTry(
             ctx: Context,
-            order: ChannelOrder,
+            order: ChannelOuterClass.Order,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,

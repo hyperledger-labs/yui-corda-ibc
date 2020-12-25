@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
@@ -18,8 +19,6 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.ChannelOrder
-import jp.datachain.corda.ibc.ics4.ChannelState
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
@@ -209,84 +208,88 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     }
 
     fun chanOpenInit(
-            order: ChannelOrder,
+            order: ChannelOuterClass.Order,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Connection.Version
+            version: String
     ) {
-        val stx = executeFlow(IbcChanOpenInitFlow(
-                baseId,
-                order,
-                connectionHops,
-                portIdentifier,
-                channelIdentifier,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
-                version
-        ))
+        val msg = ibc.core.channel.v1.Tx.MsgChannelOpenInit.newBuilder()
+                .setPortId(portIdentifier.id)
+                .setChannelId(channelIdentifier.id)
+                .apply{with(channelBuilder){
+                    setOrdering(order)
+                    counterpartyBuilder.setPortId(counterpartyPortIdentifier.id)
+                    counterpartyBuilder.setChannelId(counterpartyChannelIdentifier.id)
+                    addAllConnectionHops(connectionHops.map { it.id })
+                    setVersion(version)
+                }}
+                .build()
+        val stx = executeFlow(IbcChanOpenInitFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
-        assert(chan.end.state == ChannelState.INIT)
+        assert(chan.end.state == ChannelOuterClass.State.STATE_INIT)
     }
 
     fun chanOpenTry(
-            order: ChannelOrder,
+            order: ChannelOuterClass.Order,
             connectionHops: List<Identifier>,
             portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            counterpartyChosenChannelIdentifer: Identifier,
+            desiredChannelIdentifier: Identifier,
+            counterpartyChosenChannelIdentifier: Identifier,
             counterpartyPortIdentifier: Identifier,
             counterpartyChannelIdentifier: Identifier,
-            version: Connection.Version,
-            counterpartyVersion: Connection.Version,
+            version: String,
+            counterpartyVersion: String,
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = executeFlow(IbcChanOpenTryFlow(
-                baseId,
-                order,
-                connectionHops,
-                portIdentifier,
-                channelIdentifier,
-                counterpartyChosenChannelIdentifer,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
-                version,
-                counterpartyVersion,
-                proofInit,
-                proofHeight
-        ))
+        val msg = ibc.core.channel.v1.Tx.MsgChannelOpenTry.newBuilder()
+                .setPortId(portIdentifier.id)
+                .setDesiredChannelId(desiredChannelIdentifier.id)
+                .setCounterpartyChosenChannelId(counterpartyChosenChannelIdentifier.id)
+                .apply{with(channelBuilder){
+                    setOrdering(order)
+                    counterpartyBuilder.setPortId(counterpartyPortIdentifier.id)
+                    counterpartyBuilder.setChannelId(counterpartyChannelIdentifier.id)
+                    addAllConnectionHops(connectionHops.map{it.id})
+                    setVersion(version)
+                }}
+                .setCounterpartyVersion(counterpartyVersion)
+                .setProofInit(proofInit.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcChanOpenTryFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
-        assert(chan.id == channelIdentifier)
-        assert(chan.end.state == ChannelState.TRYOPEN)
+        assert(chan.id == desiredChannelIdentifier)
+        assert(chan.end.state == ChannelOuterClass.State.STATE_TRYOPEN)
     }
 
     fun chanOpenAck(
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            counterpartyVersion: Connection.Version,
+            counterpartyVersion: String,
             counterpartyChannelIdentifier: Identifier,
             proofTry: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = executeFlow(IbcChanOpenAckFlow(
-                baseId,
-                portIdentifier,
-                channelIdentifier,
-                counterpartyVersion,
-                counterpartyChannelIdentifier,
-                proofTry,
-                proofHeight
-        ))
+        val msg = ibc.core.channel.v1.Tx.MsgChannelOpenAck.newBuilder()
+                .setPortId(portIdentifier.id)
+                .setChannelId(channelIdentifier.id)
+                .setCounterpartyChannelId(counterpartyChannelIdentifier.id)
+                .setCounterpartyVersion(counterpartyVersion)
+                .setProofTry(proofTry.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcChanOpenAckFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
-        assert(chan.end.state == ChannelState.OPEN)
+        assert(chan.end.state == ChannelOuterClass.State.STATE_OPEN)
     }
 
     fun chanOpenConfirm(
@@ -295,32 +298,32 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofAck: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = executeFlow(IbcChanOpenConfirmFlow(
-                baseId,
-                portIdentifier,
-                channelIdentifier,
-                proofAck,
-                proofHeight
-        ))
+        val msg = ibc.core.channel.v1.Tx.MsgChannelOpenConfirm.newBuilder()
+                .setPortId(portIdentifier.id)
+                .setChannelId(channelIdentifier.id)
+                .setProofAck(proofAck.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcChanOpenConfirmFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
-        assert(chan.end.state == ChannelState.OPEN)
+        assert(chan.end.state == ChannelOuterClass.State.STATE_OPEN)
     }
 
     fun chanCloseInit(
             portIdentifier: Identifier,
             channelIdentifier: Identifier
     ) {
-        val stx = executeFlow(IbcChanCloseInitFlow(
-                baseId,
-                portIdentifier,
-                channelIdentifier
-        ))
+        val msg = ibc.core.channel.v1.Tx.MsgChannelCloseInit.newBuilder()
+                .setPortId(portIdentifier.id)
+                .setChannelId(channelIdentifier.id)
+                .build()
+        val stx = executeFlow(IbcChanCloseInitFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
-        assert(chan.end.state == ChannelState.CLOSED)
+        assert(chan.end.state == ChannelOuterClass.State.STATE_CLOSED)
     }
 
     fun chanCloseConfirm(
@@ -329,17 +332,17 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             proofInit: CommitmentProof,
             proofHeight: Height
     ) {
-        val stx = executeFlow(IbcChanCloseConfirmFlow(
-                baseId,
-                portIdentifier,
-                channelIdentifier,
-                proofInit,
-                proofHeight
-        ))
+        val msg = ibc.core.channel.v1.Tx.MsgChannelCloseConfirm.newBuilder()
+                .setPortId(portIdentifier.id)
+                .setChannelId(channelIdentifier.id)
+                .setProofInit(proofInit.toByteString())
+                .setProofHeight(proofHeight)
+                .build()
+        val stx = executeFlow(IbcChanCloseConfirmFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
         assert(chan.portId == portIdentifier)
         assert(chan.id == channelIdentifier)
-        assert(chan.end.state == ChannelState.CLOSED)
+        assert(chan.end.state == ChannelOuterClass.State.STATE_CLOSED)
     }
 
     fun sendPacket(

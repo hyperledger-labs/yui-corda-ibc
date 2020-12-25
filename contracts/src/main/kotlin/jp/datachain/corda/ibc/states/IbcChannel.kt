@@ -1,10 +1,10 @@
 package jp.datachain.corda.ibc.states
 
+import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics4.Packet
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateRef
@@ -16,14 +16,14 @@ data class IbcChannel private constructor (
         override val baseId: StateRef,
         override val id: Identifier,
         val portId: Identifier,
-        val end: ChannelEnd,
+        val end: ChannelOuterClass.Channel,
         val nextSequenceSend: Long,
         val nextSequenceRecv: Long,
         val nextSequenceAck: Long,
         val packets: Map<Long, Packet>,
         val acknowledgements: Map<Long, Acknowledgement>
 ) : IbcState {
-    constructor(host: Host, portId: Identifier, chanId: Identifier, end: ChannelEnd) : this(
+    constructor(host: Host, portId: Identifier, chanId: Identifier, end: ChannelOuterClass.Channel) : this(
             host.participants,
             host.baseId,
             chanId,

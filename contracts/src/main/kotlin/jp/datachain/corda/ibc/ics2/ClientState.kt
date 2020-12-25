@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.ics2
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
-import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
@@ -42,7 +42,7 @@ interface ClientState : IbcState {
             proof: CommitmentProof,
             portIdentifier: Identifier,
             channelIdentifier: Identifier,
-            channelEnd: ChannelEnd) : Boolean
+            channelEnd: ChannelOuterClass.Channel) : Boolean
 
     fun verifyPacketData(
             height: Height,
