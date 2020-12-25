@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.clients.corda
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
@@ -8,7 +9,6 @@ import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.ChannelEnd
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
@@ -71,7 +71,7 @@ data class CordaClientState private constructor(
                 conn.end == connectionEnd
     }
 
-    override fun verifyChannelState(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelEnd): Boolean {
+    override fun verifyChannelState(height: Height, prefix: Commitment.MerklePrefix, proof: CommitmentProof, portIdentifier: Identifier, channelIdentifier: Identifier, channelEnd: ChannelOuterClass.Channel): Boolean {
         val baseId = baseIdOf(height) ?: return false
         val notaryKey = notaryKeyOf(height) ?: return false
         val stx = proof.toSignedTransaction()

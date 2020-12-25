@@ -1,6 +1,7 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanCloseInit
@@ -17,8 +18,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcChanCloseInitFlow(
         val baseId: StateRef,
-        val portIdentifier: Identifier,
-        val channelIdentifier: Identifier
+        val msg: Tx.MsgChannelCloseInit
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -28,14 +28,14 @@ class IbcChanCloseInitFlow(
         require(participants.contains(ourIdentity))
 
         // query channel from vault
-        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, channelIdentifier)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.channelId))!!
 
         // query connection from vault
-        val connId = chan.state.data.end.connectionHops.single()
+        val connId = Identifier(chan.state.data.end.connectionHopsList.single())
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // create command and outputs
-        val command = HandleChanCloseInit(portIdentifier, channelIdentifier)
+        val command = HandleChanCloseInit(msg)
         val ctx = Context(setOf(chan.state.data), setOf(host, conn).map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)

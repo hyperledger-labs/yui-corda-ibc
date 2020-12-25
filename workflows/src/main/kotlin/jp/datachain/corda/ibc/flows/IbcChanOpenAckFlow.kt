@@ -1,10 +1,8 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client.Height
-import ibc.core.connection.v1.Connection
+import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanOpenAck
@@ -21,12 +19,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcChanOpenAckFlow(
         val baseId: StateRef,
-        val portIdentifier: Identifier,
-        val channelIdentifier: Identifier,
-        val counterpartyVersion: Connection.Version,
-        val counterpartyChannelIdentifier: Identifier,
-        val proofTry: CommitmentProof,
-        val proofHeight: Height
+        val msg: Tx.MsgChannelOpenAck
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -36,10 +29,10 @@ class IbcChanOpenAckFlow(
         require(participants.contains(ourIdentity))
 
         // query chan from vault
-        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, channelIdentifier)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.channelId))!!
 
         // query conn from vault
-        val connId = chan.state.data.end.connectionHops.single()
+        val connId = Identifier(chan.state.data.end.connectionHopsList.single())
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
@@ -47,13 +40,7 @@ class IbcChanOpenAckFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // create command and outputs
-        val command = HandleChanOpenAck(
-                portIdentifier,
-                channelIdentifier,
-                counterpartyVersion,
-                counterpartyChannelIdentifier,
-                proofTry,
-                proofHeight)
+        val command = HandleChanOpenAck(msg)
         val ctx = Context(setOf(chan.state.data), setOf(host, client, conn).map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)

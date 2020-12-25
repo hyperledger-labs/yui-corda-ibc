@@ -1,14 +1,11 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client.Height
-import ibc.core.connection.v1.Connection
+import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanOpenTry
-import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
@@ -22,17 +19,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcChanOpenTryFlow(
         val baseId: StateRef,
-        val order: ChannelOrder,
-        val connectionHops: List<Identifier>,
-        val portIdentifier: Identifier,
-        val channelIdentifier: Identifier,
-        val counterpartyChosenChannelIdentifer: Identifier,
-        val counterpartyPortIdentifier: Identifier,
-        val counterpartyChannelIdentifier: Identifier,
-        val version: Connection.Version,
-        val counterpartyVersion: Connection.Version,
-        val proofInit: CommitmentProof,
-        val proofHeight: Height
+        val msg: Tx.MsgChannelOpenTry
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -42,7 +29,7 @@ class IbcChanOpenTryFlow(
         require(participants.contains(ourIdentity))
 
         // query conn from vault
-        val connId = connectionHops.single()
+        val connId = Identifier(msg.channel.connectionHopsList.single())
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
         // query client from vault
@@ -50,21 +37,10 @@ class IbcChanOpenTryFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // (optional) channel from vault
-        val chanOrNull = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, channelIdentifier)
+        val chanOrNull = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.desiredChannelId))
 
         // create command and outputs
-        val command = HandleChanOpenTry(
-                order,
-                connectionHops,
-                portIdentifier,
-                channelIdentifier,
-                counterpartyChosenChannelIdentifer,
-                counterpartyPortIdentifier,
-                counterpartyChannelIdentifier,
-                version,
-                counterpartyVersion,
-                proofInit,
-                proofHeight)
+        val command = HandleChanOpenTry(msg)
         val inStates =
                 if(chanOrNull == null)
                     setOf(host.state.data)

@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc
 
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientType
@@ -8,7 +9,6 @@ import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.FungibleTokenPacketAcknowledgement
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics4.Acknowledgement
-import jp.datachain.corda.ibc.ics4.ChannelOrder
 import jp.datachain.corda.ibc.ics4.Packet
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.identity.CordaX500Name
@@ -140,7 +140,7 @@ class IbcFlowTests {
         val chanAid = Identifier("channelA")
         val portBid = Identifier("portB")
         val chanBid = Identifier("channelB")
-        val order = ChannelOrder.UNORDERED
+        val order = ChannelOuterClass.Order.ORDER_UNORDERED
         ibcA.chanOpenInit(
                 order,
                 listOf(connAid),
@@ -148,7 +148,7 @@ class IbcFlowTests {
                 chanAid,
                 portBid,
                 chanBid,
-                ibcA.conn(connAid).end.versionsList.single())
+                ibcA.conn(connAid).end.versionsList.single().toString())
 
         ibcB.chanOpenTry(
                 order,
@@ -158,8 +158,8 @@ class IbcFlowTests {
                 chanBid,
                 portAid,
                 chanAid,
-                ibcB.conn(connBid).end.versionsList.single(),
-                ibcA.conn(connAid).end.versionsList.single(),
+                ibcB.conn(connBid).end.versionsList.single().toString(),
+                ibcA.conn(connAid).end.versionsList.single().toString(),
                 ibcA.chanProof(chanAid),
                 ibcA.host().getCurrentHeight())
 
@@ -393,7 +393,7 @@ class IbcFlowTests {
         val idPortXYZ = Identifier("transfer")
         val idChanABC = Identifier("chanABC")
         val idChanXYZ = Identifier("chanXYZ")
-        val order = ChannelOrder.UNORDERED
+        val order = ChannelOuterClass.Order.ORDER_UNORDERED
 
         // ABC executes chanOpenInit
         ibcA.chanOpenInit(
@@ -403,7 +403,7 @@ class IbcFlowTests {
                 idChanABC,
                 idPortXYZ,
                 idChanXYZ,
-                ibcB.conn(idConnABC).end.versionsList.single())
+                ibcB.conn(idConnABC).end.versionsList.single().toString())
         // XYZ executes chanOpenTry
         ibcX.chanOpenTry(
                 order,
@@ -413,7 +413,7 @@ class IbcFlowTests {
                 idChanXYZ,
                 idPortABC,
                 idChanABC,
-                ibcY.conn(idConnXYZ).end.versionsList.single(),
+                ibcY.conn(idConnXYZ).end.versionsList.single().toString(),
                 ibcB.chan(idChanABC).end.version,
                 ibcB.chanProof(idChanABC),
                 ibcB.host().getCurrentHeight())

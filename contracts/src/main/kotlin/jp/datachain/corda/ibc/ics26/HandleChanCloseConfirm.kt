@@ -1,23 +1,11 @@
 package jp.datachain.corda.ibc.ics26
 
-import ibc.core.client.v1.Client.Height
-import jp.datachain.corda.ibc.ics23.CommitmentProof
-import jp.datachain.corda.ibc.ics24.Identifier
+import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.ics25.Handler
 import java.security.PublicKey
 
-data class HandleChanCloseConfirm(
-        val portIdentifier: Identifier,
-        val channelIdentifier: Identifier,
-        val proofInit: CommitmentProof,
-        val proofHeight: Height
-): DatagramHandler {
+data class HandleChanCloseConfirm(val msg: Tx.MsgChannelCloseConfirm): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
-        Handler.chanCloseConfirm(
-                ctx,
-                portIdentifier,
-                channelIdentifier,
-                proofInit,
-                proofHeight)
+        Handler.chanCloseConfirm(ctx, msg)
     }
 }
