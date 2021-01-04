@@ -33,13 +33,13 @@ data class Host constructor (
             emptyList()
     )
 
-    fun getCurrentHeight() = Height.getDefaultInstance()
+    fun getCurrentHeight() = Height.getDefaultInstance()!!
 
     fun getStoredRecentConsensusStateCount() = 1
 
     fun getConsensusState(height: Height) : CordaConsensusState {
         require(height == getCurrentHeight())
-        return CordaConsensusState(Timestamp(0), height, baseId, notary.owningKey)
+        return CordaConsensusState(baseId, notary.owningKey)
     }
 
     fun getCommitmentPrefix() = Commitment.MerklePrefix.getDefaultInstance()!!

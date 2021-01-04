@@ -173,14 +173,10 @@ fun GrpcClientType.into() = when(this) {
 }
 
 fun CordaConsensusState.into(): GrpcCordaConsensusState = GrpcCordaConsensusState.newBuilder()
-        .setTimestamp(timestamp.timestamp)
-        .setHeight(height)
         .setBaseId(baseId.into())
         .setNotaryKey(notaryKey.into())
         .build()
 fun GrpcCordaConsensusState.into() = CordaConsensusState(
-        timestamp = Timestamp(timestamp),
-        height = height,
         baseId = baseId.into(),
         notaryKey = notaryKey.into())
 fun GrpcCordaConsensusState.asSuper(): GrpcConsensusState = GrpcConsensusState.newBuilder()

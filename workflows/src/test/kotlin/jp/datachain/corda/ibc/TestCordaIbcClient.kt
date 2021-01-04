@@ -100,7 +100,7 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
         val client = stx.tx.outputsOfType<ClientState>().single()
         assert(client.id == id)
         assert(client is CordaClientState)
-        assert((client as CordaClientState).consensusStates.values.single() == cordaConsensusState)
+        assert((client as CordaClientState).counterpartyConsensusState == cordaConsensusState)
     }
 
     fun connOpenInit(

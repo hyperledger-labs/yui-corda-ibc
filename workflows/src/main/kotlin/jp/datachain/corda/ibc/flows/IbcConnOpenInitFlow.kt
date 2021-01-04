@@ -6,6 +6,7 @@ import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenInit
+import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -35,7 +36,7 @@ class IbcConnOpenInitFlow(
         val builder = TransactionBuilder(notary)
         builder.addCommand(command, ourIdentity.owningKey)
                 .addInputState(host)
-                .addInputState(client)
+                .addReferenceState(ReferencedStateAndRef(client))
         ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)

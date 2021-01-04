@@ -42,7 +42,7 @@ object Handler {
 
     fun connOpenInit(ctx: Context, msg: Tx.MsgConnectionOpenInit) {
         val host = ctx.getInput<Host>().addConnection(Identifier(msg.connectionId))
-        val client = ctx.getInput<ClientState>().addConnection(Identifier(msg.connectionId))
+        val client = ctx.getReference<ClientState>()
 
         require(host.clientIds.contains(Identifier(msg.clientId))){"unknown client"}
         require(client.id == Identifier(msg.clientId)){"mismatch client"}
@@ -61,18 +61,16 @@ object Handler {
                 .build()
 
         ctx.addOutput(host)
-        ctx.addOutput(client)
         ctx.addOutput(IbcConnection(host, Identifier(msg.connectionId), end))
     }
 
     fun connOpenTry(ctx: Context, msg: Tx.MsgConnectionOpenTry) {
         val host = ctx.getInput<Host>()
-        val client = ctx.getInput<ClientState>()
+        val client = ctx.getReference<ClientState>()
         val previous = ctx.getInputOrNull<IbcConnection>()
 
         if (previous != null) {
             require(host.connIds.contains(Identifier(msg.desiredConnectionId))){"unknown connection in host"}
-            require(client.connIds.contains(Identifier(msg.desiredConnectionId))){"unknown connection in client"}
             require(previous.id == Identifier(msg.desiredConnectionId)){"mismatch connection"}
         }
         require(host.clientIds.contains(client.id)){"unknown client"}
@@ -102,21 +100,21 @@ object Handler {
                         .setPrefix(host.getCommitmentPrefix())
                         .build())
                 .build()
-        require(client.verifyConnectionState(
+        client.verifyConnectionState(
                 msg.proofHeight,
                 msg.counterparty.prefix,
                 CommitmentProof(msg.proofInit),
                 Identifier(msg.counterparty.connectionId),
-                expected)){"connection verification failure"}
+                expected)
 
         val expectedConsensusState = host.getConsensusState(msg.consensusHeight)
-        require(client.verifyClientConsensusState(
+        client.verifyClientConsensusState(
                 msg.proofHeight,
-                msg.counterparty.prefix,
-                CommitmentProof(msg.proofConsensus),
                 Identifier(msg.counterparty.clientId),
                 msg.consensusHeight,
-                expectedConsensusState)){"client consensus verification failure"}
+                msg.counterparty.prefix,
+                CommitmentProof(msg.proofConsensus),
+                expectedConsensusState)
 
         val identifier = msg.desiredConnectionId
         val connectionEnd = Connection.ConnectionEnd.newBuilder()
@@ -127,7 +125,6 @@ object Handler {
                 .build()
         ctx.addOutput(IbcConnection(host, Identifier(identifier), connectionEnd))
         ctx.addOutput(host.addConnection(Identifier(identifier)))
-        ctx.addOutput(client.addConnection(Identifier(identifier)))
     }
 
     fun connOpenAck(ctx: Context, msg: Tx.MsgConnectionOpenAck) {
@@ -137,7 +134,6 @@ object Handler {
 
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
-        require(client.connIds.contains(conn.id)){"unknown connection in client"}
         require(conn.id == Identifier(msg.connectionId)){"mismatch connection"}
         require(client.id == Identifier(conn.end.clientId)){"mismatch client"}
 
@@ -157,21 +153,21 @@ object Handler {
                         .setPrefix(host.getCommitmentPrefix())
                         .build())
                 .build()
-        require(client.verifyConnectionState(
+        client.verifyConnectionState(
                 msg.proofHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofTry),
                 Identifier(msg.counterpartyConnectionId),
-                expected)){"connection verification failure"}
+                expected)
 
         val expectedConsensusState = host.getConsensusState(msg.consensusHeight)
-        require(client.verifyClientConsensusState(
+        client.verifyClientConsensusState(
                 msg.proofHeight,
-                conn.end.counterparty.prefix,
-                CommitmentProof(msg.proofConsensus),
                 Identifier(conn.end.counterparty.clientId),
                 msg.consensusHeight,
-                expectedConsensusState)){"client consensus verification failure"}
+                conn.end.counterparty.prefix,
+                CommitmentProof(msg.proofConsensus),
+                expectedConsensusState)
 
         ctx.addOutput(conn.copy(end = conn.end.toBuilder()
                 .setState(Connection.State.STATE_OPEN)
@@ -187,7 +183,6 @@ object Handler {
 
         require(host.clientIds.contains(client.id)){"unknown client"}
         require(host.connIds.contains(conn.id)){"unknown connection in host"}
-        require(client.connIds.contains(conn.id)){"unknown connection in client"}
         require(conn.id == Identifier(msg.connectionId)){"mismatch connection"}
         require(client.id == Identifier(conn.end.clientId)){"mismatch client"}
 
@@ -202,12 +197,12 @@ object Handler {
                         .setPrefix(host.getCommitmentPrefix())
                         .build())
                 .build()
-        require(client.verifyConnectionState(
+        client.verifyConnectionState(
                 msg.proofHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofAck),
                 Identifier(conn.end.counterparty.connectionId),
-                expected)){"connection verification failure"}
+                expected)
 
         ctx.addOutput(conn.copy(end = conn.end.toBuilder()
                 .setState(Connection.State.STATE_OPEN)
@@ -256,7 +251,6 @@ object Handler {
         }
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
-        require(client.connIds.contains(conn.id))
         require(conn.id == Identifier(msg.channel.connectionHopsList.single()))
         require(client.id == Identifier(conn.end.clientId))
 
@@ -283,13 +277,13 @@ object Handler {
                 .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
                 .setVersion(msg.counterpartyVersion)
                 .build()
-        require(client.verifyChannelState(
+        client.verifyChannelState(
                 msg.proofHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofInit),
                 Identifier(msg.channel.counterparty.portId),
                 Identifier(msg.channel.counterparty.channelId),
-                expected))
+                expected)
 
         val end = ChannelOuterClass.Channel.newBuilder()
                 .setState(ChannelOuterClass.State.STATE_TRYOPEN)
@@ -322,7 +316,6 @@ object Handler {
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
-        require(client.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == Identifier(msg.portId))
         require(chan.id == Identifier(msg.channelId))
@@ -346,13 +339,13 @@ object Handler {
                 .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
                 .setVersion(msg.counterpartyVersion)
                 .build()
-        require(client.verifyChannelState(
+        client.verifyChannelState(
                 msg.proofHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofTry),
                 Identifier(chan.end.counterparty.portId),
                 Identifier(chan.end.counterparty.channelId),
-                expected))
+                expected)
 
         ctx.addOutput(chan.copy(end = chan.end.toBuilder()
                 .setState(ChannelOuterClass.State.STATE_OPEN)
@@ -373,7 +366,6 @@ object Handler {
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
-        require(client.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == Identifier(msg.portId))
         require(chan.id == Identifier(msg.channelId))
@@ -394,13 +386,13 @@ object Handler {
                 .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
                 .setVersion(chan.end.version)
                 .build()
-        require(client.verifyChannelState(
+        client.verifyChannelState(
                 msg.proofHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofAck),
                 Identifier(chan.end.counterparty.portId),
                 Identifier(chan.end.counterparty.channelId),
-                expected))
+                expected)
 
         ctx.addOutput(chan.copy(end = chan.end.toBuilder()
                 .setState(ChannelOuterClass.State.STATE_OPEN)
@@ -443,7 +435,6 @@ object Handler {
 
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
-        require(client.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
         require(chan.portId == Identifier(msg.portId))
         require(chan.id == Identifier(msg.channelId))
@@ -464,13 +455,13 @@ object Handler {
                 .addAllConnectionHops(listOf(conn.end.counterparty.connectionId))
                 .setVersion(chan.end.version)
                 .build()
-        require(client.verifyChannelState(
+        client.verifyChannelState(
                 msg.proofHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofInit),
                 Identifier(chan.end.counterparty.portId),
                 Identifier(chan.end.counterparty.channelId),
-                expected))
+                expected)
 
         ctx.addOutput(chan.copy(end = chan.end.toBuilder()
                 .setState(ChannelOuterClass.State.STATE_CLOSED)
@@ -487,7 +478,6 @@ object Handler {
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(client.connIds.contains(conn.id))
 
         require(chan.end.state != ChannelOuterClass.State.STATE_CLOSED)
 
@@ -499,7 +489,7 @@ object Handler {
         require(conn.id == Identifier(chan.end.connectionHopsList.single()))
 
         require(Identifier(conn.end.clientId) == client.id)
-        val latestClientHeight = client.latestClientHeight()
+        val latestClientHeight = client.getLatestHeight()
         require(packet.timeoutHeight.isZero() || latestClientHeight < packet.timeoutHeight)
 
         require(packet.sequence == chan.nextSequenceSend)
@@ -524,7 +514,6 @@ object Handler {
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(client.connIds.contains(conn.id))
 
         require(Identifier(packet.destinationPort) == chan.portId)
         require(Identifier(packet.destinationChannel) == chan.id)
@@ -539,14 +528,14 @@ object Handler {
         require(packet.timeoutHeight.isZero() || host.getCurrentHeight() < packet.timeoutHeight)
         require(packet.timeoutTimestamp == 0L || host.currentTimestamp() < Timestamp(packet.timeoutTimestamp))
 
-        require(client.verifyPacketData(
+        client.verifyPacketCommitment(
                 proofHeight,
                 conn.end.counterparty.prefix,
                 proof,
                 Identifier(packet.sourcePort),
                 Identifier(packet.sourceChannel),
                 packet.sequence,
-                packet))
+                packet.toByteArray())
 
         chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
 
@@ -580,7 +569,6 @@ object Handler {
         require(host.clientIds.contains(client.id))
         require(host.connIds.contains(conn.id))
         require(host.portChanIds.contains(Pair(chan.portId, chan.id)))
-        require(client.connIds.contains(conn.id))
 
         require(Identifier(packet.sourcePort) == chan.portId)
         require(Identifier(packet.sourceChannel) == chan.id)
@@ -595,14 +583,14 @@ object Handler {
 
         require(chan.packets[packet.sequence] == packet)
 
-        require(client.verifyPacketAcknowledgement(
+        client.verifyPacketAcknowledgement(
                 proofHeight,
                 conn.end.counterparty.prefix,
                 proof,
                 Identifier(packet.destinationPort),
                 Identifier(packet.destinationChannel),
                 packet.sequence,
-                acknowledgement))
+                acknowledgement)
 
         if (chan.end.ordering == ChannelOuterClass.Order.ORDER_ORDERED) {
             require(packet.sequence == chan.nextSequenceAck)
