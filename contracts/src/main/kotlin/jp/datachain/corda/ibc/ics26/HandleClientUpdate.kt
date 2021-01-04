@@ -12,6 +12,7 @@ data class HandleClientUpdate(
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
         val client = ctx.getInput<ClientState>()
         require(client.id == identifier)
-        ctx.addOutput(client.checkValidityAndUpdateState(header))
+        val result = client.checkHeaderAndUpdateState(header)
+        ctx.addOutput(result.first)
     }
 }

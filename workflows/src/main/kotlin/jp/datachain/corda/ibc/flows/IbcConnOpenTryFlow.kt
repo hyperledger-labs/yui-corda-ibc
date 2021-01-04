@@ -7,6 +7,7 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenTry
 import jp.datachain.corda.ibc.states.IbcConnection
+import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -46,7 +47,7 @@ class IbcConnOpenTryFlow(
         val builder = TransactionBuilder(notary)
                 .addCommand(command, signers)
                 .addInputState(host)
-                .addInputState(client)
+                .addReferenceState(ReferencedStateAndRef(client))
         connOrNull?.let{builder.addInputState(it)}
         ctx.outStates.forEach{builder.addOutputState(it)}
 

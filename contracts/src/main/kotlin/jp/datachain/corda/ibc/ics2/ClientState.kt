@@ -1,78 +1,111 @@
 package jp.datachain.corda.ibc.ics2
 
 import ibc.core.channel.v1.ChannelOuterClass
-import ibc.core.client.v1.Client.Height
+import ibc.core.client.v1.Client
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
+import ics23.Proofs
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcState
 
 interface ClientState : IbcState {
-    val consensusStates: Map<Height, ConsensusState>
-    val connIds: List<Identifier>
+    fun clientType(): ClientType
+    fun getLatestHeight(): Client.Height
+    fun isFrozen(): Boolean
+    fun getFrozenHeight(): Client.Height
+    fun validate()
+    fun getProofSpecs(): List<Proofs.ProofSpec>
 
-    fun addConnection(id: Identifier) : ClientState
+    // Update and Misbehaviour functions
 
-    fun checkValidityAndUpdateState(header: Header) : ClientState
-    fun checkMisbehaviourAndUpdateState(evidence: Evidence) : ClientState
+    fun checkHeaderAndUpdateState(header: Header): Pair<ClientState, ConsensusState>
+    fun checkMisbehaviourAndUpdateState(misbehaviour: Misbehaviour): ClientState
+    fun checkProposedHeaderAndUpdateState(header: Header): Pair<ClientState, ConsensusState>
 
-    fun latestClientHeight() : Height
+    // Upgrade functions
+    fun verifyUpgrade(
+            newClient: ClientState,
+            upgradeHeight: Client.Height,
+            proofUpgrade: ByteArray
+    )
+
+    // Utility function that zeroes out any client customizable fields in client state
+    // Ledger enforced fields are maintained while all custom fields are zero values
+    // Used to verify upgrades
+    fun zeroCustomFields(): ClientState
+
+    // State verification functions
+
+    fun verifyClientState(
+            height: Client.Height,
+            prefix: Commitment.MerklePrefix,
+            counterpartyClientIdentifier: Identifier,
+            proof: CommitmentProof,
+            clientState: ClientState
+    )
 
     fun verifyClientConsensusState(
-            height: Height,
+            height: Client.Height,
+            counterpartyClientIdentifier: Identifier,
+            consensusHeight: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            clientIdentifier: Identifier,
-            consensusStateHeight: Height,
-            consensusState: ConsensusState) : Boolean
+            consensusState: ConsensusState
+    )
 
     fun verifyConnectionState(
-            height: Height,
+            height: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            connectionIdentifier: Identifier,
-            connectionEnd: Connection.ConnectionEnd) : Boolean
+            connectionID: Identifier,
+            connectionEnd: Connection.ConnectionEnd
+    )
 
     fun verifyChannelState(
-            height: Height,
+            height: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            channelEnd: ChannelOuterClass.Channel) : Boolean
+            portID: Identifier,
+            channelID: Identifier,
+            channel: ChannelOuterClass.Channel
+    )
 
-    fun verifyPacketData(
-            height: Height,
+    fun verifyPacketCommitment(
+            height: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
+            portID: Identifier,
+            channelID: Identifier,
             sequence: Long,
-            packet: ChannelOuterClass.Packet) : Boolean
+            commitmentBytes: ByteArray
+    )
 
     fun verifyPacketAcknowledgement(
-            height: Height,
+            height: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
+            portID: Identifier,
+            channelID: Identifier,
             sequence: Long,
-            acknowledgement: ChannelOuterClass.Acknowledgement) : Boolean
+            acknowledgement: ChannelOuterClass.Acknowledgement
+    )
 
-    fun verifyPacketAcknowledgementAbsence(
-            height: Height,
+    fun verifyPacketReceiptAbsence(
+            height: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            sequence: Long) : Boolean
+            portID: Identifier,
+            channelID: Identifier,
+            sequence: Long
+    )
 
     fun verifyNextSequenceRecv(
-            height: Height,
+            height: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            portIdentifier: Identifier,
-            channelIdentifier: Identifier,
-            nextSequenceRecv: Long) : Boolean
+            portID: Identifier,
+            channelID: Identifier,
+            nextSequenceRecv: Long
+    )
 }
