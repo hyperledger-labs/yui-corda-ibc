@@ -487,46 +487,40 @@ class IbcFlowTests {
         ibcZ.recvPacketUnordered(
                 packetCtoZ,
                 ibcC.chanProof(idChanABC),
-                ibcC.host().getCurrentHeight(),
-                forIcs20 = true)
+                ibcC.host().getCurrentHeight())
         // C receives ack from Z
         val ackZtoC = ibcZ.chan(idChanXYZ).acknowledgements[seqCtoZ]!!
         ibcC.acknowledgePacketUnordered(
                 packetCtoZ,
                 ackZtoC,
                 ibcZ.chanProof(idChanXYZ),
-                ibcZ.host().getCurrentHeight(),
-                forIcs20 = true)
+                ibcZ.host().getCurrentHeight())
         // X receives 100 JPY from A
         val packetAtoX = ibcA.chan(idChanABC).packets[seqAtoX]!!
         ibcX.recvPacketUnordered(
                 packetAtoX,
                 ibcA.chanProof(idChanABC),
-                ibcA.host().getCurrentHeight(),
-                forIcs20 = true)
+                ibcA.host().getCurrentHeight())
         // A receives ack from X
         val ackXtoA = ibcX.chan(idChanXYZ).acknowledgements[seqAtoX]!!
         ibcA.acknowledgePacketUnordered(
                 packetAtoX,
                 ackXtoA,
                 ibcX.chanProof(idChanXYZ),
-                ibcX.host().getCurrentHeight(),
-                forIcs20 = true)
+                ibcX.host().getCurrentHeight())
         // Y receives 100 JPY from B
         val packetBtoY = ibcB.chan(idChanABC).packets[seqBtoY]!!
         ibcY.recvPacketUnordered(
                 packetBtoY,
                 ibcB.chanProof(idChanABC),
-                ibcB.host().getCurrentHeight(),
-                forIcs20 = true)
+                ibcB.host().getCurrentHeight())
         // B receives ack from Y
         val ackYtoB = ibcY.chan(idChanXYZ).acknowledgements[seqBtoY]!!
         ibcB.acknowledgePacketUnordered(
                 packetBtoY,
                 ackYtoB,
                 ibcY.chanProof(idChanXYZ),
-                ibcY.host().getCurrentHeight(),
-                forIcs20 = true)
+                ibcY.host().getCurrentHeight())
 
         assert(ackXtoA.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
         assert(ackYtoB.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
@@ -551,15 +545,13 @@ class IbcFlowTests {
             ibcA.recvPacketUnordered(
                     packetXtoA,
                     ibcX.chanProof(idChanXYZ),
-                    ibcX.host().getCurrentHeight(),
-                    forIcs20 = true)
+                    ibcX.host().getCurrentHeight())
             val ackAtoX = ibcA.chan(idChanABC).acknowledgements[seqXtoA]!!
             ibcX.acknowledgePacketUnordered(
                     packetXtoA,
                     ackAtoX,
                     ibcA.chanProof(idChanABC),
-                    ibcA.host().getCurrentHeight(),
-                    forIcs20 = true)
+                    ibcA.host().getCurrentHeight())
         }
 
         assertFailsWith<ExecutionException> {
