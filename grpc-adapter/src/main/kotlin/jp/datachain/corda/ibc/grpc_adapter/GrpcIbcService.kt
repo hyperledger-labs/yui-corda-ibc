@@ -38,7 +38,7 @@ class GrpcIbcService(host: String, port: Int, username: String, password: String
                 request.baseId.into(),
                 request.owner.into(),
                 Denom(request.denom),
-                Amount(request.amount.toBigDecimal())
+                Amount(request.amount)
         ).returnValue.get()
         responseObserver.onNext(stx.into())
         responseObserver.onCompleted()

@@ -1,6 +1,8 @@
 package jp.datachain.corda.ibc
 
 import com.google.protobuf.Any
+import cosmos.base.v1beta1.CoinOuterClass
+import ibc.applications.transfer.v1.Transfer
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client
 import ibc.core.client.v1.Client.Height
@@ -16,7 +18,6 @@ import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
-import jp.datachain.corda.ibc.ics20.FungibleTokenPacketData
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -26,6 +27,7 @@ import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
+import net.corda.core.utilities.toHex
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import java.security.PublicKey
@@ -421,53 +423,47 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
     }
 
     fun sendTransfer(
-            denomination: Denom,
+            sourcePort: Identifier,
+            sourceChannel: Identifier,
+            denom: Denom,
             amount: Amount,
             sender: PublicKey,
             receiver: PublicKey,
-            destPort: Identifier,
-            destChannel: Identifier,
-            sourcePort: Identifier,
-            sourceChannel: Identifier,
             timeoutHeight: Height,
-            timeoutTimestamp: Timestamp,
-            sequence: Long
+            timeoutTimestamp: Timestamp
     ) {
         val prevBank = bank()
-        val stx = executeFlow(IbcSendTransferFlow(
-                baseId,
-                denomination,
-                amount,
-                sender,
-                receiver,
-                destPort,
-                destChannel,
-                sourcePort,
-                sourceChannel,
-                timeoutHeight,
-                timeoutTimestamp,
-                sequence
-        ))
+        val msg = ibc.applications.transfer.v1.Tx.MsgTransfer.newBuilder()
+                .setSourcePort(sourcePort.id)
+                .setSourceChannel(sourceChannel.id)
+                .setToken(CoinOuterClass.Coin.newBuilder()
+                        .setDenom(denom.denom)
+                        .setAmount(amount.amount.toString()))
+                .setSender(sender.encoded.toHex())
+                .setReceiver(receiver.encoded.toHex())
+                .setTimeoutHeight(timeoutHeight)
+                .setTimeoutTimestamp(timeoutTimestamp.timestamp)
+                .build()
+        val stx = executeFlow(IbcSendTransferFlow(baseId, msg))
         val chan = stx.tx.outputsOfType<IbcChannel>().single()
-        assert(chan.nextSequenceSend == sequence + 1)
-        val packet = chan.packets[sequence]!!
-        assert(Identifier(packet.destinationPort) == destPort)
-        assert(Identifier(packet.destinationChannel) == destChannel)
-        assert(Identifier(packet.sourcePort) == sourcePort)
-        assert(Identifier(packet.sourceChannel) == sourceChannel)
+        val packet = chan.packets[chan.nextSequenceSend - 1]!!
+        assert(packet.sourcePort == msg.sourcePort)
+        assert(packet.sourceChannel == msg.sourceChannel)
+        assert(packet.destinationPort == chan.end.counterparty.portId)
+        assert(packet.destinationChannel == chan.end.counterparty.channelId)
         assert(packet.timeoutHeight == timeoutHeight)
         assert(packet.timeoutTimestamp == timeoutTimestamp.timestamp)
-        assert(packet.sequence == sequence)
-        val data = FungibleTokenPacketData.decode(packet.data.toByteArray())
-        assert(data.denomination == denomination)
-        assert(data.amount == amount)
-        assert(data.sender == sender)
-        assert(data.receiver == receiver)
+        assert(packet.sequence == chan.nextSequenceSend - 1)
+        val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
+        assert(data.denom == msg.token.denom)
+        assert(data.amount == msg.token.amount.toLong())
+        assert(data.sender == msg.sender)
+        assert(data.receiver == msg.receiver)
         val bank = stx.tx.outputsOfType<Bank>().single()
-        if (denomination.hasPrefix(sourcePort, sourceChannel)) {
-            assert(prevBank.burn(sender, denomination.removePrefix(), amount) == bank)
+        if (denom.hasPrefix(sourcePort, sourceChannel)) {
+            assert(prevBank.burn(sender, denom.removePrefix(), amount) == bank)
         } else {
-            assert(prevBank.lock(sender, denomination, amount) == bank)
+            assert(prevBank.lock(sender, denom, amount) == bank)
         }
     }
 }

@@ -1,20 +1,27 @@
 package jp.datachain.corda.ibc.ics20
 
 import com.google.protobuf.ByteString
+import ibc.applications.transfer.v1.Transfer
 import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.ModuleCallbacks
+import net.corda.core.crypto.Crypto
+import net.corda.core.utilities.hexToByteArray
 
 class ModuleCallbacks: ModuleCallbacks {
     override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
-        val data = FungibleTokenPacketData.decode(packet.data.toByteArray())
+        val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
+        val denom = Denom(data.denom)
+        val amount = Amount(data.amount)
+        val receiver = Crypto.decodePublicKey(data.receiver.hexToByteArray())
+
         val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
-        val source = data.denomination.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
-        val bank: Bank = ctx.getInput<Bank>()
+        val source = denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
+        val bank = ctx.getInput<Bank>()
         if (source) {
             try {
-                ctx.addOutput(bank.unlock(data.receiver, data.denomination, data.amount))
+                ctx.addOutput(bank.unlock(receiver, denom, amount))
                 ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
@@ -22,7 +29,7 @@ class ModuleCallbacks: ModuleCallbacks {
             }
         } else {
             try {
-                ctx.addOutput(bank.mint(data.receiver, data.denomination, data.amount))
+                ctx.addOutput(bank.mint(receiver, denom, amount))
                 ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
@@ -43,13 +50,17 @@ class ModuleCallbacks: ModuleCallbacks {
     }
 
     private fun refundTokens(ctx: Context, packet: ChannelOuterClass.Packet) {
-        val data = FungibleTokenPacketData.decode(packet.data.toByteArray())
-        val source = !data.denomination.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
-        val bank: Bank = ctx.getInput<Bank>()
+        val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
+        val denom = Denom(data.denom)
+        val amount = Amount(data.amount)
+        val sender = Crypto.decodePublicKey(data.sender.hexToByteArray())
+
+        val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
+        val bank = ctx.getInput<Bank>()
         if (source) {
-            ctx.addOutput(bank.unlock(data.sender, data.denomination, data.amount))
+            ctx.addOutput(bank.unlock(sender, denom, amount))
         } else {
-            ctx.addOutput(bank.mint(data.sender, data.denomination, data.amount))
+            ctx.addOutput(bank.mint(sender, denom, amount))
         }
     }
 }

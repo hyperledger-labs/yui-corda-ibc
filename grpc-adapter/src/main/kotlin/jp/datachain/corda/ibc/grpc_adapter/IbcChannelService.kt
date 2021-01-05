@@ -4,7 +4,6 @@ import ibc.core.channel.v1.MsgGrpc
 import ibc.core.channel.v1.Tx
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.flows.*
-import jp.datachain.corda.ibc.flows.IbcChanOpenConfirmFlow
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow

@@ -8,7 +8,7 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
-import java.math.BigDecimal
+import java.math.BigInteger
 import java.security.PublicKey
 
 @BelongsToContract(Ibc::class)
@@ -37,7 +37,7 @@ data class Bank(
     private fun up(mm: LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>, denom: Denom, owner: PublicKey, amount: Amount)
             : LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>> {
         val m: LinkedHashMap<PublicKey, Amount> = mm.getOrDefault(denom, LinkedHashMap())
-        val balance = m.getOrDefault(owner, Amount(BigDecimal.ZERO))
+        val balance = m.getOrDefault(owner, Amount(BigInteger.ZERO))
         return mm.cloneAndPut(denom, m.cloneAndPut(owner, balance + amount))
     }
 
