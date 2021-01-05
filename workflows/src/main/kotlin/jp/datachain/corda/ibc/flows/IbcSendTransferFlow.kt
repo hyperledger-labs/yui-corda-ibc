@@ -1,40 +1,23 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client.Height
+import ibc.applications.transfer.v1.Tx
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.CreateOutgoingPacket
-import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
-import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import java.security.PublicKey
 
 @StartableByRPC
 @InitiatingFlow
-class IbcSendTransferFlow(
-        val baseId: StateRef,
-        val denomination: Denom,
-        val amount: Amount,
-        val sender: PublicKey,
-        val receiver: PublicKey,
-        val destPort: Identifier,
-        val destChannel: Identifier,
-        val sourcePort: Identifier,
-        val sourceChannel: Identifier,
-        val timeoutHeight: Height,
-        val timeoutTimestamp: Timestamp,
-        val sequence: Long
-) : FlowLogic<SignedTransaction>() {
+class IbcSendTransferFlow(val baseId: StateRef, val msg: Tx.MsgTransfer) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         // query host from vault
@@ -43,7 +26,7 @@ class IbcSendTransferFlow(
         require(participants.contains(ourIdentity))
 
         // query chan from vault
-        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, sourceChannel)!!
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.sourceChannel))!!
 
         // query conn from vault
         val connId = Identifier(chan.state.data.end.connectionHopsList.single())
@@ -62,18 +45,7 @@ class IbcSendTransferFlow(
                 setOf(host, client, conn).map{it.state.data}
         )
         val signers = listOf(ourIdentity.owningKey)
-        val command = CreateOutgoingPacket(
-                denomination,
-                amount,
-                sender,
-                receiver,
-                destPort,
-                destChannel,
-                sourcePort,
-                sourceChannel,
-                timeoutHeight,
-                timeoutTimestamp,
-                sequence)
+        val command = CreateOutgoingPacket(msg)
         command.execute(ctx, signers)
 
         // build transaction

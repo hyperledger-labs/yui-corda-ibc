@@ -433,8 +433,6 @@ class IbcFlowTests {
 
         val denom = Denom("JPY")
         val amount = Amount(100)
-        val destPort = idPortXYZ
-        val destChannel = idChanXYZ
         val sourcePort = idPortABC
         val sourceChannel = idChanABC
         val timeoutHeight = Height.getDefaultInstance()
@@ -442,45 +440,36 @@ class IbcFlowTests {
         // C sends 100 JPY to Z
         val seqCtoZ = ibcC.chan(idChanABC).nextSequenceSend
         ibcC.sendTransfer(
+                sourcePort,
+                sourceChannel,
                 denom,
                 amount,
                 cKey,
                 zKey,
-                destPort,
-                destChannel,
-                sourcePort,
-                sourceChannel,
                 timeoutHeight,
-                timeoutTimestamp,
-                seqCtoZ)
+                timeoutTimestamp)
         // A sends 100 JPY to X
         val seqAtoX = ibcC.chan(idChanABC).nextSequenceSend
         ibcA.sendTransfer(
+                sourcePort,
+                sourceChannel,
                 denom,
                 amount,
                 aKey,
                 xKey,
-                destPort,
-                destChannel,
-                sourcePort,
-                sourceChannel,
                 timeoutHeight,
-                timeoutTimestamp,
-                seqAtoX)
+                timeoutTimestamp)
         // B sends 100 JPY to Y
         val seqBtoY = ibcC.chan(idChanABC).nextSequenceSend
         ibcB.sendTransfer(
+                sourcePort,
+                sourceChannel,
                 denom,
                 amount,
                 bKey,
                 yKey,
-                destPort,
-                destChannel,
-                sourcePort,
-                sourceChannel,
                 timeoutHeight,
-                timeoutTimestamp,
-                seqBtoY)
+                timeoutTimestamp)
 
         // Z receives 100 JPY from C
         val packetCtoZ = ibcC.chan(idChanABC).packets[seqCtoZ]!!
@@ -530,17 +519,14 @@ class IbcFlowTests {
         for (i in 0 until 2) {
             val seqXtoA = ibcX.chan(idChanXYZ).nextSequenceSend
             ibcX.sendTransfer(
+                    idPortXYZ,
+                    idChanXYZ,
                     Denom("${idPortXYZ.id}/${idChanXYZ.id}/JPY"),
                     Amount(50),
                     xKey,
                     aKey,
-                    idPortABC,
-                    idChanABC,
-                    idPortXYZ,
-                    idChanXYZ,
                     Height.getDefaultInstance(),
-                    Timestamp(0),
-                    seqXtoA)
+                    Timestamp(0))
             val packetXtoA = ibcX.chan(idChanXYZ).packets[seqXtoA]!!
             ibcA.recvPacketUnordered(
                     packetXtoA,
@@ -555,19 +541,15 @@ class IbcFlowTests {
         }
 
         assertFailsWith<ExecutionException> {
-            val seqXtoA = ibcX.chan(idChanXYZ).nextSequenceSend
             ibcX.sendTransfer(
+                    idPortXYZ,
+                    idChanXYZ,
                     Denom("${idPortXYZ.id}/${idChanXYZ.id}/JPY"),
                     Amount(1),
                     xKey,
                     aKey,
-                    idPortABC,
-                    idChanABC,
-                    idPortXYZ,
-                    idChanXYZ,
                     Height.getDefaultInstance(),
-                    Timestamp(0),
-                    seqXtoA)
+                    Timestamp(0))
         }
     }
 }

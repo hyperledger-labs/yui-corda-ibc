@@ -88,7 +88,7 @@ fun LinkedHashMap<PublicKey, Amount>.into(): Corda.Bank.BalanceMapPerDenom = Cor
         .build()
 fun Corda.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
         .mapKeys{Crypto.decodePublicKey(it.key.parseAsHex())}
-        .mapValues{Amount(it.value.toBigDecimal())}
+        .mapValues{Amount(it.value.toBigInteger())}
         .let{LinkedHashMap<PublicKey, Amount>(it)}
 
 fun LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>.into(): Corda.Bank.BalanceMap = Corda.Bank.BalanceMap.newBuilder()
