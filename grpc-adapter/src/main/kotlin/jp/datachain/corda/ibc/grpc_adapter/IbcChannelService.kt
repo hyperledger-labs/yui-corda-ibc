@@ -44,4 +44,14 @@ class IbcChannelService(host: String, port: Int, username: String, password: Str
         ops.startFlow(::IbcChanCloseConfirmFlow, baseId, request).returnValue.get()
         responseObserver.onCompleted()
     }
+
+    override fun recvPacket(request: Tx.MsgRecvPacket, responseObserver: StreamObserver<Tx.MsgRecvPacketResponse>) {
+        ops.startFlow(::IbcRecvPacketFlow, baseId, request).returnValue.get()
+        responseObserver.onCompleted()
+    }
+
+    override fun acknowledgement(request: Tx.MsgAcknowledgement, responseObserver: StreamObserver<Tx.MsgAcknowledgementResponse>) {
+        ops.startFlow(::IbcAcknowledgePacketFlow, baseId, request).returnValue.get()
+        responseObserver.onCompleted()
+    }
 }
