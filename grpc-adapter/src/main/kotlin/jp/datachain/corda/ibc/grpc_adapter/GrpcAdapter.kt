@@ -18,7 +18,7 @@ object GrpcAdapter {
                 .addService(adminService)
                 .addService(GrpcNodeService(hostname, port, username, password))
                 .addService(GrpcIbcService(hostname, port, username, password))
-        baseId?.let{serverBuilder.addService(ClientMsgService(hostname, port, username, password, it))}
+        baseId?.let{serverBuilder.addService(IbcClientService(hostname, port, username, password, it))}
         val server = serverBuilder.build()
         adminService.server = server
 
