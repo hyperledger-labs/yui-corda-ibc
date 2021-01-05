@@ -1,9 +1,7 @@
 package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import jp.datachain.corda.ibc.ics2.ClientType
-import jp.datachain.corda.ibc.ics2.ConsensusState
-import jp.datachain.corda.ibc.ics24.Identifier
+import ibc.core.client.v1.Client
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleClientCreate
 import net.corda.core.contracts.StateRef
@@ -14,14 +12,17 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcClientCreateFlow(val baseId: StateRef, val id: Identifier, val clientType: ClientType, val consensusState: ConsensusState) : FlowLogic<SignedTransaction>() {
+class IbcClientCreateFlow(
+        val baseId: StateRef,
+        val msg: Client.MsgCreateClient
+) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val command = HandleClientCreate(id, clientType, consensusState)
+        val command = HandleClientCreate(msg)
         val ctx = Context(setOf(host.state.data), setOf())
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)

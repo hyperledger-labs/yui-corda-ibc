@@ -35,8 +35,6 @@ data class Host constructor (
 
     fun getCurrentHeight() = Height.getDefaultInstance()!!
 
-    fun getStoredRecentConsensusStateCount() = 1
-
     fun getConsensusState(height: Height) : CordaConsensusState {
         require(height == getCurrentHeight())
         return CordaConsensusState(baseId, notary.owningKey)

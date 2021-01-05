@@ -1,42 +1,43 @@
 package jp.datachain.corda.ibc.ics25
 
 import ibc.core.channel.v1.ChannelOuterClass
+import ibc.core.client.v1.Client
 import ibc.core.client.v1.Client.Height
 import ibc.core.client.v1.compareTo
 import ibc.core.client.v1.isZero
 import ibc.core.connection.v1.Connection
 import ibc.core.connection.v1.Tx
+import ibc.lightclients.localhost.v1.Localhost
+import ibc.lightclients.solomachine.v1.Solomachine
+import ibc.lightclients.tendermint.v1.Tendermint
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics2.ClientType
-import jp.datachain.corda.ibc.ics2.ConsensusState
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
+import jp.datachain.corda.ibc.grpc.Corda
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Timestamp
-import java.lang.IllegalArgumentException
 
 object Handler {
-    fun createClient(
-            ctx: Context,
-            id: Identifier,
-            clientType: ClientType,
-            consensusState: ConsensusState
-    ) {
-        val host = ctx.getInput<Host>()
-        when (clientType) {
-            ClientType.CordaClient -> {
-                val host = host.addClient(id)
-                val consensusState = consensusState as CordaConsensusState
-                val client = CordaClientState(host, id, consensusState)
-                ctx.addOutput(host)
+    fun createClient(ctx: Context, msg: Client.MsgCreateClient) {
+        val prevHost = ctx.getInput<Host>()
+        when {
+            msg.clientState.`is`(Corda.ClientState::class.java) -> {
+                val id = Identifier(msg.clientId)
+                val nextHost = prevHost.addClient(id)
+                val consensusState = msg.consensusState.unpack(Corda.ConsensusState::class.java)!!
+                val client = CordaClientState(prevHost, id, CordaConsensusState(consensusState))
+                ctx.addOutput(nextHost)
                 ctx.addOutput(client)
             }
-            else -> throw NotImplementedError()
+            msg.clientState.`is`(Tendermint.ClientState::class.java) -> throw NotImplementedError()
+            msg.clientState.`is`(Solomachine.ClientState::class.java) -> throw NotImplementedError()
+            msg.clientState.`is`(Localhost.ClientState::class.java) -> throw NotImplementedError()
+            else -> throw IllegalArgumentException()
         }
     }
 

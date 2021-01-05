@@ -1,14 +1,16 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
+import ibc.core.client.v1.Client
+import ibc.core.client.v1.MsgGrpc
 import io.grpc.ManagedChannelBuilder
+import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.grpc.*
-import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.utilities.NetworkHostAndPort
+import com.google.protobuf.Any
 
 object TestGrpcAdapter {
     @JvmStatic
@@ -22,17 +24,18 @@ object TestGrpcAdapter {
         val channel = ManagedChannelBuilder.forTarget("localhost:9999")
                 .usePlaintext()
                 .build()
-        val cordaService = CordaServiceGrpc.newBlockingStub(channel)
+        val nodeService = NodeServiceGrpc.newBlockingStub(channel)
         val ibcService = IbcServiceGrpc.newBlockingStub(channel)
+        val clientMsgService = MsgGrpc.newBlockingStub(channel)
 
         val partyMap = listOf("PartyA", "PartyB", "Notary").map{it to
-                cordaService.partiesFromName(PartiesFromNameRequest.newBuilder()
+                nodeService.partiesFromName(Corda.PartiesFromNameRequest.newBuilder()
                         .setName(it)
                         .setExactMatch(false)
                         .build()).partiesList.single()
         }.toMap()
 
-        val stxGenesis = ibcService.createGenesis(Participants.newBuilder()
+        val stxGenesis = ibcService.createGenesis(Corda.Participants.newBuilder()
                 .addAllParticipants(partyMap.values)
                 .build()).into()
 
@@ -43,7 +46,7 @@ object TestGrpcAdapter {
         val host = ibcService.queryHost(baseId.into()).into()
         val bank = ibcService.queryBank(baseId.into()).into()
 
-        val stxFund = ibcService.allocateFund(AllocateFundRequest.newBuilder()
+        val stxFund = ibcService.allocateFund(Corda.AllocateFundRequest.newBuilder()
                 .setBaseId(baseId.into())
                 .setOwner(partyMap["PartyA"]!!.owningKey)
                 .setDenom("USD")
@@ -51,12 +54,10 @@ object TestGrpcAdapter {
                 .build()).into()
         val bankAfterFund = ibcService.queryBank(baseId.into()).into()
 
-        val stxClient = ibcService.createClient(CreateClientRequest.newBuilder()
-                .setBaseId(baseId.into())
-                .setId(Identifier("testclient").into())
-                .setClientType(ClientType.CordaClient.into())
-                .setConsensusState(host.getConsensusState(host.getCurrentHeight()).into().asSuper())
-                .build()).into()
+        clientMsgService.createClient(Client.MsgCreateClient.newBuilder()
+                .setClientId("testclient")
+                .setConsensusState(Any.pack(host.getConsensusState(host.getCurrentHeight()).consensusState))
+                .build())
 
         println(host)
         println(bank)
