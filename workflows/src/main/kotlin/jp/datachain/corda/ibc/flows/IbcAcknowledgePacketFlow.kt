@@ -19,8 +19,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcAcknowledgePacketFlow(
         val baseId: StateRef,
-        val msg: Tx.MsgAcknowledgement,
-        val forIcs20: Boolean = false
+        val msg: Tx.MsgAcknowledgement
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -31,7 +30,7 @@ class IbcAcknowledgePacketFlow(
 
         // query bank if necessary
         val bankOrNull =
-                if (forIcs20)
+                if (msg.packet.destinationPort == "transfer")
                     serviceHub.vaultService.queryIbcBank(baseId)!!
                 else
                     null
