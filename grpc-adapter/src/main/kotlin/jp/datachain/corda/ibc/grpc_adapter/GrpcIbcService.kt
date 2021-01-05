@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.stub.StreamObserver
-import jp.datachain.corda.ibc.flows.IbcClientCreateFlow
+import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.flows.IbcFundAllocateFlow
 import jp.datachain.corda.ibc.flows.IbcGenesisCreateFlow
 import jp.datachain.corda.ibc.flows.IbcHostAndBankCreateFlow
@@ -15,28 +15,25 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.NetworkHostAndPort
 import jp.datachain.corda.ibc.ics24.Host
 import net.corda.core.messaging.startFlow
-import jp.datachain.corda.ibc.grpc.Host as GrpcHost
-import jp.datachain.corda.ibc.grpc.Bank as GrpcBank
-import jp.datachain.corda.ibc.grpc.SignedTransaction as GrpcSignedTransaction
 
 class GrpcIbcService(host: String, port: Int, username: String, password: String): IbcServiceGrpc.IbcServiceImplBase() {
     private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
             .start(username, password)
             .proxy
 
-    override fun createGenesis(request: Participants, responseObserver: StreamObserver<GrpcSignedTransaction>) {
+    override fun createGenesis(request: Corda.Participants, responseObserver: StreamObserver<Corda.SignedTransaction>) {
         val stx = ops.startFlow(::IbcGenesisCreateFlow, request.participantsList.map{it.into()}).returnValue.get()
         responseObserver.onNext(stx.into())
         responseObserver.onCompleted()
     }
 
-    override fun createHostAndBank(request: StateRef, responseObserver: StreamObserver<GrpcSignedTransaction>) {
+    override fun createHostAndBank(request: Corda.StateRef, responseObserver: StreamObserver<Corda.SignedTransaction>) {
         val stx = ops.startFlow(::IbcHostAndBankCreateFlow, request.into()).returnValue.get()
         responseObserver.onNext(stx.into())
         responseObserver.onCompleted()
     }
 
-    override fun allocateFund(request: AllocateFundRequest, responseObserver: StreamObserver<jp.datachain.corda.ibc.grpc.SignedTransaction>) {
+    override fun allocateFund(request: Corda.AllocateFundRequest, responseObserver: StreamObserver<Corda.SignedTransaction>) {
         val stx = ops.startFlow(::IbcFundAllocateFlow,
                 request.baseId.into(),
                 request.owner.into(),
@@ -47,35 +44,24 @@ class GrpcIbcService(host: String, port: Int, username: String, password: String
         responseObserver.onCompleted()
     }
 
-    override fun createClient(request: CreateClientRequest, responseObserver: StreamObserver<jp.datachain.corda.ibc.grpc.SignedTransaction>) {
-        val stx = ops.startFlow(::IbcClientCreateFlow,
-                request.baseId.into(),
-                request.id.into(),
-                request.clientType.into(),
-                request.consensusState.into()
-        ).returnValue.get()
-        responseObserver.onNext(stx.into())
-        responseObserver.onCompleted()
-    }
-
-    override fun queryHost(request: StateRef, responseObserver: StreamObserver<GrpcHost>) {
+    override fun queryHost(request: Corda.StateRef, responseObserver: StreamObserver<Corda.Host>) {
         val hostAndRef = ops.vaultQueryBy<Host>(
                 QueryCriteria.LinearStateQueryCriteria(
                         externalId = listOf(request.into().toString())
                 )
         ).states.single()
-        val reply: GrpcHost = hostAndRef.state.data.into()
+        val reply: Corda.Host = hostAndRef.state.data.into()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun queryBank(request: StateRef, responseObserver: StreamObserver<GrpcBank>) {
+    override fun queryBank(request: Corda.StateRef, responseObserver: StreamObserver<Corda.Bank>) {
         val bankAndRef = ops.vaultQueryBy<Bank>(
                 QueryCriteria.LinearStateQueryCriteria(
                         externalId = listOf(request.into().toString())
                 )
         ).states.single()
-        val reply: GrpcBank = bankAndRef.state.data.into()
+        val reply: Corda.Bank = bankAndRef.state.data.into()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }

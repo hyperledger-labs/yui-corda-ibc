@@ -1,6 +1,8 @@
 package jp.datachain.corda.ibc
 
+import com.google.protobuf.Any
 import ibc.core.channel.v1.ChannelOuterClass
+import ibc.core.client.v1.Client
 import ibc.core.client.v1.Client.Height
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
@@ -91,12 +93,12 @@ class TestCordaIbcClient(val mockNet: MockNetwork, val mockNode: StartedMockNode
             clientType: ClientType,
             cordaConsensusState: CordaConsensusState
     ) {
-        val stx = executeFlow(IbcClientCreateFlow(
-                baseId,
-                id,
-                clientType,
-                cordaConsensusState
-        ))
+        assert(clientType == ClientType.CordaClient)
+        val msg = Client.MsgCreateClient.newBuilder()
+                .setClientId(id.id)
+                .setConsensusState(Any.pack(cordaConsensusState.consensusState))
+                .build()
+        val stx = executeFlow(IbcClientCreateFlow(baseId, msg))
         val client = stx.tx.outputsOfType<ClientState>().single()
         assert(client.id == id)
         assert(client is CordaClientState)
