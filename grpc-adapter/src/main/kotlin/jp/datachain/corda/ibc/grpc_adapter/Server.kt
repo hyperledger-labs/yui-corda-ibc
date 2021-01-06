@@ -23,6 +23,8 @@ object Server {
             serverBuilder.addService(ConnectionTxService(hostname, port, username, password, it))
             serverBuilder.addService(ChannelTxService(hostname, port, username, password, it))
             serverBuilder.addService(TransferTxService(hostname, port, username, password, it))
+            serverBuilder.addService(ConnectionQueryService(hostname, port, username, password, it))
+            serverBuilder.addService(ChannelQueryService(hostname, port, username, password, it))
         }
         val server = serverBuilder.build()
         adminService.server = server
