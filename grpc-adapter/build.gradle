@@ -24,18 +24,12 @@ dependencies {
     testImplementation "junit:junit:$junit_version"
 }
 
-task runGrpcAdapter(type: JavaExec) {
+task runServer(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'jp.datachain.corda.ibc.grpc_adapter.GrpcAdapter'
-    args = ['localhost', '10006', 'user1', 'test']
+    main = 'jp.datachain.corda.ibc.grpc_adapter.Server'
 }
 
-task testGrpcAdapter(type: JavaExec) {
+task runClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'jp.datachain.corda.ibc.grpc_adapter.TestGrpcAdapter'
-}
-
-task shutdownGrpcAdapter(type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'jp.datachain.corda.ibc.grpc_adapter.ShutdownGrpcAdapter'
+    main = 'jp.datachain.corda.ibc.grpc_adapter.Client'
 }

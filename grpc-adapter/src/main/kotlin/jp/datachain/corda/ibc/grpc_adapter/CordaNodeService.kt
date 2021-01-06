@@ -6,7 +6,7 @@ import jp.datachain.corda.ibc.grpc.*
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.utilities.NetworkHostAndPort
 
-class GrpcNodeService(host: String, port: Int, username: String, password: String): NodeServiceGrpc.NodeServiceImplBase() {
+class CordaNodeService(host: String, port: Int, username: String, password: String): NodeServiceGrpc.NodeServiceImplBase() {
     private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
             .start(username, password)
             .proxy
