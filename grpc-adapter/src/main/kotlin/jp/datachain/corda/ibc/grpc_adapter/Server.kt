@@ -19,10 +19,10 @@ object Server {
                 .addService(CordaNodeService(hostname, port, username, password))
                 .addService(CordaIbcService(hostname, port, username, password))
         baseId?.let{
-            serverBuilder.addService(IbcClientService(hostname, port, username, password, it))
-            serverBuilder.addService(IbcConnectionService(hostname, port, username, password, it))
-            serverBuilder.addService(IbcChannelService(hostname, port, username, password, it))
-            serverBuilder.addService(IbcTransferService(hostname, port, username, password, it))
+            serverBuilder.addService(ClientTxService(hostname, port, username, password, it))
+            serverBuilder.addService(ConnectionTxService(hostname, port, username, password, it))
+            serverBuilder.addService(ChannelTxService(hostname, port, username, password, it))
+            serverBuilder.addService(TransferTxService(hostname, port, username, password, it))
         }
         val server = serverBuilder.build()
         adminService.server = server
