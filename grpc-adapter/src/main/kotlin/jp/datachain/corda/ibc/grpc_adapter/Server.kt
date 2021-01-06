@@ -4,7 +4,7 @@ import io.grpc.ServerBuilder
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 
-object GrpcAdapter {
+object Server {
     @JvmStatic
     fun main(args: Array<String>) {
         val hostname = args[0]
@@ -13,11 +13,11 @@ object GrpcAdapter {
         val password = args[3]
         val baseId: StateRef? = if (args.size == 5) StateRef(SecureHash.parse(args[4]), 0) else null
 
-        val adminService = GrpcAdminService()
+        val adminService = AdminService()
         val serverBuilder = ServerBuilder.forPort(9999)
                 .addService(adminService)
-                .addService(GrpcNodeService(hostname, port, username, password))
-                .addService(GrpcIbcService(hostname, port, username, password))
+                .addService(CordaNodeService(hostname, port, username, password))
+                .addService(CordaIbcService(hostname, port, username, password))
         baseId?.let{
             serverBuilder.addService(IbcClientService(hostname, port, username, password, it))
             serverBuilder.addService(IbcConnectionService(hostname, port, username, password, it))

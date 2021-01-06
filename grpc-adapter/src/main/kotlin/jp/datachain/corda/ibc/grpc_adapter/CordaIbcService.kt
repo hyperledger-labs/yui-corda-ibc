@@ -16,7 +16,7 @@ import net.corda.core.utilities.NetworkHostAndPort
 import jp.datachain.corda.ibc.ics24.Host
 import net.corda.core.messaging.startFlow
 
-class GrpcIbcService(host: String, port: Int, username: String, password: String): IbcServiceGrpc.IbcServiceImplBase() {
+class CordaIbcService(host: String, port: Int, username: String, password: String): IbcServiceGrpc.IbcServiceImplBase() {
     private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
             .start(username, password)
             .proxy

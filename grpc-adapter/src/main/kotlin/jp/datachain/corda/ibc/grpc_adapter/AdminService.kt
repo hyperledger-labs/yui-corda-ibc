@@ -6,7 +6,7 @@ import jp.datachain.corda.ibc.grpc.AdminServiceGrpc
 import jp.datachain.corda.ibc.grpc.Void
 import java.lang.NullPointerException
 
-class GrpcAdminService: AdminServiceGrpc.AdminServiceImplBase() {
+class AdminService: AdminServiceGrpc.AdminServiceImplBase() {
     var server: Server? = null
 
     override fun shutdown(request: Void, responseObserver: StreamObserver<Void>) {
