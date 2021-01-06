@@ -9,7 +9,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.NetworkHostAndPort
 
-class IbcTransferService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): MsgGrpc.MsgImplBase() {
+class TransferTxService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): MsgGrpc.MsgImplBase() {
     private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
             .start(username, password)
             .proxy
