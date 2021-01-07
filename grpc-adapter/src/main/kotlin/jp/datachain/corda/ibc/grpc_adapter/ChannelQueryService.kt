@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.grpc_adapter
 
 import ibc.core.channel.v1.QueryGrpc
 import ibc.core.channel.v1.QueryOuterClass
+import ibc.core.client.v1.Client
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -27,6 +28,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         val reply = QueryOuterClass.QueryChannelResponse.newBuilder()
                 .setChannel(stateAndRef.state.data.end)
                 .setProof(proof.toByteString())
+                .setProofHeight(Client.Height.getDefaultInstance())
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
