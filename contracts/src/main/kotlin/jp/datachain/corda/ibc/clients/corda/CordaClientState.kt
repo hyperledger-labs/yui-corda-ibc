@@ -1,10 +1,12 @@
 package jp.datachain.corda.ibc.clients.corda
 
+import com.google.protobuf.Any
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.grpc.Corda
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
@@ -23,6 +25,9 @@ data class CordaClientState private constructor(
         override val id: Identifier,
         val counterpartyConsensusState: CordaConsensusState
 ) : ClientState {
+    override val clientState get() = Any.pack(Corda.ClientState.getDefaultInstance()!!)!!
+    override val consensusStates get() = mapOf(Client.Height.getDefaultInstance() to counterpartyConsensusState)
+
     constructor(host: Host, id: Identifier, counterpartyConsensusState: CordaConsensusState)
             : this(host.participants, host.baseId, id, counterpartyConsensusState)
 

@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.ics2
 
+import com.google.protobuf.Any
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client
 import ibc.core.commitment.v1.Commitment
@@ -10,6 +11,9 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcState
 
 interface ClientState : IbcState {
+    val clientState: Any
+    val consensusStates: Map<Client.Height, ConsensusState>
+
     fun clientType(): ClientType
     fun getLatestHeight(): Client.Height
     fun isFrozen(): Boolean
