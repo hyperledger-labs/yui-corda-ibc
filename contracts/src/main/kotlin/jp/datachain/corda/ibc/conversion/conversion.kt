@@ -20,9 +20,6 @@ import net.corda.core.utilities.parseAsHex
 import net.corda.core.utilities.toHex
 import java.security.PublicKey
 
-fun Identifier.into(): Corda.Identifier = Corda.Identifier.newBuilder().setId(id).build()
-fun Corda.Identifier.into() = Identifier(id)
-
 fun SecureHash.into(): Corda.SecureHash = Corda.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
 fun Corda.SecureHash.into() = SecureHash.SHA256(bytes.toByteArray())
 
@@ -61,26 +58,26 @@ fun Party.into(): Corda.Party = Corda.Party.newBuilder()
 fun Corda.Party.into() = Party(name.into(), owningKey.into())
 
 fun Pair<Identifier, Identifier>.into(): Corda.Host.PortChannelIdentifier = Corda.Host.PortChannelIdentifier.newBuilder()
-        .setPortId(first.into())
-        .setChannelId(second.into())
+        .setPortId(first.id)
+        .setChannelId(second.id)
         .build()
-fun Corda.Host.PortChannelIdentifier.into() = Pair(portId.into(), channelId.into())
+fun Corda.Host.PortChannelIdentifier.into() = Pair(Identifier(portId), Identifier(channelId))
 
 fun Host.into(): Corda.Host = Corda.Host.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setNotary(notary.into())
-        .addAllClientIds(clientIds.map{it.into()})
-        .addAllConnIds(connIds.map{it.into()})
+        .addAllClientIds(clientIds.map{it.id})
+        .addAllConnIds(connIds.map{it.id})
         .addAllPortChanIds(portChanIds.map{it.into()})
-        .setId(id.into())
+        .setId(id.id)
         .build()
 fun Corda.Host.into() = Host(
         participants = participantsList.map{it.into()},
         baseId = baseId.into(),
         notary = notary.into(),
-        clientIds = clientIdsList.map{it.into()},
-        connIds = connIdsList.map{it.into()},
+        clientIds = clientIdsList.map(::Identifier),
+        connIds = connIdsList.map(::Identifier),
         portChanIds = portChanIdsList.map{it.into()})
 
 fun LinkedHashMap<PublicKey, Amount>.into(): Corda.Bank.BalanceMapPerDenom = Corda.Bank.BalanceMapPerDenom.newBuilder()
@@ -105,7 +102,7 @@ fun Bank.into(): Corda.Bank = Corda.Bank.newBuilder()
         .setAllocated(allocated.into())
         .setLocked(locked.into())
         .setMinted(minted.into())
-        .setId(id.into())
+        .setId(id.id)
         .build()
 fun Corda.Bank.into() = Bank(
         participants = participantsList.map{it.into()},
