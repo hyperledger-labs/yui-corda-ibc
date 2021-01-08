@@ -11,9 +11,9 @@ class CordaNodeService(host: String, port: Int, username: String, password: Stri
             .start(username, password)
             .proxy
 
-    override fun partiesFromName(request: Corda.PartiesFromNameRequest, responseObserver: StreamObserver<Corda.Parties>) {
+    override fun partiesFromName(request: Operation.PartiesFromNameRequest, responseObserver: StreamObserver<Operation.PartiesFromNameResponse>) {
         val parties = ops.partiesFromName(request.name, request.exactMatch)
-        val response = Corda.Parties.newBuilder()
+        val response = Operation.PartiesFromNameResponse.newBuilder()
                 .addAllParties(parties.map{it.into()})
                 .build()
         responseObserver.onNext(response)
