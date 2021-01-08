@@ -1,7 +1,8 @@
 package jp.datachain.corda.ibc.conversion
 
 import com.google.protobuf.ByteString
-import jp.datachain.corda.ibc.grpc.Corda
+import jp.datachain.corda.ibc.grpc.CordaTypes
+import jp.datachain.corda.ibc.grpc.Query
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
@@ -20,16 +21,16 @@ import net.corda.core.utilities.parseAsHex
 import net.corda.core.utilities.toHex
 import java.security.PublicKey
 
-fun SecureHash.into(): Corda.SecureHash = Corda.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
-fun Corda.SecureHash.into() = SecureHash.SHA256(bytes.toByteArray())
+fun SecureHash.into(): CordaTypes.SecureHash = CordaTypes.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
+fun CordaTypes.SecureHash.into() = SecureHash.SHA256(bytes.toByteArray())
 
-fun StateRef.into(): Corda.StateRef = Corda.StateRef.newBuilder()
+fun StateRef.into(): CordaTypes.StateRef = CordaTypes.StateRef.newBuilder()
         .setTxhash(txhash.into())
         .setIndex(index)
         .build()
-fun Corda.StateRef.into() = StateRef(txhash.into(), index)
+fun CordaTypes.StateRef.into() = StateRef(txhash.into(), index)
 
-fun CordaX500Name.into(): Corda.CordaX500Name = Corda.CordaX500Name.newBuilder()
+fun CordaX500Name.into(): CordaTypes.CordaX500Name = CordaTypes.CordaX500Name.newBuilder()
         .setCommonName(commonName.orEmpty())
         .setCountry(country)
         .setLocality(locality)
@@ -37,7 +38,7 @@ fun CordaX500Name.into(): Corda.CordaX500Name = Corda.CordaX500Name.newBuilder()
         .setOrganisationUnit(organisationUnit.orEmpty())
         .setState(state.orEmpty())
         .build()
-fun Corda.CordaX500Name.into() = CordaX500Name(
+fun CordaTypes.CordaX500Name.into() = CordaX500Name(
         commonName = if (commonName == "") null else commonName,
         country = country,
         locality = locality,
@@ -46,24 +47,24 @@ fun Corda.CordaX500Name.into() = CordaX500Name(
         state = if (state == "") null else state
 )
 
-fun PublicKey.into(): Corda.PublicKey = Corda.PublicKey.newBuilder()
+fun PublicKey.into(): CordaTypes.PublicKey = CordaTypes.PublicKey.newBuilder()
         .setEncoded(ByteString.copyFrom(this.encoded))
         .build()
-fun Corda.PublicKey.into() = Crypto.decodePublicKey(encoded.toByteArray())
+fun CordaTypes.PublicKey.into() = Crypto.decodePublicKey(encoded.toByteArray())
 
-fun Party.into(): Corda.Party = Corda.Party.newBuilder()
+fun Party.into(): CordaTypes.Party = CordaTypes.Party.newBuilder()
         .setName(name.into())
         .setOwningKey(owningKey.into())
         .build()
-fun Corda.Party.into() = Party(name.into(), owningKey.into())
+fun CordaTypes.Party.into() = Party(name.into(), owningKey.into())
 
-fun Pair<Identifier, Identifier>.into(): Corda.Host.PortChannelIdentifier = Corda.Host.PortChannelIdentifier.newBuilder()
+fun Pair<Identifier, Identifier>.into(): Query.Host.PortChannelIdentifier = Query.Host.PortChannelIdentifier.newBuilder()
         .setPortId(first.id)
         .setChannelId(second.id)
         .build()
-fun Corda.Host.PortChannelIdentifier.into() = Pair(Identifier(portId), Identifier(channelId))
+fun Query.Host.PortChannelIdentifier.into() = Pair(Identifier(portId), Identifier(channelId))
 
-fun Host.into(): Corda.Host = Corda.Host.newBuilder()
+fun Host.into(): Query.Host = Query.Host.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setNotary(notary.into())
@@ -72,7 +73,7 @@ fun Host.into(): Corda.Host = Corda.Host.newBuilder()
         .addAllPortChanIds(portChanIds.map{it.into()})
         .setId(id.id)
         .build()
-fun Corda.Host.into() = Host(
+fun Query.Host.into() = Host(
         participants = participantsList.map{it.into()},
         baseId = baseId.into(),
         notary = notary.into(),
@@ -80,23 +81,23 @@ fun Corda.Host.into() = Host(
         connIds = connIdsList.map(::Identifier),
         portChanIds = portChanIdsList.map{it.into()})
 
-fun LinkedHashMap<PublicKey, Amount>.into(): Corda.Bank.BalanceMapPerDenom = Corda.Bank.BalanceMapPerDenom.newBuilder()
+fun LinkedHashMap<PublicKey, Amount>.into(): Query.Bank.BalanceMapPerDenom = Query.Bank.BalanceMapPerDenom.newBuilder()
         .putAllPubkeyToAmount(this.mapKeys{it.key.encoded.toHex()}.mapValues{it.value.amount.toString()})
         .build()
-fun Corda.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
+fun Query.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
         .mapKeys{Crypto.decodePublicKey(it.key.parseAsHex())}
         .mapValues{Amount(it.value.toBigInteger())}
         .let{LinkedHashMap<PublicKey, Amount>(it)}
 
-fun LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>.into(): Corda.Bank.BalanceMap = Corda.Bank.BalanceMap.newBuilder()
+fun LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>.into(): Query.Bank.BalanceMap = Query.Bank.BalanceMap.newBuilder()
         .putAllDenomToMap(this.mapKeys{it.key.denom}.mapValues{it.value.into()})
         .build()
-fun Corda.Bank.BalanceMap.into() = denomToMapMap
+fun Query.Bank.BalanceMap.into() = denomToMapMap
         .mapKeys{Denom(it.key)}
         .mapValues{it.value.into()}
         .let{LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>(it)}
 
-fun Bank.into(): Corda.Bank = Corda.Bank.newBuilder()
+fun Bank.into(): Query.Bank = Query.Bank.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setAllocated(allocated.into())
@@ -104,35 +105,35 @@ fun Bank.into(): Corda.Bank = Corda.Bank.newBuilder()
         .setMinted(minted.into())
         .setId(id.id)
         .build()
-fun Corda.Bank.into() = Bank(
+fun Query.Bank.into() = Bank(
         participants = participantsList.map{it.into()},
         baseId = baseId.into(),
         allocated = allocated.into(),
         locked = locked.into(),
         minted = minted.into())
 
-fun SignatureMetadata.into(): Corda.SignatureMetadata = Corda.SignatureMetadata.newBuilder()
+fun SignatureMetadata.into(): CordaTypes.SignatureMetadata = CordaTypes.SignatureMetadata.newBuilder()
         .setPlatformVersion(platformVersion)
         .setSchemeNumberId(schemeNumberID)
         .build()
-fun Corda.SignatureMetadata.into() = SignatureMetadata(
+fun CordaTypes.SignatureMetadata.into() = SignatureMetadata(
         platformVersion = platformVersion,
         schemeNumberID = schemeNumberId)
 
-fun TransactionSignature.into(): Corda.TransactionSignature = Corda.TransactionSignature.newBuilder()
+fun TransactionSignature.into(): CordaTypes.TransactionSignature = CordaTypes.TransactionSignature.newBuilder()
         .setBytes(ByteString.copyFrom(bytes))
         .setBy(by.into())
         .setSignatureMetadata(signatureMetadata.into())
         .build()
-fun Corda.TransactionSignature.into() = TransactionSignature(
+fun CordaTypes.TransactionSignature.into() = TransactionSignature(
         bytes = bytes.toByteArray(),
         by = by.into(),
         signatureMetadata = signatureMetadata.into())
 
-fun SignedTransaction.into(): Corda.SignedTransaction = Corda.SignedTransaction.newBuilder()
+fun SignedTransaction.into(): CordaTypes.SignedTransaction = CordaTypes.SignedTransaction.newBuilder()
         .setTxBits(ByteString.copyFrom(txBits.bytes))
         .addAllSigs(sigs.map{it.into()})
         .build()
-fun Corda.SignedTransaction.into() = SignedTransaction(
+fun CordaTypes.SignedTransaction.into() = SignedTransaction(
         txBits = SerializedBytes(txBits.toByteArray()),
         sigs = sigsList.map{it.into()})
