@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package jp.datachain.corda.ibc.grpc;
 
-import "ibc/core/client/v1/client.proto";
-
 service NodeService {
   rpc PartiesFromName (PartiesFromNameRequest) returns (Parties);
 }
