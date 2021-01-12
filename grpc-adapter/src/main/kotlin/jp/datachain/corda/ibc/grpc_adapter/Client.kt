@@ -1,5 +1,20 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
+import com.google.protobuf.Any
+import ibc.core.client.v1.Client.*
+import ibc.core.client.v1.QueryOuterClass.*
+import ibc.core.connection.v1.Tx.*
+import ibc.core.connection.v1.QueryOuterClass.*
+import ibc.core.channel.v1.Tx.*
+import ibc.core.channel.v1.QueryOuterClass.*
+import ibc.core.channel.v1.ChannelOuterClass.*
+import ibc.core.client.v1.MsgGrpc as ClientMsgGrpc
+import ibc.core.client.v1.QueryGrpc as ClientQueryGrpc
+import ibc.core.connection.v1.MsgGrpc as ConnectionMsgGrpc
+import ibc.core.connection.v1.QueryGrpc as ConnectionQueryGrpc
+import ibc.core.channel.v1.MsgGrpc as ChannelMsgGrpc
+import ibc.core.channel.v1.QueryGrpc as ChannelQueryGrpc
+import ibc.applications.transfer.v1.MsgGrpc as TransferMsgGrpc
 import io.grpc.ManagedChannelBuilder
 import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.grpc.*
@@ -99,5 +114,185 @@ object Client {
         println(baseId.txhash.bytes.toHex())
     }
 
-    private fun executeTest(endpointA: String, endpointB: String) {}
+    const val CLIENT_A = "CLIENT_A"
+    const val CLIENT_B = "CLIENT_B"
+    const val CONNECTION_A = "CONNECTION_A"
+    const val CONNECTION_B = "CONNECTION_B"
+    const val PORT_A = "PORT_A"
+    const val PORT_B = "PORT_B"
+    const val CHANNEL_A = "CHANNEL_A"
+    const val CHANNEL_B = "CHANNEL_B"
+    const val CHANNEL_VERSION_A = "CHANNEL_VERSION_A"
+    const val CHANNEL_VERSION_B = "CHANNEL_VERSION_B"
+
+    private fun executeTest(endpointA: String, endpointB: String) {
+        val channelA = connectGrpc(endpointA)
+        val channelB = connectGrpc(endpointB)
+
+        val hostAndBankQueryServiceA = QueryServiceGrpc.newBlockingStub(channelA)
+        val clientQueryServiceA = ClientQueryGrpc.newBlockingStub(channelA)
+        val clientTxServiceA = ClientMsgGrpc.newBlockingStub(channelA)
+        val connectionQueryServiceA = ConnectionQueryGrpc.newBlockingStub(channelA)
+        val connectionTxServiceA = ConnectionMsgGrpc.newBlockingStub(channelA)
+        val channelQueryServiceA = ChannelQueryGrpc.newBlockingStub(channelA)
+        val channelTxServiceA = ChannelMsgGrpc.newBlockingStub(channelA)
+        val transferTxServiceA = TransferMsgGrpc.newBlockingStub(channelA)
+
+        val hostAndBankQueryServiceB = QueryServiceGrpc.newBlockingStub(channelB)
+        val clientQueryServiceB = ClientQueryGrpc.newBlockingStub(channelB)
+        val clientTxServiceB = ClientMsgGrpc.newBlockingStub(channelB)
+        val connectionQueryServiceB = ConnectionQueryGrpc.newBlockingStub(channelB)
+        val connectionTxServiceB = ConnectionMsgGrpc.newBlockingStub(channelB)
+        val channelQueryServiceB = ChannelQueryGrpc.newBlockingStub(channelB)
+        val channelTxServiceB = ChannelMsgGrpc.newBlockingStub(channelB)
+        val transferTxServiceB = TransferMsgGrpc.newBlockingStub(channelB)
+
+        val hostA = hostAndBankQueryServiceA.queryHost(Query.QueryHostRequest.getDefaultInstance()).into()
+        val consensusStateA = hostA.getConsensusState(hostA.getCurrentHeight())
+
+        val hostB = hostAndBankQueryServiceB.queryHost(Query.QueryHostRequest.getDefaultInstance()).into()
+        val consensusStateB = hostB.getConsensusState(hostB.getCurrentHeight())
+
+        clientTxServiceA.createClient(MsgCreateClient.newBuilder()
+                .setClientId(CLIENT_A)
+                .setClientState(Any.pack(Corda.ClientState.getDefaultInstance()))
+                .setConsensusState(consensusStateB.consensusState)
+                .build())
+        clientTxServiceB.createClient(MsgCreateClient.newBuilder()
+                .setClientId(CLIENT_B)
+                .setClientState(Any.pack(Corda.ClientState.getDefaultInstance()))
+                .setConsensusState(consensusStateA.consensusState)
+                .build())
+
+        // connOpenInit
+        val versionA = hostA.getCompatibleVersions().single()
+        connectionTxServiceA.connectionOpenInit(MsgConnectionOpenInit.newBuilder().apply {
+            clientId = CLIENT_A
+            connectionId = CONNECTION_A
+            counterpartyBuilder.clientId = CLIENT_B
+            counterpartyBuilder.connectionId = ""
+            counterpartyBuilder.prefix = hostB.getCommitmentPrefix()
+            version = versionA
+        }.build())
+
+        // connOpenTry
+        val connInit = connectionQueryServiceA.connection(QueryConnectionRequest.newBuilder()
+                .setConnectionId(CONNECTION_A)
+                .build())
+        val clientInit = clientQueryServiceA.clientState(QueryClientStateRequest.newBuilder()
+                .setClientId(CLIENT_A)
+                .build())
+        val consensusInit = clientQueryServiceA.consensusState(QueryConsensusStateRequest.newBuilder()
+                .setClientId(CLIENT_A)
+                .setLatestHeight(true)
+                .build())
+        assert(connInit.proofHeight == clientInit.proofHeight)
+        assert(connInit.proofHeight == consensusInit.proofHeight)
+        connectionTxServiceB.connectionOpenTry(MsgConnectionOpenTry.newBuilder().apply {
+            clientId = CLIENT_B
+            desiredConnectionId = CONNECTION_B
+            counterpartyChosenConnectionId = ""
+            clientState = clientInit.clientState
+            counterpartyBuilder.clientId = CLIENT_A
+            counterpartyBuilder.connectionId = CONNECTION_A
+            counterpartyBuilder.prefix = hostA.getCommitmentPrefix()
+            addAllCounterpartyVersions(hostA.getCompatibleVersions())
+            proofHeight = connInit.proofHeight
+            proofInit = connInit.proof
+            proofClient = clientInit.proof
+            proofConsensus = consensusInit.proof
+            consensusHeight = hostB.getCurrentHeight()
+        }.build())
+
+        // connOpenAck
+        val connTry = connectionQueryServiceB.connection(QueryConnectionRequest.newBuilder()
+                .setConnectionId(CONNECTION_B)
+                .build())
+        val clientTry = clientQueryServiceB.clientState(QueryClientStateRequest.newBuilder()
+                .setClientId(CLIENT_B)
+                .build())
+        val consensusTry = clientQueryServiceB.consensusState(QueryConsensusStateRequest.newBuilder()
+                .setClientId(CLIENT_B)
+                .setLatestHeight(true)
+                .build())
+        assert(connTry.proofHeight == clientTry.proofHeight)
+        assert(connTry.proofHeight == consensusTry.proofHeight)
+        connectionTxServiceA.connectionOpenAck(MsgConnectionOpenAck.newBuilder().apply {
+            connectionId = CONNECTION_A
+            counterpartyConnectionId = CONNECTION_B
+            version = versionA
+            clientState = clientTry.clientState
+            proofHeight = connTry.proofHeight
+            proofTry = connTry.proof
+            proofClient = clientTry.proof
+            proofConsensus = consensusTry.proof
+            consensusHeight = hostA.getCurrentHeight()
+        }.build())
+
+        // connOpenConfirm
+        val connAck = connectionQueryServiceA.connection(QueryConnectionRequest.newBuilder()
+                .setConnectionId(CONNECTION_A)
+                .build())
+        connectionTxServiceB.connectionOpenConfirm(MsgConnectionOpenConfirm.newBuilder().apply{
+            connectionId = CONNECTION_B
+            proofAck = connAck.proof
+            proofHeight = connAck.proofHeight
+        }.build())
+
+        // chanOpenInit
+        channelTxServiceA.channelOpenInit(MsgChannelOpenInit.newBuilder().apply{
+            portId = PORT_A
+            channelId = CHANNEL_A
+            channelBuilder.ordering = Order.ORDER_ORDERED
+            channelBuilder.counterpartyBuilder.portId = PORT_B
+            channelBuilder.counterpartyBuilder.channelId = ""
+            channelBuilder.addAllConnectionHops(listOf(CONNECTION_A))
+            channelBuilder.version = CHANNEL_VERSION_A
+        }.build())
+
+        // chanOpenTry
+        val chanInit = channelQueryServiceA.channel(QueryChannelRequest.newBuilder()
+                .setPortId(PORT_A)
+                .setChannelId(CHANNEL_A)
+                .build())
+        channelTxServiceB.channelOpenTry(MsgChannelOpenTry.newBuilder().apply{
+            portId = PORT_B
+            desiredChannelId = CHANNEL_B
+            counterpartyChosenChannelId = ""
+            channelBuilder.ordering = Order.ORDER_ORDERED
+            channelBuilder.counterpartyBuilder.portId = PORT_A
+            channelBuilder.counterpartyBuilder.channelId = CHANNEL_A
+            channelBuilder.addAllConnectionHops(listOf(CONNECTION_B))
+            channelBuilder.version = CHANNEL_VERSION_B
+            counterpartyVersion = CHANNEL_VERSION_A
+            proofInit = chanInit.proof
+            proofHeight = chanInit.proofHeight
+        }.build())
+
+        // chanOpenAck
+        val chanTry = channelQueryServiceB.channel(QueryChannelRequest.newBuilder()
+                .setPortId(PORT_B)
+                .setChannelId(CHANNEL_B)
+                .build())
+        channelTxServiceA.channelOpenAck(MsgChannelOpenAck.newBuilder().apply{
+            portId = PORT_A
+            channelId = CHANNEL_A
+            counterpartyChannelId = CHANNEL_B
+            counterpartyVersion = CHANNEL_VERSION_B
+            proofTry = chanTry.proof
+            proofHeight = chanTry.proofHeight
+        }.build())
+
+        // chanOpenConfirm
+        val chanAck = channelQueryServiceA.channel(QueryChannelRequest.newBuilder()
+                .setPortId(PORT_A)
+                .setChannelId(CHANNEL_A)
+                .build())
+        channelTxServiceB.channelOpenConfirm(MsgChannelOpenConfirm.newBuilder().apply{
+            portId = PORT_B
+            channelId = CHANNEL_B
+            proofAck = chanAck.proof
+            proofHeight = chanAck.proofHeight
+        }.build())
+    }
 }
