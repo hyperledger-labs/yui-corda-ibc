@@ -24,6 +24,7 @@ import net.corda.core.utilities.NetworkHostAndPort
 import io.grpc.StatusRuntimeException
 import net.corda.core.crypto.SecureHash
 import net.corda.core.utilities.toHex
+import java.io.File
 
 object Client {
     @JvmStatic
@@ -31,7 +32,7 @@ object Client {
         warmUpSerialization()
         when (args[0]) {
             "shutdown" -> shutdown(args[1])
-            "createGenesis" -> createGenesis(args[1], args[2])
+            "createGenesis" -> createGenesis(args[1], args[2], args[3])
             "createHost" -> createHost(args[1], args[2])
             "allocateFund" -> allocateFund(args[1], args[2], args[3])
             "executeTest" -> executeTest(args[1], args[2])
@@ -61,7 +62,7 @@ object Client {
         }
     }
 
-    private fun createGenesis(endpoint: String, partyName: String) {
+    private fun createGenesis(endpoint: String, partyName: String, baseHashFilePath: String) {
         val channel = connectGrpc(endpoint)
         val nodeService = NodeServiceGrpc.newBlockingStub(channel)
         val ibcService = IbcServiceGrpc.newBlockingStub(channel)
@@ -80,7 +81,7 @@ object Client {
 
         val baseId = StateRef(txhash = stxGenesis.id, index = 0)
 
-        println(baseId.txhash.bytes.toHex())
+        File("../", baseHashFilePath).writeText(baseId.txhash.bytes.toHex())
     }
 
     private fun createHost(endpoint: String, baseHash: String) {
