@@ -16,6 +16,7 @@ class TransferTxService(host: String, port: Int, username: String, password: Str
 
     override fun transfer(request: Tx.MsgTransfer, responseObserver: StreamObserver<Tx.MsgTransferResponse>) {
         ops.startFlow(::IbcSendTransferFlow, baseId, request).returnValue.get()
+        responseObserver.onNext(Tx.MsgTransferResponse.getDefaultInstance())
         responseObserver.onCompleted()
     }
 }

@@ -1,7 +1,9 @@
 .PHONY: build
 .PHONY: deployNodes upNodes downNodes
-.PHONY: startGrpcAdapter testGrpcAdapter shutdownGrpcAdapter
-.PHONY: intTestGrpcAdapter
+.PHONY: prepareHostA startServerA shutdownServerA
+.PHONY: prepareHostB startServerB shutdownServerB
+.PHONY: executeTest
+.PHONY: test
 
 build:
 	./gradlew -x test clean build
@@ -34,11 +36,13 @@ prepareHostB:
 	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:19999 `cat base-id-b.txt` PartyB"
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
 
-runServerA:
-	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-id-a.txt`"
+startServerA:
+	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-id-a.txt`" &
+	sleep 10
 
-runServerB:
-	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-id-b.txt`"
+startServerB:
+	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-id-b.txt`" &
+	sleep 10
 
 executeTest:
 	./gradlew :grpc-adapter:runClient --args 'executeTest localhost:9999 localhost:19999'
@@ -49,12 +53,4 @@ shutdownServerA:
 shutdownServerB:
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
 
-test:
-	make prepareHostA
-	make prepareHostB
-	make runServerA &
-	make runServerB &
-	sleep 20
-	make executeTest
-	make shutdownServerA
-	make shutdownServerB
+test: prepareHostA prepareHostB startServerA startServerB executeTest shutdownServerA shutdownServerB

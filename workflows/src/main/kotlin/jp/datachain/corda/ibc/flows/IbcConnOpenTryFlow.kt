@@ -36,10 +36,10 @@ class IbcConnOpenTryFlow(
         val command = HandleConnOpenTry(msg)
         val inStates =
                 if (connOrNull == null)
-                    setOf(host.state.data, client.state.data)
+                    setOf(host.state.data)
                 else
-                    setOf(host.state.data, client.state.data, connOrNull.state.data)
-        val ctx = Context(inStates, emptySet())
+                    setOf(host.state.data, connOrNull.state.data)
+        val ctx = Context(inStates, setOf(client.state.data))
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)
 
