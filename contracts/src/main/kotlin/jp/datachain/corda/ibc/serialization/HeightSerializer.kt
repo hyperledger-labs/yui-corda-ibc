@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc.serialization.ics2
+package jp.datachain.corda.ibc.serialization
 
 import ibc.core.client.v1.Client
 import net.corda.core.serialization.SerializationCustomSerializer
