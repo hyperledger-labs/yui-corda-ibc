@@ -16,6 +16,7 @@ class ClientTxService(host: String, port: Int, username: String, password: Strin
 
     override fun createClient(request: Client.MsgCreateClient, responseObserver: StreamObserver<Client.MsgCreateClientResponse>) {
         ops.startFlow(::IbcClientCreateFlow, baseId, request).returnValue.get()
+        responseObserver.onNext(Client.MsgCreateClientResponse.getDefaultInstance())
         responseObserver.onCompleted()
     }
 }

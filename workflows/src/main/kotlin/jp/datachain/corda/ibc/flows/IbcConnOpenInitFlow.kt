@@ -28,7 +28,7 @@ class IbcConnOpenInitFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(msg.clientId))!!
 
         val command = HandleConnOpenInit(msg)
-        val ctx = Context(setOf(host.state.data, client.state.data), emptySet())
+        val ctx = Context(setOf(host.state.data), setOf(client.state.data))
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)
 

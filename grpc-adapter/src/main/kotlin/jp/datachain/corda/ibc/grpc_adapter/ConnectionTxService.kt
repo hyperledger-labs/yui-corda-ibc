@@ -16,21 +16,25 @@ class ConnectionTxService(host: String, port: Int, username: String, password: S
 
     override fun connectionOpenInit(request: Tx.MsgConnectionOpenInit, responseObserver: StreamObserver<Tx.MsgConnectionOpenInitResponse>) {
         ops.startFlow(::IbcConnOpenInitFlow, baseId, request).returnValue.get()
+        responseObserver.onNext(Tx.MsgConnectionOpenInitResponse.getDefaultInstance())
         responseObserver.onCompleted()
     }
 
     override fun connectionOpenTry(request: Tx.MsgConnectionOpenTry, responseObserver: StreamObserver<Tx.MsgConnectionOpenTryResponse>) {
         ops.startFlow(::IbcConnOpenTryFlow, baseId, request).returnValue.get()
+        responseObserver.onNext(Tx.MsgConnectionOpenTryResponse.getDefaultInstance())
         responseObserver.onCompleted()
     }
 
     override fun connectionOpenAck(request: Tx.MsgConnectionOpenAck, responseObserver: StreamObserver<Tx.MsgConnectionOpenAckResponse>) {
         ops.startFlow(::IbcConnOpenAckFlow, baseId, request).returnValue.get()
+        responseObserver.onNext(Tx.MsgConnectionOpenAckResponse.getDefaultInstance())
         responseObserver.onCompleted()
     }
 
     override fun connectionOpenConfirm(request: Tx.MsgConnectionOpenConfirm, responseObserver: StreamObserver<Tx.MsgConnectionOpenConfirmResponse>) {
         ops.startFlow(::IbcConnOpenConfirmFlow, baseId, request).returnValue.get()
+        responseObserver.onNext(Tx.MsgConnectionOpenConfirmResponse.getDefaultInstance())
         responseObserver.onCompleted()
     }
 }

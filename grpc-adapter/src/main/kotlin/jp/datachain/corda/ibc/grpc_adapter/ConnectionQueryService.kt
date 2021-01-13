@@ -5,6 +5,7 @@ import ibc.core.connection.v1.QueryGrpc
 import ibc.core.connection.v1.QueryOuterClass
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.toProof
+import jp.datachain.corda.ibc.clients.corda.toSignedTransaction
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.client.rpc.CordaRPCClient
@@ -24,6 +25,7 @@ class ConnectionQueryService(host: String, port: Int, username: String, password
                 uuid = listOf(Identifier(request.connectionId).toUUID())
         )).states.single()
         val proof = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!.toProof()
+        assert(proof.toSignedTransaction().tx.outputsOfType<IbcConnection>().single() == stateAndRef.state.data)
         val reply = QueryOuterClass.QueryConnectionResponse.newBuilder()
                 .setConnection(stateAndRef.state.data.end)
                 .setProof(proof.toByteString())
