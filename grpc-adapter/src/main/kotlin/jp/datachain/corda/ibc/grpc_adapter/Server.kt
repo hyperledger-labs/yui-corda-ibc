@@ -11,10 +11,11 @@ object Server {
         val port = args[1].toInt()
         val username = args[2]
         val password = args[3]
-        val baseId: StateRef? = if (args.size == 5) StateRef(SecureHash.parse(args[4]), 0) else null
+        val listenPort = args[4]
+        val baseId: StateRef? = if (args.size == 6) StateRef(SecureHash.parse(args[5]), 0) else null
 
         val adminService = AdminService()
-        val serverBuilder = ServerBuilder.forPort(9999)
+        val serverBuilder = ServerBuilder.forPort(listenPort.toInt())
                 .addService(adminService)
                 .addService(CordaNodeService(hostname, port, username, password))
                 .addService(CordaIbcService(hostname, port, username, password))
