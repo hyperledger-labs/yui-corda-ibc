@@ -20,28 +20,31 @@ downNodes:
 	-sshpass -p test ssh -p 2223 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown
 	-sshpass -p test ssh -p 2224 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown
 
+killNodes:
+	kill -9 $$(jps -l | grep 'main class information unavailable' | cut -d ' ' -f 1)
+
 prepareHostA:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10006 user1 test 9999' &
 	sleep 20
-	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:9999 PartyA base-id-a.txt'
-	./gradlew :grpc-adapter:runClient --args "createHost localhost:9999 `cat base-id-a.txt`"
-	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:9999 `cat base-id-a.txt` PartyA"
+	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:9999 PartyA base-hash-a.txt'
+	./gradlew :grpc-adapter:runClient --args "createHost localhost:9999 `cat base-hash-a.txt`"
+	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:9999 `cat base-hash-a.txt` PartyA"
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:9999'
 
 prepareHostB:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10009 user1 test 19999' &
 	sleep 20
-	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:19999 PartyB base-id-b.txt'
-	./gradlew :grpc-adapter:runClient --args "createHost localhost:19999 `cat base-id-b.txt`"
-	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:19999 `cat base-id-b.txt` PartyB"
+	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:19999 PartyB base-hash-b.txt'
+	./gradlew :grpc-adapter:runClient --args "createHost localhost:19999 `cat base-hash-b.txt`"
+	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:19999 `cat base-hash-b.txt` PartyB"
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
 
 startServerA:
-	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-id-a.txt`" &
+	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
 	sleep 10
 
 startServerB:
-	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-id-b.txt`" &
+	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-hash-b.txt`" &
 	sleep 10
 
 executeTest:
