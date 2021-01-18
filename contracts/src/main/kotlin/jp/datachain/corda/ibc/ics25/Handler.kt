@@ -346,7 +346,7 @@ object Handler {
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofTry),
                 Identifier(chan.end.counterparty.portId),
-                Identifier(chan.end.counterparty.channelId),
+                Identifier(msg.counterpartyChannelId),
                 expected)
 
         ctx.addOutput(chan.copy(end = chan.end.toBuilder()
