@@ -174,6 +174,7 @@ object Handler {
                 .setState(Connection.State.STATE_OPEN)
                 .clearVersions()
                 .addAllVersions(listOf(msg.version))
+                .apply{counterpartyBuilder.connectionId = msg.counterpartyConnectionId}
                 .build()))
     }
 
