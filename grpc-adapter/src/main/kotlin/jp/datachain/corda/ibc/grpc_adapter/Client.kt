@@ -40,11 +40,13 @@ object Client {
     }
 
     private fun warmUpSerialization() {
-        for (port in listOf(10003, 10006, 10009)) {
-            CordaRPCClient(NetworkHostAndPort("localhost", port))
-                    .start("user1", "test")
-                    .close()
-        }
+        // port 0 is dummy. This instance of CordaRPCClient is never used.
+        // Before using Corda's (de)serialization mechanism, one of four
+        // pre-defined serialization environments must be initialized.
+        // In the initializer block (init { ... }) of CordaRPCClient,
+        // the "node" serialization environment is initialized.
+        // Ref: https://github.com/corda/corda/blob/release/os/4.3/client/rpc/src/main/kotlin/net/corda/client/rpc/CordaRPCClient.kt#L435
+        CordaRPCClient(NetworkHostAndPort("localhost", 0))
     }
 
     private fun connectGrpc(endpoint: String) = ManagedChannelBuilder.forTarget(endpoint)
