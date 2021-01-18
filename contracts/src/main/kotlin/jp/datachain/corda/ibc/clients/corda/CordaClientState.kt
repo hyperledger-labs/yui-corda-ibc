@@ -17,6 +17,8 @@ import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
+import net.corda.core.serialization.SerializationCustomSerializer
+import net.corda.core.serialization.SerializationFactory
 
 @BelongsToContract(Ibc::class)
 data class CordaClientState private constructor(
@@ -68,8 +70,46 @@ data class CordaClientState private constructor(
         require(notaryKey == counterpartyNotaryKey){"unmatched notary key: $notaryKey != $counterpartyNotaryKey"}
     }
 
-    private inline fun <reified T: IbcState> extractState(proof: CommitmentProof)
-            = proof.toSignedTransaction().tx.outputsOfType<T>().single()
+    // This code is a bit tricky ...
+    // In contract contexts, as of transaction elements (commands/inputs/outputs/references, etc.),
+    // only ones which are instantiated by the special classloader in the beginning of verification process are used.
+    // Deserialization of such states (from SignedTransaction) still works, but it generates objects instantiated by
+    // the default classloader. Even if two classes are loaded from same source, if different classloaders are used,
+    // they are treated as completely different classes on JVM.
+    // In this code, the class T is loaded by the special classloader, and so we have to tell deserialization process
+    // to use the same classloader in order to get an instance of T.
+    private inline fun <reified T: IbcState> extractState(proof: CommitmentProof): T {
+        val attachmentsClassLoader = T::class.java.classLoader
+        val serializers = listOf(
+                "AcknowledgementSerializer",
+                "AnySerializer",
+                "ChannelSerializer",
+                "ConnectionEndSerializer",
+                "CordaConsensusStateSerializer",
+                "HeightSerializer",
+                "MsgChannelOpenAckSerializer",
+                "MsgChannelOpenConfirmSerializer",
+                "MsgChannelOpenInitSerializer",
+                "MsgChannelOpenTrySerializer",
+                "MsgConnectionOpenAckSerializer",
+                "MsgConnectionOpenConfirmSerializer",
+                "MsgConnectionOpenInitSerializer",
+                "MsgConnectionOpenTrySerializer",
+                "MsgCreateClientSerializer",
+                "PacketSerializer"
+        ).map{
+            val className = "jp.datachain.corda.ibc.serialization.$it"
+            val clazz = attachmentsClassLoader.loadClass(className)
+            clazz.newInstance() as SerializationCustomSerializer<*,*>
+        }.toSet()
+        val context = SerializationFactory.defaultFactory.defaultContext
+                .withClassLoader(attachmentsClassLoader)
+                .withCustomSerializers(serializers)
+        val outputs = SerializationFactory.defaultFactory.withCurrentContext(context) {
+            proof.toSignedTransaction().tx.outputsOfType<T>()
+        }
+        return outputs.single()
+    }
 
     override fun verifyClientState(
             height: Client.Height,
