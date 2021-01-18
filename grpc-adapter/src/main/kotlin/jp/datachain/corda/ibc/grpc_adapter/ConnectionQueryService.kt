@@ -24,7 +24,9 @@ class ConnectionQueryService(host: String, port: Int, username: String, password
                 externalId = listOf(baseId.toString()),
                 uuid = listOf(Identifier(request.connectionId).toUUID())
         )).states.single()
-        val proof = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!.toProof()
+        val stx = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!
+        stx.verifyRequiredSignatures()
+        val proof = stx.toProof()
         assert(proof.toSignedTransaction().tx.outputsOfType<IbcConnection>().single() == stateAndRef.state.data)
         val reply = QueryOuterClass.QueryConnectionResponse.newBuilder()
                 .setConnection(stateAndRef.state.data.end)
