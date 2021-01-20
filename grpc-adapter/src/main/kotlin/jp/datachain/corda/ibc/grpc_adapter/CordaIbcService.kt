@@ -8,15 +8,9 @@ import jp.datachain.corda.ibc.flows.IbcHostAndBankCreateFlow
 import jp.datachain.corda.ibc.grpc.*
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
-import net.corda.client.rpc.CordaRPCClient
-import net.corda.core.utilities.NetworkHostAndPort
 import net.corda.core.messaging.startFlow
 
-class CordaIbcService(host: String, port: Int, username: String, password: String): IbcServiceGrpc.IbcServiceImplBase() {
-    private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
-            .start(username, password)
-            .proxy
-
+class CordaIbcService(host: String, port: Int, username: String, password: String): IbcServiceGrpc.IbcServiceImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
     override fun createGenesis(request: Operation.CreateGenesisRequest, responseObserver: StreamObserver<CordaTypes.SignedTransaction>) {
         val stx = ops.startFlow(::IbcGenesisCreateFlow, request.participantsList.map{it.into()}).returnValue.get()
         responseObserver.onNext(stx.into())

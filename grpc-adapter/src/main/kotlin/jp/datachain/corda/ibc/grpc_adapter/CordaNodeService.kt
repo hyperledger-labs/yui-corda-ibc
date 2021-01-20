@@ -3,14 +3,8 @@ package jp.datachain.corda.ibc.grpc_adapter
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.grpc.*
-import net.corda.client.rpc.CordaRPCClient
-import net.corda.core.utilities.NetworkHostAndPort
 
-class CordaNodeService(host: String, port: Int, username: String, password: String): NodeServiceGrpc.NodeServiceImplBase() {
-    private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
-            .start(username, password)
-            .proxy
-
+class CordaNodeService(host: String, port: Int, username: String, password: String): NodeServiceGrpc.NodeServiceImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
     override fun partiesFromName(request: Operation.PartiesFromNameRequest, responseObserver: StreamObserver<Operation.PartiesFromNameResponse>) {
         val parties = ops.partiesFromName(request.name, request.exactMatch)
         val response = Operation.PartiesFromNameResponse.newBuilder()

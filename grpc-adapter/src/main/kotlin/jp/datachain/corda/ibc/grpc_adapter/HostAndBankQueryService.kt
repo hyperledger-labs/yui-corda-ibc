@@ -6,17 +6,11 @@ import jp.datachain.corda.ibc.grpc.Query
 import jp.datachain.corda.ibc.grpc.QueryServiceGrpc
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics24.Host
-import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.utilities.NetworkHostAndPort
 
-class HostAndBankQueryService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): QueryServiceGrpc.QueryServiceImplBase() {
-    private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
-            .start(username, password)
-            .proxy
-
+class HostAndBankQueryService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): QueryServiceGrpc.QueryServiceImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
     override fun queryHost(request: Query.QueryHostRequest, responseObserver: StreamObserver<Query.Host>) {
         val hostAndRef = ops.vaultQueryBy<Host>(
                 QueryCriteria.LinearStateQueryCriteria(
