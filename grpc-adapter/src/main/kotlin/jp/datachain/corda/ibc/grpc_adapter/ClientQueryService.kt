@@ -7,17 +7,11 @@ import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
-import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.utilities.NetworkHostAndPort
 
-class ClientQueryService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): QueryGrpc.QueryImplBase() {
-    private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
-            .start(username, password)
-            .proxy
-
+class ClientQueryService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): QueryGrpc.QueryImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
     override fun clientState(request: QueryOuterClass.QueryClientStateRequest, responseObserver: StreamObserver<QueryOuterClass.QueryClientStateResponse>) {
         val stateAndRef = ops.vaultQueryBy<ClientState>(QueryCriteria.LinearStateQueryCriteria(
                 externalId = listOf(baseId.toString()),

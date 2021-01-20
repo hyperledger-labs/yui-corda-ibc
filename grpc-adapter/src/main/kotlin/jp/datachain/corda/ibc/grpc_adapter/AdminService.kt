@@ -12,6 +12,7 @@ class AdminService: AdminServiceGrpc.AdminServiceImplBase() {
     override fun shutdown(request: Void, responseObserver: StreamObserver<Void>) {
         if (server != null) {
             server!!.shutdown()
+            responseObserver.onNext(Void.getDefaultInstance())
             responseObserver.onCompleted()
         } else {
             responseObserver.onError(NullPointerException())

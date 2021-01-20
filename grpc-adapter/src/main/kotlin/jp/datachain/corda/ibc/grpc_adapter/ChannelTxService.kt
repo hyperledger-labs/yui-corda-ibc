@@ -4,16 +4,10 @@ import ibc.core.channel.v1.MsgGrpc
 import ibc.core.channel.v1.Tx
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.flows.*
-import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
-import net.corda.core.utilities.NetworkHostAndPort
 
-class ChannelTxService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): MsgGrpc.MsgImplBase() {
-    private val ops = CordaRPCClient(NetworkHostAndPort(host, port))
-            .start(username, password)
-            .proxy
-
+class ChannelTxService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): MsgGrpc.MsgImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
     override fun channelOpenInit(request: Tx.MsgChannelOpenInit, responseObserver: StreamObserver<Tx.MsgChannelOpenInitResponse>) {
         ops.startFlow(::IbcChanOpenInitFlow, baseId, request).returnValue.get()
         responseObserver.onNext(Tx.MsgChannelOpenInitResponse.getDefaultInstance())
