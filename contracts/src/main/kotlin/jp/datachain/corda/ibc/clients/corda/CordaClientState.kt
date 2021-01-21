@@ -87,6 +87,7 @@ data class CordaClientState private constructor(
                 "ConnectionEndSerializer",
                 "CordaConsensusStateSerializer",
                 "HeightSerializer",
+                "MsgAcknowledgementSerializer",
                 "MsgChannelOpenAckSerializer",
                 "MsgChannelOpenConfirmSerializer",
                 "MsgChannelOpenInitSerializer",
@@ -96,6 +97,8 @@ data class CordaClientState private constructor(
                 "MsgConnectionOpenInitSerializer",
                 "MsgConnectionOpenTrySerializer",
                 "MsgCreateClientSerializer",
+                "MsgRecvPacketSerializer",
+                "MsgTransferSerializer",
                 "PacketSerializer"
         ).map{
             val className = "jp.datachain.corda.ibc.serialization.$it"
