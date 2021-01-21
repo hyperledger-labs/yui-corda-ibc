@@ -48,7 +48,7 @@ startServerB:
 	sleep 10
 
 executeTest:
-	./gradlew :grpc-adapter:runClient --args 'executeTest localhost:9999 localhost:19999'
+	./gradlew :grpc-adapter:runClient --args 'executeTest localhost:9999 localhost:19999 PartyA PartyB'
 
 shutdownServerA:
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:9999'
