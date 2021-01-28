@@ -1,6 +1,8 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
 import com.google.protobuf.Any
+import com.google.protobuf.ByteString
+import cosmos.base.query.v1beta1.Pagination
 import ibc.applications.transfer.v1.Tx
 import ibc.core.client.v1.Client.*
 import ibc.core.client.v1.QueryOuterClass.*
@@ -311,6 +313,12 @@ object Client {
                 .setName(partyNameB)
                 .setExactMatch(false)
                 .build()).partiesList.single().owningKey.encoded.toByteArray().toHex()
+        val pageReq = Pagination.PageRequest.newBuilder().apply{
+            key = ByteString.copyFrom("", Charsets.US_ASCII)
+            offset = 0
+            limit = 1000
+            countTotal = true
+        }.build()
 
         // transfer $10, $20 and $30 @ A
         listOf(10, 20, 30).forEach{
@@ -327,6 +335,36 @@ object Client {
             }.build())
         }
 
+        // check packet commitments
+        channelQueryServiceA.packetCommitments(QueryPacketCommitmentsRequest.newBuilder().apply{
+            portId = PORT_A
+            channelId = CHANNEL_A
+            pagination = pageReq
+        }.build()).let { res ->
+            assert(res.pagination.total == 3L)
+            assert(res.commitmentsCount == 3)
+            res.commitmentsList.forEach{ packetState ->
+                assert(packetState.portId == PORT_A)
+                assert(packetState.channelId == CHANNEL_A)
+                val commitment = channelQueryServiceA.packetCommitment(QueryPacketCommitmentRequest.newBuilder().apply {
+                    portId = packetState.portId
+                    channelId = packetState.channelId
+                    sequence = packetState.sequence
+                }.build())
+                assert(packetState.data == commitment.commitment)
+            }
+        }
+
+        // check unreceived packets (before recv)
+        channelQueryServiceB.unreceivedPackets(QueryUnreceivedPacketsRequest.newBuilder().apply{
+            portId = PORT_B
+            channelId = CHANNEL_B
+            addAllPacketCommitmentSequences(listOf(1, 2, 3))
+        }.build()).let {
+            assert(it.sequencesCount == 3)
+            assert(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
+        }
+
         // recv $10, $20 and $30 @ B
         repeat(3) {
             val seq = (it + 1).toLong()
@@ -340,6 +378,25 @@ object Client {
                 proof = packetCommitment.proof
                 proofHeight = packetCommitment.proofHeight
             }.build())
+        }
+
+        // check unreceived packets (after recv)
+        channelQueryServiceB.unreceivedPackets(QueryUnreceivedPacketsRequest.newBuilder().apply{
+            portId = PORT_B
+            channelId = CHANNEL_B
+            addAllPacketCommitmentSequences(listOf(1, 2, 3))
+        }.build()).let {
+            assert(it.sequencesCount == 0)
+        }
+
+        // check unreceived acknowledgements (before recv)
+        channelQueryServiceA.unreceivedAcks(QueryUnreceivedAcksRequest.newBuilder().apply{
+            portId = PORT_A
+            channelId = CHANNEL_A
+            addAllPacketAckSequences(listOf(1, 2, 3))
+        }.build()).let {
+            assert(it.sequencesCount == 3)
+            assert(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
         }
 
         // recv acks for $10, $20 and $30 @ A
@@ -361,6 +418,35 @@ object Client {
                 proof = packetAcknowledgement.proof
                 proofHeight = packetAcknowledgement.proofHeight
             }.build())
+        }
+
+        // check unreceived acknowledgements (after recv)
+        channelQueryServiceA.unreceivedAcks(QueryUnreceivedAcksRequest.newBuilder().apply{
+            portId = PORT_A
+            channelId = CHANNEL_A
+            addAllPacketAckSequences(listOf(1, 2, 3))
+        }.build()).let {
+            assert(it.sequencesCount == 0)
+        }
+
+        // check acks
+        channelQueryServiceB.packetAcknowledgements(QueryPacketAcknowledgementsRequest.newBuilder().apply{
+            portId = PORT_B
+            channelId = CHANNEL_B
+            pagination = pageReq
+        }.build()).let { res ->
+            assert(res.pagination.total == 3L)
+            assert(res.acknowledgementsCount == 3)
+            res.acknowledgementsList.forEach{ packetState ->
+                assert(packetState.portId == PORT_B)
+                assert(packetState.channelId == CHANNEL_B)
+                val ack = channelQueryServiceB.packetAcknowledgement(QueryPacketAcknowledgementRequest.newBuilder().apply {
+                    portId = packetState.portId
+                    channelId = packetState.channelId
+                    sequence = packetState.sequence
+                }.build())
+                assert(packetState.data == ack.acknowledgement)
+            }
         }
 
         listOf(1, 58, 1).forEachIndexed { i, amount ->
