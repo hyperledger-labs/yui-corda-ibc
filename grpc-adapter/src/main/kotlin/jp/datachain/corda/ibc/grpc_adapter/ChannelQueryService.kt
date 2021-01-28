@@ -1,5 +1,7 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
+import cosmos.base.query.v1beta1.Pagination
+import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.channel.v1.QueryGrpc
 import ibc.core.channel.v1.QueryOuterClass
 import ibc.core.client.v1.Client
@@ -44,6 +46,39 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         responseObserver.onCompleted()
     }
 
+    override fun packetCommitments(request: QueryOuterClass.QueryPacketCommitmentsRequest, responseObserver: StreamObserver<QueryOuterClass.QueryPacketCommitmentsResponse>) {
+        assert(request.pagination.key.isEmpty)
+        val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
+                externalId = listOf(baseId.toString()),
+                uuid = listOf(Identifier(request.channelId).toUUID())
+        )).states.single()
+        assert(stateAndRef.state.data.portId.id == request.portId)
+        // TODO: the following is very inefficient code ...
+        val commitments = stateAndRef.state.data.packets.values
+                .sortedBy{it.sequence}
+                .filter{it.sequence >= request.pagination.offset}
+                .take(request.pagination.limit.toInt())
+                .map {
+                    ChannelOuterClass.PacketState.newBuilder()
+                            .setPortId(request.portId)
+                            .setChannelId(request.channelId)
+                            .setSequence(it.sequence)
+                            .setData(it.toByteString())
+                            .build()
+                }
+        val reply = QueryOuterClass.QueryPacketCommitmentsResponse.newBuilder()
+                .addAllCommitments(commitments)
+                .setPagination(Pagination.PageResponse.newBuilder().apply{
+                    if (request.pagination.countTotal) {
+                        total = commitments.size.toLong()
+                    }
+                })
+                .setHeight(Client.Height.getDefaultInstance())
+                .build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+    }
+
     override fun packetReceipt(request: QueryOuterClass.QueryPacketReceiptRequest, responseObserver: StreamObserver<QueryOuterClass.QueryPacketReceiptResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
                 externalId = listOf(baseId.toString()),
@@ -71,6 +106,74 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
                 .setAcknowledgement(stateAndRef.state.data.acknowledgements[request.sequence]!!.toByteString())
                 .setProof(proof.toByteString())
                 .setProofHeight(Client.Height.getDefaultInstance())
+                .build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+    }
+
+    override fun packetAcknowledgements(request: QueryOuterClass.QueryPacketAcknowledgementsRequest, responseObserver: StreamObserver<QueryOuterClass.QueryPacketAcknowledgementsResponse>) {
+        assert(request.pagination.key.isEmpty)
+        val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
+                externalId = listOf(baseId.toString()),
+                uuid = listOf(Identifier(request.channelId).toUUID())
+        )).states.single()
+        assert(stateAndRef.state.data.portId.id == request.portId)
+        // TODO: the following is very inefficient code ...
+        val acks = stateAndRef.state.data.acknowledgements.toSortedMap()
+                .subMap(request.pagination.offset, Long.MAX_VALUE)
+                .toList()
+                .take(request.pagination.limit.toInt())
+                .map {
+                    ChannelOuterClass.PacketState.newBuilder()
+                            .setPortId(request.portId)
+                            .setChannelId(request.channelId)
+                            .setSequence(it.first)
+                            .setData(it.second.toByteString())
+                            .build()
+                }
+        val reply = QueryOuterClass.QueryPacketAcknowledgementsResponse.newBuilder()
+                .addAllAcknowledgements(acks)
+                .setPagination(Pagination.PageResponse.newBuilder().apply{
+                    if (request.pagination.countTotal) {
+                        total = acks.size.toLong()
+                    }
+                })
+                .setHeight(Client.Height.getDefaultInstance())
+                .build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+    }
+
+    override fun unreceivedPackets(request: QueryOuterClass.QueryUnreceivedPacketsRequest, responseObserver: StreamObserver<QueryOuterClass.QueryUnreceivedPacketsResponse>) {
+        val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
+                externalId = listOf(baseId.toString()),
+                uuid = listOf(Identifier(request.channelId).toUUID())
+        )).states.single()
+        assert(stateAndRef.state.data.portId.id == request.portId)
+        val unreceived = request.packetCommitmentSequencesList.filter{!stateAndRef.state.data.receipts.contains(it)}
+        val reply = QueryOuterClass.QueryUnreceivedPacketsResponse.newBuilder()
+                .addAllSequences(unreceived)
+                .setHeight(Client.Height.getDefaultInstance())
+                .build()
+        responseObserver.onNext(reply)
+        responseObserver.onCompleted()
+    }
+
+    override fun unreceivedAcks(request: QueryOuterClass.QueryUnreceivedAcksRequest, responseObserver: StreamObserver<QueryOuterClass.QueryUnreceivedAcksResponse>) {
+        val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
+                externalId = listOf(baseId.toString()),
+                uuid = listOf(Identifier(request.channelId).toUUID())
+        )).states.single()
+        assert(stateAndRef.state.data.portId.id == request.portId)
+
+        // When a packet is sent, it is saved into packets field of channel.
+        // When an ack is received, the corresponding packet is removed from this field.
+        // Therefore this field contains only packets that have been sent but not been acknowledged yet.
+        val unreceived = request.packetAckSequencesList.filter{stateAndRef.state.data.packets.containsKey(it)}
+
+        val reply = QueryOuterClass.QueryUnreceivedAcksResponse.newBuilder()
+                .addAllSequences(unreceived)
+                .setHeight(Client.Height.getDefaultInstance())
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
