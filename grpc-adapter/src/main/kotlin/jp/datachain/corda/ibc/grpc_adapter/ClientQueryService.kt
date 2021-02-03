@@ -4,6 +4,7 @@ import ibc.core.client.v1.Client
 import ibc.core.client.v1.QueryGrpc
 import ibc.core.client.v1.QueryOuterClass
 import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -21,7 +22,7 @@ class ClientQueryService(host: String, port: Int, username: String, password: St
         val reply = QueryOuterClass.QueryClientStateResponse.newBuilder()
                 .setClientState(stateAndRef.state.data.clientState)
                 .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
+                .setProofHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -45,7 +46,7 @@ class ClientQueryService(host: String, port: Int, username: String, password: St
         val reply = QueryOuterClass.QueryConsensusStateResponse.newBuilder()
                 .setConsensusState(clientState.consensusStates[height]!!.consensusState)
                 .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
+                .setProofHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()

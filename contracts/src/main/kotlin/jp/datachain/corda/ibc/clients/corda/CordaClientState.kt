@@ -28,7 +28,7 @@ data class CordaClientState private constructor(
         val counterpartyConsensusState: CordaConsensusState
 ) : ClientState {
     override val clientState get() = Any.pack(Corda.ClientState.getDefaultInstance()!!)!!
-    override val consensusStates get() = mapOf(Client.Height.getDefaultInstance() to counterpartyConsensusState)
+    override val consensusStates get() = mapOf(HEIGHT to counterpartyConsensusState)
 
     constructor(host: Host, id: Identifier, counterpartyConsensusState: CordaConsensusState)
             : this(host.participants, host.baseId, id, counterpartyConsensusState)
@@ -37,7 +37,7 @@ data class CordaClientState private constructor(
     private val counterpartyNotaryKey = counterpartyConsensusState.notaryKey
 
     override fun clientType() = ClientType.CordaClient
-    override fun getLatestHeight() = Client.Height.getDefaultInstance()!!
+    override fun getLatestHeight() = HEIGHT
     override fun isFrozen() = false
     override fun getFrozenHeight() = throw NotImplementedError()
     override fun validate() {}
