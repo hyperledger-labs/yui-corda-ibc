@@ -1,10 +1,10 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
-import ibc.core.client.v1.Client
 import ibc.core.connection.v1.Connection
 import ibc.core.connection.v1.QueryGrpc
 import ibc.core.connection.v1.QueryOuterClass
 import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.clients.corda.toSignedTransaction
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -27,7 +27,7 @@ class ConnectionQueryService(host: String, port: Int, username: String, password
             val reply = QueryOuterClass.QueryConnectionResponse.newBuilder()
                     .setConnection(stateAndRef.state.data.end)
                     .setProof(proof.toByteString())
-                    .setProofHeight(Client.Height.getDefaultInstance())
+                    .setProofHeight(HEIGHT)
                     .build()
             responseObserver.onNext(reply)
             responseObserver.onCompleted()

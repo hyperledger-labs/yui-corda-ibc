@@ -3,6 +3,7 @@ package jp.datachain.corda.ibc
 import com.google.protobuf.ByteString
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client.Height
+import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.flows.*
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.Amount
@@ -89,11 +90,11 @@ class IbcFlowTests {
         ))
 
         val clientAid = Identifier("clientA")
-        val consensusStateB = ibcB.host().getConsensusState(Height.getDefaultInstance())
+        val consensusStateB = ibcB.host().getConsensusState(HEIGHT)
         ibcA.createClient(clientAid, ClientType.CordaClient, consensusStateB)
 
         val clientBid = Identifier("clientB")
-        val consensusStateA = ibcA.host().getConsensusState(Height.getDefaultInstance())
+        val consensusStateA = ibcA.host().getConsensusState(HEIGHT)
         ibcB.createClient(clientBid, ClientType.CordaClient, consensusStateA)
 
         val connAid = Identifier("connectionA")
@@ -342,12 +343,12 @@ class IbcFlowTests {
         ibcA.createClient(
                 idCliABC,
                 ClientType.CordaClient,
-                ibcY.host().getConsensusState(Height.getDefaultInstance()))
+                ibcY.host().getConsensusState(HEIGHT))
         // XYZ creates client for interacting with ABC
         ibcX.createClient(
                 idCliXYZ,
                 ClientType.CordaClient,
-                ibcB.host().getConsensusState(Height.getDefaultInstance()))
+                ibcB.host().getConsensusState(HEIGHT))
 
         val idConnABC = Identifier("connABC")
         val idConnXYZ = Identifier("connXYZ")

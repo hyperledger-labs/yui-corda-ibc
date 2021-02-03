@@ -4,8 +4,8 @@ import cosmos.base.query.v1beta1.Pagination
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.channel.v1.QueryGrpc
 import ibc.core.channel.v1.QueryOuterClass
-import ibc.core.client.v1.Client
 import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
@@ -25,7 +25,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
             val reply = QueryOuterClass.QueryChannelResponse.newBuilder()
                     .setChannel(stateAndRef.state.data.end)
                     .setProof(proof.toByteString())
-                    .setProofHeight(Client.Height.getDefaultInstance())
+                    .setProofHeight(HEIGHT)
                     .build()
             responseObserver.onNext(reply)
             responseObserver.onCompleted()
@@ -47,7 +47,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         val reply = QueryOuterClass.QueryPacketCommitmentResponse.newBuilder()
                 .setCommitment(stateAndRef.state.data.packets[request.sequence]!!.toByteString())
                 .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
+                .setProofHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -80,7 +80,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
                         total = commitments.size.toLong()
                     }
                 })
-                .setHeight(Client.Height.getDefaultInstance())
+                .setHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -96,7 +96,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         val reply = QueryOuterClass.QueryPacketReceiptResponse.newBuilder()
                 .setReceived(stateAndRef.state.data.receipts.contains(request.sequence))
                 .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
+                .setProofHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -112,7 +112,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         val reply = QueryOuterClass.QueryPacketAcknowledgementResponse.newBuilder()
                 .setAcknowledgement(stateAndRef.state.data.acknowledgements[request.sequence]!!.toByteString())
                 .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
+                .setProofHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -145,7 +145,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
                         total = acks.size.toLong()
                     }
                 })
-                .setHeight(Client.Height.getDefaultInstance())
+                .setHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -160,7 +160,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         val unreceived = request.packetCommitmentSequencesList.filter{!stateAndRef.state.data.receipts.contains(it)}
         val reply = QueryOuterClass.QueryUnreceivedPacketsResponse.newBuilder()
                 .addAllSequences(unreceived)
-                .setHeight(Client.Height.getDefaultInstance())
+                .setHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
@@ -180,7 +180,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
 
         val reply = QueryOuterClass.QueryUnreceivedAcksResponse.newBuilder()
                 .addAllSequences(unreceived)
-                .setHeight(Client.Height.getDefaultInstance())
+                .setHeight(HEIGHT)
                 .build()
         responseObserver.onNext(reply)
         responseObserver.onCompleted()
