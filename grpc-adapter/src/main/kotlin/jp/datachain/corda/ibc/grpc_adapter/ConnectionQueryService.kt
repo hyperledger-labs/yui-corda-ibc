@@ -1,6 +1,7 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
 import ibc.core.client.v1.Client
+import ibc.core.connection.v1.Connection
 import ibc.core.connection.v1.QueryGrpc
 import ibc.core.connection.v1.QueryOuterClass
 import io.grpc.stub.StreamObserver
@@ -17,17 +18,24 @@ class ConnectionQueryService(host: String, port: Int, username: String, password
         val stateAndRef = ops.vaultQueryBy<IbcConnection>(QueryCriteria.LinearStateQueryCriteria(
                 externalId = listOf(baseId.toString()),
                 uuid = listOf(Identifier(request.connectionId).toUUID())
-        )).states.single()
-        val stx = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!
-        stx.verifyRequiredSignatures()
-        val proof = stx.toProof()
-        assert(proof.toSignedTransaction().tx.outputsOfType<IbcConnection>().single() == stateAndRef.state.data)
-        val reply = QueryOuterClass.QueryConnectionResponse.newBuilder()
-                .setConnection(stateAndRef.state.data.end)
-                .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
-                .build()
-        responseObserver.onNext(reply)
-        responseObserver.onCompleted()
+        )).states.singleOrNull()
+        if (stateAndRef != null) {
+            val stx = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!
+            stx.verifyRequiredSignatures()
+            val proof = stx.toProof()
+            assert(proof.toSignedTransaction().tx.outputsOfType<IbcConnection>().single() == stateAndRef.state.data)
+            val reply = QueryOuterClass.QueryConnectionResponse.newBuilder()
+                    .setConnection(stateAndRef.state.data.end)
+                    .setProof(proof.toByteString())
+                    .setProofHeight(Client.Height.getDefaultInstance())
+                    .build()
+            responseObserver.onNext(reply)
+            responseObserver.onCompleted()
+        } else {
+            responseObserver.onNext(QueryOuterClass.QueryConnectionResponse.newBuilder()
+                    .setConnection(Connection.ConnectionEnd.getDefaultInstance())
+                    .build())
+            responseObserver.onCompleted()
+        }
     }
 }
