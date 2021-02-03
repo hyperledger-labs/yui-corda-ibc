@@ -18,16 +18,23 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
                 externalId = listOf(baseId.toString()),
                 uuid = listOf(Identifier(request.channelId).toUUID())
-        )).states.single()
-        assert(stateAndRef.state.data.portId.id == request.portId)
-        val proof = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!.toProof()
-        val reply = QueryOuterClass.QueryChannelResponse.newBuilder()
-                .setChannel(stateAndRef.state.data.end)
-                .setProof(proof.toByteString())
-                .setProofHeight(Client.Height.getDefaultInstance())
-                .build()
-        responseObserver.onNext(reply)
-        responseObserver.onCompleted()
+        )).states.singleOrNull()
+        if (stateAndRef != null) {
+            assert(stateAndRef.state.data.portId.id == request.portId)
+            val proof = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!.toProof()
+            val reply = QueryOuterClass.QueryChannelResponse.newBuilder()
+                    .setChannel(stateAndRef.state.data.end)
+                    .setProof(proof.toByteString())
+                    .setProofHeight(Client.Height.getDefaultInstance())
+                    .build()
+            responseObserver.onNext(reply)
+            responseObserver.onCompleted()
+        } else {
+            responseObserver.onNext(QueryOuterClass.QueryChannelResponse.newBuilder()
+                    .setChannel(ChannelOuterClass.Channel.getDefaultInstance())
+                    .build())
+            responseObserver.onCompleted()
+        }
     }
 
     override fun packetCommitment(request: QueryOuterClass.QueryPacketCommitmentRequest, responseObserver: StreamObserver<QueryOuterClass.QueryPacketCommitmentResponse>) {
