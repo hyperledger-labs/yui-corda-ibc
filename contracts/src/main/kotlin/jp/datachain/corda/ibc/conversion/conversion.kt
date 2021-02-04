@@ -3,6 +3,7 @@ package jp.datachain.corda.ibc.conversion
 import com.google.protobuf.ByteString
 import jp.datachain.corda.ibc.grpc.CordaTypes
 import jp.datachain.corda.ibc.grpc.Query
+import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
@@ -17,8 +18,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.utilities.parseAsHex
-import net.corda.core.utilities.toHex
 import java.security.PublicKey
 
 fun SecureHash.into(): CordaTypes.SecureHash = CordaTypes.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
@@ -81,21 +80,21 @@ fun Query.Host.into() = Host(
         connIds = connIdsList.map(::Identifier),
         portChanIds = portChanIdsList.map{it.into()})
 
-fun LinkedHashMap<PublicKey, Amount>.into(): Query.Bank.BalanceMapPerDenom = Query.Bank.BalanceMapPerDenom.newBuilder()
-        .putAllPubkeyToAmount(this.mapKeys{it.key.encoded.toHex()}.mapValues{it.value.amount.toString()})
+fun LinkedHashMap<Address, Amount>.into(): Query.Bank.BalanceMapPerDenom = Query.Bank.BalanceMapPerDenom.newBuilder()
+        .putAllPubkeyToAmount(this.mapKeys{it.key.address}.mapValues{it.value.amount.toString()})
         .build()
 fun Query.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
-        .mapKeys{Crypto.decodePublicKey(it.key.parseAsHex())}
+        .mapKeys{Address(it.key)}
         .mapValues{Amount(it.value.toBigInteger())}
-        .let{LinkedHashMap<PublicKey, Amount>(it)}
+        .let{LinkedHashMap<Address, Amount>(it)}
 
-fun LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>.into(): Query.Bank.BalanceMap = Query.Bank.BalanceMap.newBuilder()
+fun LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>.into(): Query.Bank.BalanceMap = Query.Bank.BalanceMap.newBuilder()
         .putAllDenomToMap(this.mapKeys{it.key.denom}.mapValues{it.value.into()})
         .build()
 fun Query.Bank.BalanceMap.into() = denomToMapMap
         .mapKeys{Denom(it.key)}
         .mapValues{it.value.into()}
-        .let{LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>(it)}
+        .let{LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>(it)}
 
 fun Bank.into(): Query.Bank = Query.Bank.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})

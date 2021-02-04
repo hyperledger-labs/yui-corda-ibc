@@ -8,21 +8,17 @@ import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
-import net.corda.core.crypto.Crypto
-import net.corda.core.utilities.hexToByteArray
 import java.security.PublicKey
 
 data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
         val denom = Denom(msg.token.denom)
         val amount = Amount(msg.token.amount)
-        val sender = Crypto.decodePublicKey(msg.sender.hexToByteArray())
+        val sender = Address(msg.sender)
         val sourcePort = Identifier(msg.sourcePort)
         val sourceChannel = Identifier(msg.sourceChannel)
 
-        require(signers.contains(sender))
-
-        val bank: Bank = ctx.getInput<Bank>()
+        val bank = ctx.getInput<Bank>()
         val source = !denom.hasPrefix(sourcePort, sourceChannel)
         if (source) {
             ctx.addOutput(bank.lock(sender, denom, amount))

@@ -9,15 +9,14 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 import java.math.BigInteger
-import java.security.PublicKey
 
 @BelongsToContract(Ibc::class)
 data class Bank(
         override val participants: List<AbstractParty>,
         override val baseId: StateRef,
-        val allocated: LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>,
-        val locked: LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>,
-        val minted: LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>
+        val allocated: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>,
+        val locked: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>,
+        val minted: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>
 ): IbcState {
     override val id = Identifier("bank")
 
@@ -34,40 +33,40 @@ data class Bank(
         return m
     }
 
-    private fun up(mm: LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>, denom: Denom, owner: PublicKey, amount: Amount)
-            : LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>> {
-        val m: LinkedHashMap<PublicKey, Amount> = mm.getOrDefault(denom, LinkedHashMap())
+    private fun up(mm: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>, denom: Denom, owner: Address, amount: Amount)
+            : LinkedHashMap<Denom, LinkedHashMap<Address, Amount>> {
+        val m: LinkedHashMap<Address, Amount> = mm.getOrDefault(denom, LinkedHashMap())
         val balance = m.getOrDefault(owner, Amount(BigInteger.ZERO))
         return mm.cloneAndPut(denom, m.cloneAndPut(owner, balance + amount))
     }
 
-    private fun down(mm: LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>>, denom: Denom, owner: PublicKey, amount: Amount)
-            : LinkedHashMap<Denom, LinkedHashMap<PublicKey, Amount>> {
-        val m: LinkedHashMap<PublicKey, Amount> = mm.get(denom) ?: throw IllegalArgumentException("unknown denomination")
+    private fun down(mm: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>, denom: Denom, owner: Address, amount: Amount)
+            : LinkedHashMap<Denom, LinkedHashMap<Address, Amount>> {
+        val m: LinkedHashMap<Address, Amount> = mm.get(denom) ?: throw IllegalArgumentException("unknown denomination")
         val balance = m.get(owner) ?: throw IllegalArgumentException("insufficient funds")
         require(balance >= amount)
         return mm.cloneAndPut(denom, m.cloneAndPut(owner, balance - amount))
     }
 
-    fun allocate(owner: PublicKey, denom: Denom, amount: Amount) = copy(
+    fun allocate(owner: Address, denom: Denom, amount: Amount) = copy(
             allocated = up(allocated, denom, owner, amount)
     )
 
-    fun lock(owner: PublicKey, denom: Denom, amount: Amount) = copy(
+    fun lock(owner: Address, denom: Denom, amount: Amount) = copy(
             allocated = down(allocated, denom, owner, amount),
             locked = up(locked, denom, owner, amount)
     )
 
-    fun unlock(owner: PublicKey, denom: Denom, amount: Amount) = copy(
+    fun unlock(owner: Address, denom: Denom, amount: Amount) = copy(
             allocated = up(allocated, denom, owner, amount),
             locked = down(locked, denom, owner, amount)
     )
 
-    fun mint(owner: PublicKey, denom: Denom, amount: Amount) = copy(
+    fun mint(owner: Address, denom: Denom, amount: Amount) = copy(
             minted = up(minted, denom, owner, amount)
     )
 
-    fun burn(owner: PublicKey, denom: Denom, amount: Amount) = copy(
+    fun burn(owner: Address, denom: Denom, amount: Amount) = copy(
             minted = down(minted, denom, owner, amount)
     )
 }

@@ -6,15 +6,13 @@ import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.ModuleCallbacks
-import net.corda.core.crypto.Crypto
-import net.corda.core.utilities.hexToByteArray
 
 class ModuleCallbacks: ModuleCallbacks {
     override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
         val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
         val denom = Denom(data.denom)
         val amount = Amount(data.amount)
-        val receiver = Crypto.decodePublicKey(data.receiver.hexToByteArray())
+        val receiver = Address(data.receiver)
 
         val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
         val source = denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
@@ -53,7 +51,7 @@ class ModuleCallbacks: ModuleCallbacks {
         val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
         val denom = Denom(data.denom)
         val amount = Amount(data.amount)
-        val sender = Crypto.decodePublicKey(data.sender.hexToByteArray())
+        val sender = Address(data.sender)
 
         val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         val bank = ctx.getInput<Bank>()
