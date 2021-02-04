@@ -6,6 +6,7 @@ import jp.datachain.corda.ibc.flows.IbcFundAllocateFlow
 import jp.datachain.corda.ibc.flows.IbcGenesisCreateFlow
 import jp.datachain.corda.ibc.flows.IbcHostAndBankCreateFlow
 import jp.datachain.corda.ibc.grpc.*
+import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
 import net.corda.core.messaging.startFlow
@@ -26,7 +27,7 @@ class CordaIbcService(host: String, port: Int, username: String, password: Strin
     override fun allocateFund(request: Operation.AllocateFundRequest, responseObserver: StreamObserver<CordaTypes.SignedTransaction>) {
         val stx = ops.startFlow(::IbcFundAllocateFlow,
                 request.baseId.into(),
-                request.owner.into(),
+                Address(request.owner),
                 Denom(request.denom),
                 Amount(request.amount)
         ).returnValue.get()

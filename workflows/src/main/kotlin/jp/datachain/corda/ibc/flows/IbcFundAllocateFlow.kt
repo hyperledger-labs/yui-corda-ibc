@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
 import net.corda.core.contracts.StateRef
@@ -9,15 +10,14 @@ import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import java.security.PublicKey
 
 @StartableByRPC
 @InitiatingFlow
 class IbcFundAllocateFlow(
-        val baseId: StateRef,
-        val owner: PublicKey,
-        val denom: Denom,
-        val amount: Amount
+        private val baseId: StateRef,
+        private val owner: Address,
+        private val denom: Denom,
+        private val amount: Amount
 ): FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {

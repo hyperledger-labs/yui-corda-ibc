@@ -33,7 +33,7 @@ message CreateHostAndBankRequest {
 
 message AllocateFundRequest {
   StateRef base_id = 1;
-  PublicKey owner = 2;
+  string owner = 2;
   string denom = 3;
   string amount = 4;
 }

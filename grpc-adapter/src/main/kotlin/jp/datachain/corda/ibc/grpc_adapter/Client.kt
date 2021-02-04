@@ -100,19 +100,13 @@ object Client {
 
     private fun allocateFund(endpoint: String, baseHash: String, partyName: String) {
         val channel = connectGrpc(endpoint)
-        val nodeService = NodeServiceGrpc.newBlockingStub(channel)
         val ibcService = IbcServiceGrpc.newBlockingStub(channel)
 
         val baseId = StateRef(txhash = SecureHash.parse(baseHash), index = 0)
 
-        val party = nodeService.partiesFromName(Operation.PartiesFromNameRequest.newBuilder()
-                .setName(partyName)
-                .setExactMatch(false)
-                .build()).partiesList.single()
-
         ibcService.allocateFund(Operation.AllocateFundRequest.newBuilder()
                 .setBaseId(baseId.into())
-                .setOwner(party.owningKey)
+                .setOwner(partyName)
                 .setDenom("USD")
                 .setAmount("100")
                 .build()).into()
@@ -152,8 +146,6 @@ object Client {
         val channelQueryServiceB = ChannelQueryGrpc.newBlockingStub(channelB)
         val channelTxServiceB = ChannelMsgGrpc.newBlockingStub(channelB)
         val transferTxServiceB = TransferMsgGrpc.newBlockingStub(channelB)
-
-        val nodeService = NodeServiceGrpc.newBlockingStub(channelA)
 
         val hostA = hostAndBankQueryServiceA.queryHost(Query.QueryHostRequest.getDefaultInstance()).into()
         val consensusStateA = hostA.getConsensusState(hostA.getCurrentHeight())
@@ -305,14 +297,6 @@ object Client {
             proofHeight = chanAck.proofHeight
         }.build())
 
-        val addrA = nodeService.partiesFromName(Operation.PartiesFromNameRequest.newBuilder()
-                .setName(partyNameA)
-                .setExactMatch(false)
-                .build()).partiesList.single().owningKey.encoded.toByteArray().toHex()
-        val addrB = nodeService.partiesFromName(Operation.PartiesFromNameRequest.newBuilder()
-                .setName(partyNameB)
-                .setExactMatch(false)
-                .build()).partiesList.single().owningKey.encoded.toByteArray().toHex()
         val pageReq = Pagination.PageRequest.newBuilder().apply{
             key = ByteString.copyFrom("", Charsets.US_ASCII)
             offset = 0
@@ -328,9 +312,9 @@ object Client {
                 sourceChannel = CHANNEL_A
                 tokenBuilder.denom = "USD"
                 tokenBuilder.amount = amount
-                sender = addrA
-                receiver = addrB
-                timeoutHeight = hostB.getCurrentHeight()
+                sender = partyNameA
+                receiver = partyNameB
+                timeoutHeight = Height.getDefaultInstance()
                 timeoutTimestamp = 0
             }.build())
         }
@@ -459,9 +443,9 @@ object Client {
                 sourceChannel = CHANNEL_B
                 tokenBuilder.denom = "$PORT_B/$CHANNEL_B/USD"
                 tokenBuilder.amount = amount
-                sender = addrB
-                receiver = addrA
-                timeoutHeight = hostA.getCurrentHeight()
+                sender = partyNameB
+                receiver = partyNameA
+                timeoutHeight = Height.getDefaultInstance()
                 timeoutTimestamp = 0
             }.build())
 
