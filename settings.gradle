@@ -1,7 +1,6 @@
 include 'workflows'
 include 'contracts'
 include 'clients'
-include 'cosmos-experiment'
 include 'grpc-adapter'
 include 'proto'
 
