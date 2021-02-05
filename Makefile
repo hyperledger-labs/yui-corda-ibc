@@ -36,7 +36,6 @@ prepareHostB:
 	sleep 20
 	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:19999 PartyB base-hash-b.txt'
 	./gradlew :grpc-adapter:runClient --args "createHost localhost:19999 `cat base-hash-b.txt`"
-	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:19999 `cat base-hash-b.txt` PartyB"
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
 
 startServerA:
