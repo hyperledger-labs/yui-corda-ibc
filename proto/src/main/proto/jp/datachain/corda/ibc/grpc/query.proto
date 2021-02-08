@@ -35,10 +35,15 @@ message Bank {
     map<string, BalanceMapPerDenom> denomToMap = 1;
   }
 
+  message IbcDenomMap {
+    map<string, string> ibcDenomToDenom = 1;
+  }
+
   repeated Party participants = 1;
   StateRef baseId = 2;
   BalanceMap allocated = 3;
   BalanceMap locked = 4;
   BalanceMap minted = 5;
-  string id = 6;
+  IbcDenomMap denoms = 6;
+  string id = 7;
 }

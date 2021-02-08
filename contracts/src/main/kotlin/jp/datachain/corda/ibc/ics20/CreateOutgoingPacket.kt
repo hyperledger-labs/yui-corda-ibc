@@ -19,15 +19,20 @@ data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
         val sourceChannel = Identifier(msg.sourceChannel)
 
         val bank = ctx.getInput<Bank>()
-        val source = !denom.hasPrefix(sourcePort, sourceChannel)
+        val resolvedDenom =
+                if (denom.hasIbcPrefix())
+                    bank.resolveDenom(denom)
+                else
+                    denom
+        val source = !resolvedDenom.hasPrefix(sourcePort, sourceChannel)
         if (source) {
             ctx.addOutput(bank.lock(sender, denom, amount))
         } else {
-            ctx.addOutput(bank.burn(sender, denom.removePrefix(), amount))
+            ctx.addOutput(bank.burn(sender, denom, amount))
         }
 
         val data = Transfer.FungibleTokenPacketData.newBuilder()
-                .setDenom(msg.token.denom)
+                .setDenom(resolvedDenom.denom)
                 .setAmount(msg.token.amount.toLong())
                 .setSender(msg.sender)
                 .setReceiver(msg.receiver)

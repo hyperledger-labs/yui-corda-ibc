@@ -19,7 +19,8 @@ class ModuleCallbacks: ModuleCallbacks {
         val bank = ctx.getInput<Bank>()
         if (source) {
             try {
-                ctx.addOutput(bank.unlock(receiver, denom, amount))
+                val unprefixedDenom = denom.removePrefix()
+                ctx.addOutput(bank.unlock(receiver, unprefixedDenom, amount))
                 ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
@@ -27,7 +28,10 @@ class ModuleCallbacks: ModuleCallbacks {
             }
         } else {
             try {
-                ctx.addOutput(bank.mint(receiver, denom, amount))
+                val prefixedDenom = denom.addPrefix(Identifier(packet.destinationPort), Identifier(packet.destinationChannel))
+                ctx.addOutput(bank
+                        .recordDenom(prefixedDenom)
+                        .mint(receiver, prefixedDenom.ibcDenom, amount))
                 ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
@@ -58,7 +62,7 @@ class ModuleCallbacks: ModuleCallbacks {
         if (source) {
             ctx.addOutput(bank.unlock(sender, denom, amount))
         } else {
-            ctx.addOutput(bank.mint(sender, denom, amount))
+            ctx.addOutput(bank.mint(sender, denom.ibcDenom, amount))
         }
     }
 }
