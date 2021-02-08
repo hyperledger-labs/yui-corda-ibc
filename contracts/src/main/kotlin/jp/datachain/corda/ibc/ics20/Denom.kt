@@ -1,18 +1,33 @@
 package jp.datachain.corda.ibc.ics20
 
 import jp.datachain.corda.ibc.ics24.Identifier
+import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.utilities.toHex
 
 @CordaSerializable
 data class Denom(val denom: String) {
     fun hasPrefix(portId: Identifier, chanId: Identifier): Boolean {
-        val prefix = "${portId.id}/${chanId.id}"
-        return denom.length >= prefix.length && denom.substring(0, prefix.length) == prefix
+        denom.split('/').let {
+            return it.size == 3 && it[0] == portId.id && it[1] == chanId.id
+        }
     }
 
-    fun removePrefix(): Denom {
-        val firstSlash = denom.findAnyOf(setOf("/"))!!.first
-        val secondSlash = denom.findAnyOf(setOf("/"), firstSlash+1)!!.first
-        return Denom(denom.substring(secondSlash+1))
+    fun addPrefix(portId: Identifier, chanId: Identifier) = Denom("${portId.id}/${chanId.id}/$denom")
+
+    fun removePrefix(): Denom = denom.split('/').let {
+        assert(it.size == 3)
+        Denom(it[2])
     }
+
+    fun hasIbcPrefix(): Boolean = denom.split('/').let {
+        assert(it.size == 2)
+        it[0] == "ibc"
+    }
+
+    val ibcDenom: Denom
+        get() {
+            val hash = SecureHash.sha256(denom).bytes.toHex()
+            return Denom("ibc/$hash")
+        }
 }

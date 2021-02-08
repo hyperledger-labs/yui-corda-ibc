@@ -14,59 +14,72 @@ import java.math.BigInteger
 data class Bank(
         override val participants: List<AbstractParty>,
         override val baseId: StateRef,
-        val allocated: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>,
-        val locked: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>,
-        val minted: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>
+        val allocated: MutableMap<Denom, MutableMap<Address, Amount>>,
+        val locked: MutableMap<Denom, MutableMap<Address, Amount>>,
+        val minted: MutableMap<Denom, MutableMap<Address, Amount>>,
+        val denoms: MutableMap<Denom, Denom>
 ): IbcState {
     override val id = Identifier("bank")
 
     constructor(genesisAndRef: StateAndRef<Genesis>) : this(
             genesisAndRef.state.data.participants,
             genesisAndRef.ref,
-            linkedMapOf(),
-            linkedMapOf(),
-            linkedMapOf())
+            mutableMapOf(),
+            mutableMapOf(),
+            mutableMapOf(),
+            mutableMapOf())
 
-    private inline fun <reified K, reified V> LinkedHashMap<K, V>.cloneAndPut(k: K, v: V): LinkedHashMap<K, V> {
-        val m = clone() as LinkedHashMap<K, V>
-        m.put(k, v)
-        return m
+    private fun deepCopy() = copy(
+            allocated = allocated.deepCopy(),
+            locked = locked.deepCopy(),
+            minted = minted.deepCopy(),
+            denoms = denoms.toMutableMap()
+    )
+
+    private fun MutableMap<Denom, MutableMap<Address, Amount>>.deepCopy() = toMutableMap().apply{
+        entries.forEach{
+            put(it.key, it.value.toMutableMap())
+        }
     }
 
-    private fun up(mm: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>, denom: Denom, owner: Address, amount: Amount)
-            : LinkedHashMap<Denom, LinkedHashMap<Address, Amount>> {
-        val m: LinkedHashMap<Address, Amount> = mm.getOrDefault(denom, LinkedHashMap())
-        val balance = m.getOrDefault(owner, Amount(BigInteger.ZERO))
-        return mm.cloneAndPut(denom, m.cloneAndPut(owner, balance + amount))
+    private fun MutableMap<Denom, MutableMap<Address, Amount>>.up(denom: Denom, owner: Address, amount: Amount) {
+        put(denom, getOrDefault(denom, mutableMapOf()).apply{
+            put(owner, getOrDefault(owner, Amount(BigInteger.ZERO)) + amount)
+        })
     }
 
-    private fun down(mm: LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>, denom: Denom, owner: Address, amount: Amount)
-            : LinkedHashMap<Denom, LinkedHashMap<Address, Amount>> {
-        val m: LinkedHashMap<Address, Amount> = mm.get(denom) ?: throw IllegalArgumentException("unknown denomination")
-        val balance = m.get(owner) ?: throw IllegalArgumentException("insufficient funds")
-        require(balance >= amount)
-        return mm.cloneAndPut(denom, m.cloneAndPut(owner, balance - amount))
+    private fun MutableMap<Denom, MutableMap<Address, Amount>>.down(denom: Denom, owner: Address, amount: Amount) {
+        val m = get(denom) ?: throw IllegalArgumentException("unknown denom: $denom")
+        val balance = m[owner] ?: throw IllegalArgumentException("no fund: amount=$amount")
+        require(balance >= amount){"insufficient fund: balance=$balance, amount=$amount"}
+        m[owner] = balance - amount
     }
 
-    fun allocate(owner: Address, denom: Denom, amount: Amount) = copy(
-            allocated = up(allocated, denom, owner, amount)
-    )
+    fun allocate(owner: Address, denom: Denom, amount: Amount) = deepCopy().apply{
+        allocated.up(denom, owner, amount)
+    }
 
-    fun lock(owner: Address, denom: Denom, amount: Amount) = copy(
-            allocated = down(allocated, denom, owner, amount),
-            locked = up(locked, denom, owner, amount)
-    )
+    fun lock(owner: Address, denom: Denom, amount: Amount) = deepCopy().apply{
+        allocated.down(denom, owner, amount)
+        locked.up(denom, owner, amount)
+    }
 
-    fun unlock(owner: Address, denom: Denom, amount: Amount) = copy(
-            allocated = up(allocated, denom, owner, amount),
-            locked = down(locked, denom, owner, amount)
-    )
+    fun unlock(owner: Address, denom: Denom, amount: Amount) = deepCopy().apply{
+        allocated.up(denom, owner, amount)
+        locked.down(denom, owner, amount)
+    }
 
-    fun mint(owner: Address, denom: Denom, amount: Amount) = copy(
-            minted = up(minted, denom, owner, amount)
-    )
+    fun mint(owner: Address, denom: Denom, amount: Amount) = deepCopy().apply{
+        minted.up(denom, owner, amount)
+    }
 
-    fun burn(owner: Address, denom: Denom, amount: Amount) = copy(
-            minted = down(minted, denom, owner, amount)
-    )
+    fun burn(owner: Address, denom: Denom, amount: Amount) = deepCopy().apply{
+        minted.down(denom, owner, amount)
+    }
+
+    fun recordDenom(denom: Denom) = deepCopy().apply{
+        denoms[denom.ibcDenom] = denom
+    }
+
+    fun resolveDenom(ibcDenom: Denom) = denoms[ibcDenom] ?: throw IllegalArgumentException()
 }

@@ -80,21 +80,29 @@ fun Query.Host.into() = Host(
         connIds = connIdsList.map(::Identifier),
         portChanIds = portChanIdsList.map{it.into()})
 
-fun LinkedHashMap<Address, Amount>.into(): Query.Bank.BalanceMapPerDenom = Query.Bank.BalanceMapPerDenom.newBuilder()
+fun MutableMap<Address, Amount>.into(): Query.Bank.BalanceMapPerDenom = Query.Bank.BalanceMapPerDenom.newBuilder()
         .putAllPubkeyToAmount(this.mapKeys{it.key.address}.mapValues{it.value.amount.toString()})
         .build()
 fun Query.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
         .mapKeys{Address(it.key)}
         .mapValues{Amount(it.value.toBigInteger())}
-        .let{LinkedHashMap<Address, Amount>(it)}
+        .toMutableMap()
 
-fun LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>.into(): Query.Bank.BalanceMap = Query.Bank.BalanceMap.newBuilder()
+fun MutableMap<Denom, MutableMap<Address, Amount>>.into(): Query.Bank.BalanceMap = Query.Bank.BalanceMap.newBuilder()
         .putAllDenomToMap(this.mapKeys{it.key.denom}.mapValues{it.value.into()})
         .build()
 fun Query.Bank.BalanceMap.into() = denomToMapMap
         .mapKeys{Denom(it.key)}
         .mapValues{it.value.into()}
-        .let{LinkedHashMap<Denom, LinkedHashMap<Address, Amount>>(it)}
+        .toMutableMap()
+
+fun MutableMap<Denom, Denom>.into(): Query.Bank.IbcDenomMap = Query.Bank.IbcDenomMap.newBuilder()
+        .putAllIbcDenomToDenom(this.mapKeys{it.key.denom}.mapValues{it.value.denom})
+        .build()
+fun Query.Bank.IbcDenomMap.into() = ibcDenomToDenomMap
+        .mapKeys{Denom(it.key)}
+        .mapValues{Denom(it.value)}
+        .toMutableMap()
 
 fun Bank.into(): Query.Bank = Query.Bank.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
@@ -102,6 +110,7 @@ fun Bank.into(): Query.Bank = Query.Bank.newBuilder()
         .setAllocated(allocated.into())
         .setLocked(locked.into())
         .setMinted(minted.into())
+        .setDenoms(denoms.into())
         .setId(id.id)
         .build()
 fun Query.Bank.into() = Bank(
@@ -109,7 +118,8 @@ fun Query.Bank.into() = Bank(
         baseId = baseId.into(),
         allocated = allocated.into(),
         locked = locked.into(),
-        minted = minted.into())
+        minted = minted.into(),
+        denoms = denoms.into())
 
 fun SignatureMetadata.into(): CordaTypes.SignatureMetadata = CordaTypes.SignatureMetadata.newBuilder()
         .setPlatformVersion(platformVersion)

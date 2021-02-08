@@ -25,6 +25,8 @@ import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.utilities.NetworkHostAndPort
 import io.grpc.StatusRuntimeException
+import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.crypto.SecureHash
 import net.corda.core.utilities.toHex
 import java.io.File
@@ -441,7 +443,10 @@ object Client {
             transferTxServiceB.transfer(Tx.MsgTransfer.newBuilder().apply {
                 sourcePort = PORT_B
                 sourceChannel = CHANNEL_B
-                tokenBuilder.denom = "$PORT_B/$CHANNEL_B/USD"
+                tokenBuilder.denom = Denom("USD")
+                        .addPrefix(Identifier(PORT_B), Identifier(CHANNEL_B))
+                        .ibcDenom
+                        .denom
                 tokenBuilder.amount = amount
                 sender = partyNameB
                 receiver = partyNameA
