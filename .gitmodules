@@ -1,3 +1,6 @@
 [submodule "external/cosmos-sdk"]
 	path = external/cosmos-sdk
 	url = https://github.com/cosmos/cosmos-sdk.git
+[submodule "external/fabric-ibc"]
+	path = external/fabric-ibc
+	url = https://github.com/datachainlab/fabric-ibc
