@@ -86,6 +86,8 @@ data class CordaClientState private constructor(
                 "ChannelSerializer",
                 "ConnectionEndSerializer",
                 "CordaConsensusStateSerializer",
+                "FabricClientStateSerializer",
+                "FabricConsensusStateSerializer",
                 "HeightSerializer",
                 "MsgAcknowledgementSerializer",
                 "MsgChannelOpenAckSerializer",
