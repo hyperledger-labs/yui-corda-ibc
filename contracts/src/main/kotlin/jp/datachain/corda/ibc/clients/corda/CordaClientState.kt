@@ -5,8 +5,8 @@ import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
+import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.grpc.Corda
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host

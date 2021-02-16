@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
+import ibc.lightclients.corda.v1.Query
+import ibc.lightclients.corda.v1.QueryServiceGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.conversion.into
-import jp.datachain.corda.ibc.grpc.Query
-import jp.datachain.corda.ibc.grpc.QueryServiceGrpc
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics24.Host
 import net.corda.core.contracts.StateRef
