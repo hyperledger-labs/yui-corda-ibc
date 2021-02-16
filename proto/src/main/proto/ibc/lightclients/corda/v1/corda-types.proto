@@ -1,6 +1,8 @@
 syntax = "proto3";
+package ibc.lightclients.corda.v1;
 
-package jp.datachain.corda.ibc.grpc;
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
+option java_package = "jp.datachain.corda.ibc.grpc";
 
 message SecureHash {
   bytes bytes = 1;
