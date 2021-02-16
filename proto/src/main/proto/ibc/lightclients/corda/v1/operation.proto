@@ -1,8 +1,10 @@
 syntax = "proto3";
+package ibc.lightclients.corda.v1;
 
-package jp.datachain.corda.ibc.grpc;
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
+option java_package = "jp.datachain.corda.ibc.grpc";
 
-import "jp/datachain/corda/ibc/grpc/corda-types.proto";
+import "ibc/lightclients/corda/v1/corda-types.proto";
 
 service NodeService {
   rpc PartiesFromName (PartiesFromNameRequest) returns (PartiesFromNameResponse);
