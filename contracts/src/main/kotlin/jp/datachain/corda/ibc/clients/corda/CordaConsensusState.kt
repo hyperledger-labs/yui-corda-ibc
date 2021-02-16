@@ -1,8 +1,8 @@
 package jp.datachain.corda.ibc.clients.corda
 
 import com.google.protobuf.Any
+import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.conversion.into
-import jp.datachain.corda.ibc.grpc.Corda
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics2.ConsensusState
 import net.corda.core.contracts.StateRef

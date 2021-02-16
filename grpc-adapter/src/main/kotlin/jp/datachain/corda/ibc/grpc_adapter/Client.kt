@@ -11,6 +11,7 @@ import ibc.core.connection.v1.QueryOuterClass.*
 import ibc.core.channel.v1.Tx.*
 import ibc.core.channel.v1.QueryOuterClass.*
 import ibc.core.channel.v1.ChannelOuterClass.*
+import ibc.lightclients.corda.v1.*
 import ibc.core.client.v1.MsgGrpc as ClientMsgGrpc
 import ibc.core.client.v1.QueryGrpc as ClientQueryGrpc
 import ibc.core.connection.v1.MsgGrpc as ConnectionMsgGrpc
@@ -20,7 +21,6 @@ import ibc.core.channel.v1.QueryGrpc as ChannelQueryGrpc
 import ibc.applications.transfer.v1.MsgGrpc as TransferMsgGrpc
 import io.grpc.ManagedChannelBuilder
 import jp.datachain.corda.ibc.conversion.into
-import jp.datachain.corda.ibc.grpc.*
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.utilities.NetworkHostAndPort
@@ -116,16 +116,16 @@ object Client {
         println(baseId.txhash.bytes.toHex())
     }
 
-    const val CLIENT_A = "CLIENT_A"
-    const val CLIENT_B = "CLIENT_B"
-    const val CONNECTION_A = "CONNECTION_A"
-    const val CONNECTION_B = "CONNECTION_B"
-    const val PORT_A = "transfer"
-    const val PORT_B = "transfer"
-    const val CHANNEL_A = "CHANNEL_A"
-    const val CHANNEL_B = "CHANNEL_B"
-    const val CHANNEL_VERSION_A = "CHANNEL_VERSION_A"
-    const val CHANNEL_VERSION_B = "CHANNEL_VERSION_B"
+    private const val CLIENT_A = "CLIENT_A"
+    private const val CLIENT_B = "CLIENT_B"
+    private const val CONNECTION_A = "CONNECTION_A"
+    private const val CONNECTION_B = "CONNECTION_B"
+    private const val PORT_A = "transfer"
+    private const val PORT_B = "transfer"
+    private const val CHANNEL_A = "CHANNEL_A"
+    private const val CHANNEL_B = "CHANNEL_B"
+    private const val CHANNEL_VERSION_A = "CHANNEL_VERSION_A"
+    private const val CHANNEL_VERSION_B = "CHANNEL_VERSION_B"
 
     private fun executeTest(endpointA: String, endpointB: String, partyNameA: String, partyNameB: String) {
         val channelA = connectGrpc(endpointA)

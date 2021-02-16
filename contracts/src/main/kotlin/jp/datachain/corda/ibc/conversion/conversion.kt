@@ -1,8 +1,8 @@
 package jp.datachain.corda.ibc.conversion
 
 import com.google.protobuf.ByteString
-import jp.datachain.corda.ibc.grpc.CordaTypes
-import jp.datachain.corda.ibc.grpc.Query
+import ibc.lightclients.corda.v1.CordaTypes
+import ibc.lightclients.corda.v1.Query
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank

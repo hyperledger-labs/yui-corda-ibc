@@ -7,6 +7,7 @@ import ibc.core.client.v1.compareTo
 import ibc.core.client.v1.isZero
 import ibc.core.connection.v1.Connection
 import ibc.core.connection.v1.Tx
+import ibc.lightclients.corda.v1.Corda
 import ibc.lightclients.fabric.v1.Fabric
 import ibc.lightclients.localhost.v1.Localhost
 import ibc.lightclients.solomachine.v1.Solomachine
@@ -16,7 +17,6 @@ import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.clients.fabric.FabricClientState
-import jp.datachain.corda.ibc.grpc.Corda
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context

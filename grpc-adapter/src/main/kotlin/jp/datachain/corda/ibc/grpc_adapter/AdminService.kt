@@ -1,9 +1,9 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
+import ibc.lightclients.corda.v1.AdminServiceGrpc
+import ibc.lightclients.corda.v1.Void
 import io.grpc.Server
 import io.grpc.stub.StreamObserver
-import jp.datachain.corda.ibc.grpc.AdminServiceGrpc
-import jp.datachain.corda.ibc.grpc.Void
 import java.lang.NullPointerException
 
 class AdminService: AdminServiceGrpc.AdminServiceImplBase() {

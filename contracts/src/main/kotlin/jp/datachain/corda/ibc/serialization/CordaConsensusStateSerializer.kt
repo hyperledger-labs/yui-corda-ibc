@@ -1,6 +1,6 @@
 package jp.datachain.corda.ibc.serialization
 
-import jp.datachain.corda.ibc.grpc.Corda
+import ibc.lightclients.corda.v1.Corda
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.utilities.OpaqueBytes
 
