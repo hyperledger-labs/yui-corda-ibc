@@ -27,7 +27,7 @@ data class CordaClientState private constructor(
         override val id: Identifier,
         val counterpartyConsensusState: CordaConsensusState
 ) : ClientState {
-    override val clientState get() = Any.pack(Corda.ClientState.getDefaultInstance()!!)!!
+    override val clientState get() = Any.pack(Corda.ClientState.getDefaultInstance()!!, "")!!
     override val consensusStates get() = mapOf(HEIGHT to counterpartyConsensusState)
 
     constructor(host: Host, id: Identifier, counterpartyConsensusState: CordaConsensusState)

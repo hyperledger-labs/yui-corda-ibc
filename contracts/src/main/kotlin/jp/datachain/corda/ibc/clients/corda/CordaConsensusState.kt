@@ -9,7 +9,7 @@ import net.corda.core.contracts.StateRef
 import java.security.PublicKey
 
 data class CordaConsensusState(val cordaConsensusState: Corda.ConsensusState) : ConsensusState {
-    override val consensusState get() = Any.pack(cordaConsensusState)!!
+    override val consensusState get() = Any.pack(cordaConsensusState, "")!!
     val baseId get() = cordaConsensusState.baseId.into()
     val notaryKey get() = cordaConsensusState.notaryKey.into()
 

@@ -23,7 +23,7 @@ data class FabricClientState private constructor(
         val fabricClientState: Fabric.ClientState,
         val fabricConsensusState: FabricConsensusState
 ) : ClientState {
-    override val clientState get() = Any.pack(fabricClientState)!!
+    override val clientState get() = Any.pack(fabricClientState, "")!!
     override val consensusStates get() = mapOf(getLatestHeight() to fabricConsensusState)
 
     constructor(host: Host, id: Identifier, fabricClientState: Fabric.ClientState, fabricConsensusState: Fabric.ConsensusState)
