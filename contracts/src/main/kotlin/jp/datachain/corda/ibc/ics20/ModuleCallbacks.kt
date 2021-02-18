@@ -1,7 +1,6 @@
 package jp.datachain.corda.ibc.ics20
 
 import com.google.protobuf.ByteString
-import ibc.applications.transfer.v1.Transfer
 import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
@@ -9,7 +8,7 @@ import jp.datachain.corda.ibc.ics26.ModuleCallbacks
 
 class ModuleCallbacks: ModuleCallbacks {
     override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
-        val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
+        val data = packet.data.toFungibleTokenPacketData()
         val denom = Denom(data.denom)
         val amount = Amount(data.amount)
         val receiver = Address(data.receiver)
@@ -52,7 +51,7 @@ class ModuleCallbacks: ModuleCallbacks {
     }
 
     private fun refundTokens(ctx: Context, packet: ChannelOuterClass.Packet) {
-        val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
+        val data = packet.data.toFungibleTokenPacketData()
         val denom = Denom(data.denom)
         val amount = Amount(data.amount)
         val sender = Address(data.sender)

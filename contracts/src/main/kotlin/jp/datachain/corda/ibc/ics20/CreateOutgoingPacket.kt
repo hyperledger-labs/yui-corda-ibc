@@ -45,7 +45,7 @@ data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
                 .setSourceChannel(msg.sourceChannel)
                 .setDestinationPort(channel.end.counterparty.portId)
                 .setDestinationChannel(channel.end.counterparty.channelId)
-                .setData(data.toByteString())
+                .setData(data.toJson())
                 .setTimeoutHeight(msg.timeoutHeight)
                 .setTimeoutTimestamp(msg.timeoutTimestamp)
                 .build()
