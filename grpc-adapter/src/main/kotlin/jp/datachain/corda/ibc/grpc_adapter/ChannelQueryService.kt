@@ -7,6 +7,7 @@ import ibc.core.channel.v1.QueryOuterClass
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.toProof
+import jp.datachain.corda.ibc.ics20.toJson
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
 import net.corda.core.contracts.StateRef
@@ -110,7 +111,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
         assert(stateAndRef.state.data.portId.id == request.portId)
         val proof = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!.toProof()
         val reply = QueryOuterClass.QueryPacketAcknowledgementResponse.newBuilder()
-                .setAcknowledgement(stateAndRef.state.data.acknowledgements[request.sequence]!!.toByteString())
+                .setAcknowledgement(stateAndRef.state.data.acknowledgements[request.sequence]!!.toJson())
                 .setProof(proof.toByteString())
                 .setProofHeight(HEIGHT)
                 .build()
@@ -135,7 +136,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
                             .setPortId(request.portId)
                             .setChannelId(request.channelId)
                             .setSequence(it.first)
-                            .setData(it.second.toByteString())
+                            .setData(it.second.toJson())
                             .build()
                 }
         val reply = QueryOuterClass.QueryPacketAcknowledgementsResponse.newBuilder()
