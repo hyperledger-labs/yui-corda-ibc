@@ -38,6 +38,9 @@ prepareHostB:
 	./gradlew :grpc-adapter:runClient --args "createHost localhost:19999 `cat base-hash-b.txt`"
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
 
+allocateForRelayerTest:
+	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:9999 `cat base-hash-a.txt` cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a"
+
 startServerA:
 	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
 	sleep 10
