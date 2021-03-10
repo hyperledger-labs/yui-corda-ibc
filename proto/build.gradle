@@ -32,6 +32,7 @@ sourceSets {
             srcDir rootProject.file('external/cosmos-sdk/proto')
             srcDir rootProject.file('external/cosmos-sdk/third_party/proto')
             srcDir rootProject.file('external/fabric-ibc/proto')
+            srcDir rootProject.file('external/fabric-ibc-lightclientd/proto')
         }
         java {
             srcDirs 'build/generated/source/proto/main/grpc'
