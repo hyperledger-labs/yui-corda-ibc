@@ -4,3 +4,6 @@
 [submodule "external/fabric-ibc"]
 	path = external/fabric-ibc
 	url = https://github.com/datachainlab/fabric-ibc
+[submodule "external/fabric-ibc-lightclientd"]
+	path = external/fabric-ibc-lightclientd
+	url = https://github.com/datachainlab/fabric-ibc-lightclientd.git
