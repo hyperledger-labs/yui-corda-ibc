@@ -1,0 +1,187 @@
+syntax = "proto3";
+package ibc.lightclientd.corda.v1;
+
+import "ibc/core/client/v1/client.proto";
+import "ibc/core/connection/v1/connection.proto";
+import "ibc/core/channel/v1/channel.proto";
+import "ibc/core/commitment/v1/commitment.proto";
+import "ibc/lightclients/corda/v1/corda.proto";
+import "confio/proofs.proto";
+import "google/protobuf/empty.proto";
+
+// State
+message State {
+  ibc.lightclients.corda.v1.ClientState client_state = 1;
+  ibc.lightclients.corda.v1.ConsensusState consensus_state = 2;
+}
+
+service LightClient {
+  rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
+  rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
+  rpc IsFrozen(IsFrozenRequest) returns (IsFrozenResponse);
+  rpc GetFrozenHeight(GetFrozenHeightRequest) returns (GetFrozenHeightResponse);
+  rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
+  rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
+  //rpc CheckHeaderAndUpdateState(CheckHeaderAndUpdateStateRequest) returns (CheckHeaderAndUpdateStateResponse);
+  //rpc CheckMisbehaviourAndUpdateState(CheckMisbehaviourAndUpdateStateRequest) returns (CheckMisbehaviourAndUpdateStateResponse);
+  //rpc CheckProposedHeaderAndUpdateState(CheckProposedHeaderAndUpdateStateRequest) returns (CheckProposedHeaderAndUpdateStateResponse);
+  rpc VerifyUpgrade(VerifyUpgradeRequest) returns (google.protobuf.Empty);
+  rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
+  rpc VerifyClientState(VerifyClientStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyClientConsensusState(VerifyClientConsensusStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyConnectionState(VerifyConnectionStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyChannelState(VerifyChannelStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyPacketCommitment(VerifyPacketCommitmentRequest) returns (google.protobuf.Empty);
+  rpc VerifyPacketAcknowledgement(VerifyPacketAcknowledgementRequest) returns (google.protobuf.Empty);
+  rpc VerifyPacketReceiptAbsence(VerifyPacketReceiptAbsenceRequest) returns (google.protobuf.Empty);
+  rpc VerifyNextSequenceRecv(VerifyNextSequenceRecvRequest) returns (google.protobuf.Empty);
+}
+
+// rpc ClientType
+message ClientTypeRequest {
+  State state = 1;
+}
+message ClientTypeResponse {
+  string client_type = 1;
+}
+
+// rpc GetLatestHeight
+message GetLatestHeightRequest {
+  State state = 1;
+}
+message GetLatestHeightResponse {
+  ibc.core.client.v1.Height height = 1;
+}
+
+// rpc IsFrozen
+message IsFrozenRequest {
+  State state = 1;
+}
+message IsFrozenResponse {
+  bool is_frozen = 1;
+}
+
+// rpc GetFrozenHeight
+message GetFrozenHeightRequest {
+  State state = 1;
+}
+message GetFrozenHeightResponse {
+  ibc.core.client.v1.Height height = 1;
+}
+
+// rpc Validate
+message ValidateRequest {
+  State state = 1;
+}
+
+// rpc GetProofSpecs
+message GetProofSpecsRequest {
+  State state = 1;
+}
+message GetProofSpecsResponse {
+  repeated ics23.ProofSpec proof_specs = 1;
+}
+
+// rpc VerifyUpgrade
+message VerifyUpgradeRequest {
+  State state = 1;
+  ibc.lightclients.corda.v1.ClientState new_client = 2;
+  ibc.core.client.v1.Height upgrade_height = 3;
+  bytes proof_upgrade = 4;
+}
+
+// rpc ZeroCustomFields
+message ZeroCustomFieldsRequest {
+  State state = 1;
+}
+message ZeroCustomFieldsResponse {
+  ibc.lightclients.corda.v1.ClientState client_state = 1;
+}
+
+// rpc VerifyClientState
+message VerifyClientStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  string counterparty_client_identifier = 4;
+  bytes proof = 5;
+  ibc.lightclients.corda.v1.ClientState client_state = 6;
+}
+
+// rpc VerifyClientConsensusState
+message VerifyClientConsensusStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  string counterparty_client_identifier = 3;
+  ibc.core.client.v1.Height consensus_height = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  ibc.lightclients.corda.v1.ConsensusState consensus_state = 7;
+}
+
+// rpc VerifyConnectionState
+message VerifyConnectionStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string connection_id = 5;
+  ibc.core.connection.v1.ConnectionEnd connection_end = 6;
+}
+
+// rpc VerifyChannelState
+message VerifyChannelStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  ibc.core.channel.v1.Channel channel = 7;
+}
+
+// rpc VerifyPacketCommitment
+message VerifyPacketCommitmentRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  uint64 sequence = 7;
+  bytes commitment_bytes = 8;
+}
+
+// rpc VerifyPacketAcknowledgement
+message VerifyPacketAcknowledgementRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  uint64 sequence = 7;
+  bytes acknowledgement = 8;
+}
+
+// rpc VerifyPacketReceiptAbsence
+message VerifyPacketReceiptAbsenceRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  uint64 sequence = 7;
+}
+
+// rpc VerifyNextSequenceRecv
+message VerifyNextSequenceRecvRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  uint64 next_sequence_recv = 7;
+}
