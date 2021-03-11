@@ -6,6 +6,7 @@ import ibc.core.client.v1.Client
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclients.corda.v1.Corda
+import ics23.Proofs
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics23.CommitmentProof
@@ -46,9 +47,9 @@ data class CordaClientState constructor(
     override fun clientType() = ClientType.CordaClient
     override fun getLatestHeight() = HEIGHT
     override fun isFrozen() = false
-    override fun getFrozenHeight() = throw NotImplementedError()
+    override fun getFrozenHeight(): Client.Height = throw NotImplementedError()
     override fun validate() {}
-    override fun getProofSpecs() = throw NotImplementedError()
+    override fun getProofSpecs(): List<Proofs.ProofSpec> = throw NotImplementedError()
 
     override fun checkHeaderAndUpdateState(header: Header): Pair<ClientState, ConsensusState> {
         throw NotImplementedError()

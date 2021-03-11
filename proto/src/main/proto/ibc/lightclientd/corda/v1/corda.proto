@@ -6,13 +6,15 @@ import "ibc/core/connection/v1/connection.proto";
 import "ibc/core/channel/v1/channel.proto";
 import "ibc/core/commitment/v1/commitment.proto";
 import "ibc/lightclients/corda/v1/corda.proto";
+import "ibc/lightclients/corda/v1/corda-types.proto";
 import "confio/proofs.proto";
 import "google/protobuf/empty.proto";
 
 // State
 message State {
-  ibc.lightclients.corda.v1.ClientState client_state = 1;
-  ibc.lightclients.corda.v1.ConsensusState consensus_state = 2;
+  ibc.lightclients.corda.v1.StateRef base_id = 1;
+  ibc.lightclients.corda.v1.ClientState client_state = 2;
+  ibc.lightclients.corda.v1.ConsensusState consensus_state = 3;
 }
 
 service LightClient {
