@@ -15,7 +15,6 @@ import ibc.lightclients.tendermint.v1.Tendermint
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.clients.fabric.FabricClientState
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -33,8 +32,9 @@ object Handler {
 
         when {
             msg.clientState.`is`(Corda.ClientState::class.java) -> {
+                val clientState = msg.clientState.unpack(Corda.ClientState::class.java)!!
                 val consensusState = msg.consensusState.unpack(Corda.ConsensusState::class.java)!!
-                ctx.addOutput(CordaClientState(prevHost, clientId, CordaConsensusState(consensusState)))
+                ctx.addOutput(CordaClientState(prevHost, clientId, clientState, consensusState))
             }
             msg.clientState.`is`(Fabric.ClientState::class.java) -> {
                 val clientState = msg.clientState.unpack(Fabric.ClientState::class.java)!!

@@ -5,7 +5,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/t
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
 
-message ClientState {}
+message ClientState {
+  string id = 1;
+}
 
 message ConsensusState {
   StateRef base_id = 1;
