@@ -21,6 +21,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java-util
     compile group: 'com.google.protobuf', name: 'protobuf-java-util', version: "$protobuf_version"
 
+    compile group: 'io.grpc', name: 'grpc-netty-shaded', version: "$grpc_version"
+
     // Corda dependencies.
     cordaCompile "$corda_core_release_group:corda-core:$corda_core_release_version"
 
