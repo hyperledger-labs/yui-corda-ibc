@@ -16,6 +16,7 @@ import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.fabric.FabricClientState
+import jp.datachain.corda.ibc.ics20.toCommitment
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
@@ -544,7 +545,7 @@ object Handler {
                 Identifier(packet.sourcePort),
                 Identifier(packet.sourceChannel),
                 packet.sequence,
-                packet.toByteArray())
+                packet.toCommitment())
 
         chan = chan.copy(acknowledgements = chan.acknowledgements + mapOf(packet.sequence to acknowledgement))
 

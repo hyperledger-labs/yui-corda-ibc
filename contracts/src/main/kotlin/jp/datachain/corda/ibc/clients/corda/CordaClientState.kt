@@ -9,6 +9,7 @@ import ibc.lightclients.corda.v1.Corda
 import ics23.Proofs
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.*
+import jp.datachain.corda.ibc.ics20.toCommitment
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -20,6 +21,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationFactory
+import java.util.*
 
 @BelongsToContract(Ibc::class)
 data class CordaClientState constructor(
@@ -208,8 +210,7 @@ data class CordaClientState constructor(
         require(includedState.portId == portID){"unmatched port id: ${includedState.portId} != $portID"}
         require(includedState.id == channelID){"unmatched channel id: ${includedState.id} != $channelID"}
         val includedPacket = includedState.packets[sequence]!!
-        val packet = ChannelOuterClass.Packet.parseFrom(commitmentBytes)
-        require(includedPacket == packet){"unmatched packet: $includedPacket != $packet"}
+        require(includedPacket.toCommitment().contentEquals(commitmentBytes)){"unmatched packet: ${includedPacket.toCommitment()} != $commitmentBytes"}
     }
 
     override fun verifyPacketAcknowledgement(

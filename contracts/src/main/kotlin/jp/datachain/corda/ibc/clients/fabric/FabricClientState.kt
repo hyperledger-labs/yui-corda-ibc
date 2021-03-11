@@ -161,7 +161,7 @@ data class FabricClientState constructor(
             .setPrefix(prefix)
             .setCounterpartyClientIdentifier(counterpartyClientIdentifier.id)
             .setProof(proof.toByteString())
-            .setClientState((clientState as FabricClientState).fabricClientState)
+            .setClientState(clientState.clientState)
             .build()
         it.verifyClientState(req)
         Unit
@@ -183,7 +183,7 @@ data class FabricClientState constructor(
             .setConsensusHeight(consensusHeight)
             .setPrefix(prefix)
             .setProof(proof.toByteString())
-            .setConsensusState((consensusState as FabricConsensusState).fabricConsensusState)
+            .setConsensusState(consensusState.consensusState)
             .build()
         it.verifyClientConsensusState(req)
         Unit
