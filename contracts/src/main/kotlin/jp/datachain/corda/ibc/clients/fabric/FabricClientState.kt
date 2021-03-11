@@ -20,23 +20,31 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 
 @BelongsToContract(Ibc::class)
-data class FabricClientState private constructor(
-        override val participants: List<AbstractParty>,
-        override val baseId: StateRef,
-        val fabricClientState: Fabric.ClientState,
-        override val consensusStates: Map<Client.Height, FabricConsensusState>
+data class FabricClientState constructor(
+    override val participants: List<AbstractParty>,
+    override val baseId: StateRef,
+    val fabricClientState: Fabric.ClientState,
+    val fabricConsensusStates: Map<Long, Fabric.ConsensusState>
 ) : ClientState {
     override val id get() = Identifier(fabricClientState.id)
     override val clientState get() = Any.pack(fabricClientState, "")!!
+    override val consensusStates get() = fabricConsensusStates
+        .mapKeys { e ->
+            Client.Height.newBuilder()
+                .setVersionNumber(0)
+                .setVersionHeight(e.key)
+                .build()
+        }
+        .mapValues { e ->
+            FabricConsensusState(e.value)
+        }
 
     constructor(host: Host, id: Identifier, fabricClientState: Fabric.ClientState, fabricConsensusState: Fabric.ConsensusState) : this(
         host.participants,
         host.baseId,
         fabricClientState,
-        mapOf(Client.Height.newBuilder()
-            .setVersionNumber(0)
-            .setVersionHeight(fabricClientState.lastChaincodeHeader.sequence.value)
-            .build() to FabricConsensusState(fabricConsensusState))) {
+        mapOf(fabricClientState.lastChaincodeHeader.sequence.value to fabricConsensusState)
+    ) {
         require(id.id == fabricClientState.id)
     }
 
@@ -118,16 +126,7 @@ data class FabricClientState private constructor(
             val state = it.checkHeaderAndUpdateState(req).state
             val newClientState = this.copy(
                 fabricClientState = state.clientState,
-                consensusStates = state.consensusStatesMap
-                    .mapKeys { e ->
-                        Client.Height.newBuilder()
-                            .setVersionNumber(0)
-                            .setVersionHeight(e.key)
-                            .build()
-                    }
-                    .mapValues { e ->
-                        FabricConsensusState(e.value)
-                    }
+                fabricConsensusStates = state.consensusStatesMap
             )
             val newConsensusState = newClientState.consensusStates[newClientState.getLatestHeight()]!!
             Pair(newClientState, newConsensusState)

@@ -21,20 +21,27 @@ import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationFactory
 
 @BelongsToContract(Ibc::class)
-data class CordaClientState private constructor(
-        override val participants: List<AbstractParty>,
-        override val baseId: StateRef,
-        override val id: Identifier,
-        val counterpartyConsensusState: CordaConsensusState
+data class CordaClientState constructor(
+    override val participants: List<AbstractParty>,
+    override val baseId: StateRef,
+    val cordaClientState: Corda.ClientState,
+    val cordaConsensusState: Corda.ConsensusState
 ) : ClientState {
+    override val id get() = Identifier(cordaClientState.id)
     override val clientState get() = Any.pack(Corda.ClientState.getDefaultInstance()!!, "")!!
-    override val consensusStates get() = mapOf(HEIGHT to counterpartyConsensusState)
+    override val consensusStates get() = mapOf(HEIGHT to CordaConsensusState(cordaConsensusState))
 
-    constructor(host: Host, id: Identifier, counterpartyConsensusState: CordaConsensusState)
-            : this(host.participants, host.baseId, id, counterpartyConsensusState)
+    constructor(host: Host, id: Identifier, cordaClientState: Corda.ClientState, cordaConsensusState: Corda.ConsensusState) : this(
+        host.participants,
+        host.baseId,
+        cordaClientState,
+        cordaConsensusState
+    ) {
+        require(id.id == cordaClientState.id)
+    }
 
-    private val counterpartyBaseId get() = counterpartyConsensusState.baseId
-    private val counterpartyNotaryKey = counterpartyConsensusState.notaryKey
+    private val counterpartyBaseId get() = CordaConsensusState(cordaConsensusState).baseId
+    private val counterpartyNotaryKey = CordaConsensusState(cordaConsensusState).notaryKey
 
     override fun clientType() = ClientType.CordaClient
     override fun getLatestHeight() = HEIGHT
@@ -146,7 +153,7 @@ data class CordaClientState private constructor(
         val includedState = extractState<CordaClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched consensus base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched consensus id: ${includedState.id} != $counterpartyClientIdentifier"}
-        require(includedState.counterpartyConsensusState == consensusState){"unmatched consensus state: ${includedState.counterpartyConsensusState} != $consensusState"}
+        require(CordaConsensusState(includedState.cordaConsensusState) == consensusState){"unmatched consensus state: ${includedState.cordaConsensusState} != $consensusState"}
     }
 
     override fun verifyConnectionState(
