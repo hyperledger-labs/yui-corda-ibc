@@ -9,6 +9,7 @@ import "ibc/lightclients/corda/v1/corda.proto";
 import "ibc/lightclients/corda/v1/corda-types.proto";
 import "confio/proofs.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
 
 // State
 message State {
@@ -107,7 +108,7 @@ message VerifyClientStateRequest {
   ibc.core.commitment.v1.MerklePrefix prefix = 3;
   string counterparty_client_identifier = 4;
   bytes proof = 5;
-  ibc.lightclients.corda.v1.ClientState client_state = 6;
+  google.protobuf.Any client_state = 6;
 }
 
 // rpc VerifyClientConsensusState
@@ -118,7 +119,7 @@ message VerifyClientConsensusStateRequest {
   ibc.core.client.v1.Height consensus_height = 4;
   ibc.core.commitment.v1.MerklePrefix prefix = 5;
   bytes proof = 6;
-  ibc.lightclients.corda.v1.ConsensusState consensus_state = 7;
+  google.protobuf.Any consensus_state = 7;
 }
 
 // rpc VerifyConnectionState
