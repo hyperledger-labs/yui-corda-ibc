@@ -3,9 +3,10 @@ package jp.datachain.corda.ibc.lightclientd
 import com.google.protobuf.Empty
 import ibc.lightclientd.corda.v1.Corda
 import ibc.lightclientd.corda.v1.LightClientGrpc
+import ibc.lightclients.fabric.v1.Fabric
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
+import jp.datachain.corda.ibc.clients.fabric.FabricConsensusState
 import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toAcknowledgement
@@ -93,13 +94,15 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
         request: Corda.VerifyClientConsensusStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
+        // TODO: make this more flexible
+        assert(request.consensusState.`is`(Fabric.ConsensusState::class.java))
         it.verifyClientConsensusState(
             request.height,
             Identifier(request.counterpartyClientIdentifier),
             request.consensusHeight,
             request.prefix,
             CommitmentProof(request.proof),
-            CordaConsensusState(request.consensusState)
+            FabricConsensusState(request.consensusState.unpack(Fabric.ConsensusState::class.java))
         )
         responseObserver.onNext(Empty.getDefaultInstance())
         responseObserver.onCompleted()
