@@ -23,21 +23,22 @@ import net.corda.core.identity.AbstractParty
 data class FabricClientState private constructor(
         override val participants: List<AbstractParty>,
         override val baseId: StateRef,
-        override val id: Identifier,
         val fabricClientState: Fabric.ClientState,
         override val consensusStates: Map<Client.Height, FabricConsensusState>
 ) : ClientState {
+    override val id get() = Identifier(fabricClientState.id)
     override val clientState get() = Any.pack(fabricClientState, "")!!
 
     constructor(host: Host, id: Identifier, fabricClientState: Fabric.ClientState, fabricConsensusState: Fabric.ConsensusState) : this(
         host.participants,
         host.baseId,
-        id,
         fabricClientState,
         mapOf(Client.Height.newBuilder()
             .setVersionNumber(0)
             .setVersionHeight(fabricClientState.lastChaincodeHeader.sequence.value)
-            .build() to FabricConsensusState(fabricConsensusState)))
+            .build() to FabricConsensusState(fabricConsensusState))) {
+        require(id.id == fabricClientState.id)
+    }
 
     private fun <R> withLightClientStub(f: (lc: LightClientGrpc.LightClientBlockingStub) -> R): R {
         val channel = ManagedChannelBuilder
@@ -52,6 +53,7 @@ data class FabricClientState private constructor(
         }
     }
     private fun makeState() = ibc.lightclientd.fabric.v1.Fabric.State.newBuilder()
+        .setId(id.id)
         .setClientState(fabricClientState)
         .also { builder ->
             consensusStates.forEach{ (height, consensusState) ->
