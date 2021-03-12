@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.lightclientd
 
 import com.google.protobuf.Empty
-import ibc.lightclientd.corda.v1.Corda
+import ibc.lightclientd.corda.v1.CordaLightclientd
 import ibc.lightclientd.corda.v1.LightClientGrpc
 import ibc.lightclients.fabric.v1.Fabric
 import io.grpc.stub.StreamObserver
@@ -14,46 +14,46 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 
 class LightClient: LightClientGrpc.LightClientImplBase() {
-    private fun withClientState(state: Corda.State, f: (cs: CordaClientState) -> Unit) {
+    private fun withClientState(state: CordaLightclientd.State, f: (cs: CordaClientState) -> Unit) {
         val cs = CordaClientState(emptyList(), state.baseId.into(), state.clientState, state.consensusState)
         f(cs)
     }
 
     override fun clientType(
-        request: Corda.ClientTypeRequest,
-        responseObserver: StreamObserver<Corda.ClientTypeResponse>
+        request: CordaLightclientd.ClientTypeRequest,
+        responseObserver: StreamObserver<CordaLightclientd.ClientTypeResponse>
     ) = withClientState(request.state) {
         assert(it.clientType() == ClientType.CordaClient)
-        responseObserver.onNext(Corda.ClientTypeResponse.newBuilder().setClientType("corda").build())
+        responseObserver.onNext(CordaLightclientd.ClientTypeResponse.newBuilder().setClientType("corda").build())
         responseObserver.onCompleted()
     }
 
     override fun getLatestHeight(
-        request: Corda.GetLatestHeightRequest,
-        responseObserver: StreamObserver<Corda.GetLatestHeightResponse>
+        request: CordaLightclientd.GetLatestHeightRequest,
+        responseObserver: StreamObserver<CordaLightclientd.GetLatestHeightResponse>
     ) = withClientState(request.state) {
-        responseObserver.onNext(Corda.GetLatestHeightResponse.newBuilder().setHeight(it.getLatestHeight()).build())
+        responseObserver.onNext(CordaLightclientd.GetLatestHeightResponse.newBuilder().setHeight(it.getLatestHeight()).build())
         responseObserver.onCompleted()
     }
 
     override fun isFrozen(
-        request: Corda.IsFrozenRequest,
-        responseObserver: StreamObserver<Corda.IsFrozenResponse>
+        request: CordaLightclientd.IsFrozenRequest,
+        responseObserver: StreamObserver<CordaLightclientd.IsFrozenResponse>
     ) = withClientState(request.state) {
-        responseObserver.onNext(Corda.IsFrozenResponse.newBuilder().setIsFrozen(it.isFrozen()).build())
+        responseObserver.onNext(CordaLightclientd.IsFrozenResponse.newBuilder().setIsFrozen(it.isFrozen()).build())
         responseObserver.onCompleted()
     }
 
     override fun getFrozenHeight(
-        request: Corda.GetFrozenHeightRequest,
-        responseObserver: StreamObserver<Corda.GetFrozenHeightResponse>
+        request: CordaLightclientd.GetFrozenHeightRequest,
+        responseObserver: StreamObserver<CordaLightclientd.GetFrozenHeightResponse>
     ) = withClientState(request.state) {
-        responseObserver.onNext(Corda.GetFrozenHeightResponse.newBuilder().setHeight(it.getFrozenHeight()).build())
+        responseObserver.onNext(CordaLightclientd.GetFrozenHeightResponse.newBuilder().setHeight(it.getFrozenHeight()).build())
         responseObserver.onCompleted()
     }
 
     override fun validate(
-        request: Corda.ValidateRequest,
+        request: CordaLightclientd.ValidateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.validate()
@@ -62,36 +62,36 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun getProofSpecs(
-        request: Corda.GetProofSpecsRequest,
-        responseObserver: StreamObserver<Corda.GetProofSpecsResponse>
+        request: CordaLightclientd.GetProofSpecsRequest,
+        responseObserver: StreamObserver<CordaLightclientd.GetProofSpecsResponse>
     ) = withClientState(request.state) {
-        responseObserver.onNext(Corda.GetProofSpecsResponse.newBuilder().addAllProofSpecs(it.getProofSpecs()).build())
+        responseObserver.onNext(CordaLightclientd.GetProofSpecsResponse.newBuilder().addAllProofSpecs(it.getProofSpecs()).build())
         responseObserver.onCompleted()
     }
 
     override fun verifyUpgrade(
-        request: Corda.VerifyUpgradeRequest,
+        request: CordaLightclientd.VerifyUpgradeRequest,
         responseObserver: StreamObserver<Empty>
     ) {
         throw NotImplementedError()
     }
 
     override fun zeroCustomFields(
-        request: Corda.ZeroCustomFieldsRequest,
-        responseObserver: StreamObserver<Corda.ZeroCustomFieldsResponse>
+        request: CordaLightclientd.ZeroCustomFieldsRequest,
+        responseObserver: StreamObserver<CordaLightclientd.ZeroCustomFieldsResponse>
     ) {
         throw NotImplementedError()
     }
 
     override fun verifyClientState(
-        request: Corda.VerifyClientStateRequest,
+        request: CordaLightclientd.VerifyClientStateRequest,
         responseObserver: StreamObserver<Empty>
     ) {
         throw NotImplementedError()
     }
 
     override fun verifyClientConsensusState(
-        request: Corda.VerifyClientConsensusStateRequest,
+        request: CordaLightclientd.VerifyClientConsensusStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         // TODO: make this more flexible
@@ -109,7 +109,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyConnectionState(
-        request: Corda.VerifyConnectionStateRequest,
+        request: CordaLightclientd.VerifyConnectionStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyConnectionState(
@@ -124,7 +124,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyChannelState(
-        request: Corda.VerifyChannelStateRequest,
+        request: CordaLightclientd.VerifyChannelStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyChannelState(
@@ -140,7 +140,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyPacketCommitment(
-        request: Corda.VerifyPacketCommitmentRequest,
+        request: CordaLightclientd.VerifyPacketCommitmentRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyPacketCommitment(
@@ -157,7 +157,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyPacketAcknowledgement(
-        request: Corda.VerifyPacketAcknowledgementRequest,
+        request: CordaLightclientd.VerifyPacketAcknowledgementRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyPacketAcknowledgement(
@@ -174,7 +174,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyPacketReceiptAbsence(
-        request: Corda.VerifyPacketReceiptAbsenceRequest,
+        request: CordaLightclientd.VerifyPacketReceiptAbsenceRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyPacketReceiptAbsence(
@@ -190,7 +190,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyNextSequenceRecv(
-        request: Corda.VerifyNextSequenceRecvRequest,
+        request: CordaLightclientd.VerifyNextSequenceRecvRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyNextSequenceRecv(

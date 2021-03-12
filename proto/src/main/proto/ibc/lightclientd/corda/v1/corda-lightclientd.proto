@@ -1,6 +1,8 @@
 syntax = "proto3";
 package ibc.lightclientd.corda.v1;
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
+
 import "ibc/core/client/v1/client.proto";
 import "ibc/core/connection/v1/connection.proto";
 import "ibc/core/channel/v1/channel.proto";
