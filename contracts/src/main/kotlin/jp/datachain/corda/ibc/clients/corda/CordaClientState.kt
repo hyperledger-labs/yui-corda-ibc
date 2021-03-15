@@ -21,7 +21,6 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationFactory
-import java.util.*
 
 @BelongsToContract(Ibc::class)
 data class CordaClientState constructor(
