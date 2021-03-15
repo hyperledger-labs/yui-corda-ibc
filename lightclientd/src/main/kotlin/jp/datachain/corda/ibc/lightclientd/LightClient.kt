@@ -7,15 +7,16 @@ import ibc.lightclients.fabric.v1.Fabric
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.fabric.FabricConsensusState
-import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toAcknowledgement
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
+import net.corda.core.contracts.StateRef
+import net.corda.core.crypto.SecureHash
 
 class LightClient: LightClientGrpc.LightClientImplBase() {
     private fun withClientState(state: CordaLightclientd.State, f: (cs: CordaClientState) -> Unit) {
-        val cs = CordaClientState(emptyList(), state.baseId.into(), state.clientState, state.consensusState)
+        val cs = CordaClientState(emptyList(), StateRef(SecureHash.zeroHash, 0), state.clientState, state.consensusState)
         f(cs)
     }
 
