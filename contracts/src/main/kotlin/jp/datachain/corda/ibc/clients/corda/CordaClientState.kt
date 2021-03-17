@@ -131,7 +131,7 @@ data class CordaClientState constructor(
             prefix: Commitment.MerklePrefix,
             counterpartyClientIdentifier: Identifier,
             proof: CommitmentProof,
-            clientState: ClientState
+            clientState: Any
     ) {
         verifyHeight(height)
         verifyNotaryKey(proof)
@@ -139,7 +139,7 @@ data class CordaClientState constructor(
         val includedState = extractState<ClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched client base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched client id: ${includedState.id} != $counterpartyClientIdentifier"}
-        require(includedState == clientState){"unmatched client state: $includedState != $clientState"}
+        require(includedState.clientState == clientState){"unmatched client state: ${includedState.clientState} != $clientState"}
     }
 
     override fun verifyClientConsensusState(
@@ -148,7 +148,7 @@ data class CordaClientState constructor(
             consensusHeight: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            consensusState: ConsensusState
+            consensusState: Any
     ) {
         verifyHeight(height)
         verifyNotaryKey(proof)
@@ -156,7 +156,7 @@ data class CordaClientState constructor(
         val includedState = extractState<ClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched consensus base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched consensus id: ${includedState.id} != $counterpartyClientIdentifier"}
-        require(includedState.consensusStates[consensusHeight] == consensusState){"unmatched consensus state: ${includedState.consensusStates[consensusHeight]} != $consensusState"}
+        require(includedState.consensusStates[consensusHeight]?.consensusState == consensusState){"unmatched consensus state: ${includedState.consensusStates[consensusHeight]?.consensusState} != $consensusState"}
     }
 
     override fun verifyConnectionState(

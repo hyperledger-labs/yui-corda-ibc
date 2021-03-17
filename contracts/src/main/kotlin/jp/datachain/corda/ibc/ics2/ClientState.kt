@@ -46,7 +46,7 @@ interface ClientState : IbcState {
             prefix: Commitment.MerklePrefix,
             counterpartyClientIdentifier: Identifier,
             proof: CommitmentProof,
-            clientState: ClientState
+            clientState: Any
     )
 
     fun verifyClientConsensusState(
@@ -55,7 +55,7 @@ interface ClientState : IbcState {
             consensusHeight: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            consensusState: ConsensusState
+            consensusState: Any
     )
 
     fun verifyConnectionState(
