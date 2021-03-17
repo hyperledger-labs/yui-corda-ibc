@@ -11,10 +11,29 @@ import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toAcknowledgement
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
+import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
+import net.corda.core.utilities.NetworkHostAndPort
 
 class LightClient: LightClientGrpc.LightClientImplBase() {
+    companion object {
+        init {
+            warmUpSerialization()
+        }
+
+        private fun warmUpSerialization() {
+            // port 0 is dummy. This instance of CordaRPCClient is never used.
+            // Before using Corda's (de)serialization mechanism, one of four
+            // pre-defined serialization environments must be initialized.
+            // In the initializer block (init { ... }) of CordaRPCClient,
+            // the "node" serialization environment is initialized.
+            // Ref: https://github.com/corda/corda/blob/release/os/4.3/client/rpc/src/main/kotlin/net/corda/client/rpc/CordaRPCClient.kt#L435
+            CordaRPCClient(NetworkHostAndPort("localhost", 0))
+            println("I'm Ready!")
+        }
+    }
+
     private fun withClientState(state: CordaLightclientd.State, f: (cs: CordaClientState) -> Unit) {
         val cs = CordaClientState(emptyList(), StateRef(SecureHash.zeroHash, 0), state.clientState, state.consensusState)
         f(cs)
