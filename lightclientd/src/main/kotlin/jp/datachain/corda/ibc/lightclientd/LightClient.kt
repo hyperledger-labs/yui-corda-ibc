@@ -3,10 +3,8 @@ package jp.datachain.corda.ibc.lightclientd
 import com.google.protobuf.Empty
 import ibc.lightclientd.corda.v1.CordaLightclientd
 import ibc.lightclientd.corda.v1.LightClientGrpc
-import ibc.lightclients.fabric.v1.Fabric
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.clients.fabric.FabricConsensusState
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toAcknowledgement
 import jp.datachain.corda.ibc.ics23.CommitmentProof
@@ -106,24 +104,28 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     override fun verifyClientState(
         request: CordaLightclientd.VerifyClientStateRequest,
         responseObserver: StreamObserver<Empty>
-    ) {
-        throw NotImplementedError()
+    ) = withClientState(request.state) {
+        it.verifyClientState(
+            request.height,
+            request.prefix,
+            Identifier(request.counterpartyClientIdentifier),
+            CommitmentProof(request.proof),
+            request.clientState)
+        responseObserver.onNext(Empty.getDefaultInstance())
+        responseObserver.onCompleted()
     }
 
     override fun verifyClientConsensusState(
         request: CordaLightclientd.VerifyClientConsensusStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
-        // TODO: make this more flexible
-        assert(request.consensusState.`is`(Fabric.ConsensusState::class.java))
         it.verifyClientConsensusState(
             request.height,
             Identifier(request.counterpartyClientIdentifier),
             request.consensusHeight,
             request.prefix,
             CommitmentProof(request.proof),
-            FabricConsensusState(request.consensusState.unpack(Fabric.ConsensusState::class.java))
-        )
+            request.consensusState)
         responseObserver.onNext(Empty.getDefaultInstance())
         responseObserver.onCompleted()
     }

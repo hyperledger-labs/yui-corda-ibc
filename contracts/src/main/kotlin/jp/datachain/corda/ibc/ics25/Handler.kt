@@ -123,7 +123,7 @@ object Handler {
                 msg.consensusHeight,
                 msg.counterparty.prefix,
                 CommitmentProof(msg.proofConsensus),
-                expectedConsensusState)
+                expectedConsensusState.consensusState)
 
         val identifier = msg.desiredConnectionId
         val connectionEnd = Connection.ConnectionEnd.newBuilder()
@@ -176,7 +176,7 @@ object Handler {
                 msg.consensusHeight,
                 conn.end.counterparty.prefix,
                 CommitmentProof(msg.proofConsensus),
-                expectedConsensusState)
+                expectedConsensusState.consensusState)
 
         ctx.addOutput(conn.copy(end = conn.end.toBuilder()
                 .setState(Connection.State.STATE_OPEN)

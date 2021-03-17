@@ -8,6 +8,7 @@ import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclientd.fabric.v1.LightClientGrpc
 import ibc.lightclients.fabric.v1.Fabric
+import ics23.Proofs
 import io.grpc.ManagedChannelBuilder
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.*
@@ -79,7 +80,7 @@ data class FabricClientState constructor(
         require(res.clientType == "fabric")
         ClientType.FabricClient
     }
-    override fun getLatestHeight() = withLightClientStub {
+    override fun getLatestHeight(): Client.Height = withLightClientStub {
         val req = ibc.lightclientd.fabric.v1.Fabric.GetLatestHeightRequest
             .newBuilder()
             .setState(makeState())
@@ -93,7 +94,7 @@ data class FabricClientState constructor(
             .build()
         it.isFrozen(req).isFrozen
     }
-    override fun getFrozenHeight() = withLightClientStub {
+    override fun getFrozenHeight(): Client.Height = withLightClientStub {
         val req = ibc.lightclientd.fabric.v1.Fabric.GetFrozenHeightRequest
             .newBuilder()
             .setState(makeState())
@@ -108,7 +109,7 @@ data class FabricClientState constructor(
         it.validate(req)
         Unit
     }
-    override fun getProofSpecs() = withLightClientStub {
+    override fun getProofSpecs(): List<Proofs.ProofSpec> = withLightClientStub {
         val req = ibc.lightclientd.fabric.v1.Fabric.GetProofSpecsRequest
             .newBuilder()
             .setState(makeState())
@@ -152,7 +153,7 @@ data class FabricClientState constructor(
             prefix: Commitment.MerklePrefix,
             counterpartyClientIdentifier: Identifier,
             proof: CommitmentProof,
-            clientState: ClientState
+            clientState: Any
     ) = withLightClientStub {
         val req = ibc.lightclientd.fabric.v1.Fabric.VerifyClientStateRequest
             .newBuilder()
@@ -161,7 +162,7 @@ data class FabricClientState constructor(
             .setPrefix(prefix)
             .setCounterpartyClientIdentifier(counterpartyClientIdentifier.id)
             .setProof(proof.toByteString())
-            .setClientState(clientState.clientState)
+            .setClientState(clientState)
             .build()
         it.verifyClientState(req)
         Unit
@@ -173,7 +174,7 @@ data class FabricClientState constructor(
             consensusHeight: Client.Height,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
-            consensusState: ConsensusState
+            consensusState: Any
     ) = withLightClientStub {
         val req = ibc.lightclientd.fabric.v1.Fabric.VerifyClientConsensusStateRequest
             .newBuilder()
@@ -183,7 +184,7 @@ data class FabricClientState constructor(
             .setConsensusHeight(consensusHeight)
             .setPrefix(prefix)
             .setProof(proof.toByteString())
-            .setConsensusState(consensusState.consensusState)
+            .setConsensusState(consensusState)
             .build()
         it.verifyClientConsensusState(req)
         Unit
