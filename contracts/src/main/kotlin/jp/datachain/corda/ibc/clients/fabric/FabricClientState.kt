@@ -50,7 +50,7 @@ data class FabricClientState constructor(
 
     private fun <R> withLightClientStub(f: (lc: LightClientGrpc.LightClientBlockingStub) -> R): R {
         val channel = ManagedChannelBuilder
-            .forTarget("localhost:60000")
+            .forTarget("localhost:60001")
             .usePlaintext()
             .build()
         try {

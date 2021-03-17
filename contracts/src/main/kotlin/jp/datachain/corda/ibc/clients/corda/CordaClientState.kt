@@ -43,7 +43,7 @@ data class CordaClientState constructor(
     }
 
     private val counterpartyBaseId get() = CordaConsensusState(cordaConsensusState).baseId
-    private val counterpartyNotaryKey = CordaConsensusState(cordaConsensusState).notaryKey
+    private val counterpartyNotaryKey get() = CordaConsensusState(cordaConsensusState).notaryKey
 
     override fun clientType() = ClientType.CordaClient
     override fun getLatestHeight() = HEIGHT
@@ -94,6 +94,7 @@ data class CordaClientState constructor(
                 "AnySerializer",
                 "ChannelSerializer",
                 "ConnectionEndSerializer",
+                "CordaClientStateSerializer",
                 "CordaConsensusStateSerializer",
                 "FabricClientStateSerializer",
                 "FabricConsensusStateSerializer",
@@ -135,7 +136,7 @@ data class CordaClientState constructor(
         verifyHeight(height)
         verifyNotaryKey(proof)
 
-        val includedState = extractState<CordaClientState>(proof)
+        val includedState = extractState<ClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched client base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched client id: ${includedState.id} != $counterpartyClientIdentifier"}
         require(includedState == clientState){"unmatched client state: $includedState != $clientState"}
@@ -152,10 +153,10 @@ data class CordaClientState constructor(
         verifyHeight(height)
         verifyNotaryKey(proof)
 
-        val includedState = extractState<CordaClientState>(proof)
+        val includedState = extractState<ClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched consensus base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched consensus id: ${includedState.id} != $counterpartyClientIdentifier"}
-        require(CordaConsensusState(includedState.cordaConsensusState) == consensusState){"unmatched consensus state: ${includedState.cordaConsensusState} != $consensusState"}
+        require(includedState.consensusStates[consensusHeight] == consensusState){"unmatched consensus state: ${includedState.consensusStates[consensusHeight]} != $consensusState"}
     }
 
     override fun verifyConnectionState(

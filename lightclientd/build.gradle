@@ -5,6 +5,10 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile project(":contracts")
+
+    // Lightclientd never uses Corda RPC, but some classes in this package are
+    // utilised to initialize Corda's serialization mechanism.
+    compile "$corda_release_group:corda-rpc:$corda_release_version"
 }
 
 task runLightclientd(type: JavaExec) {
