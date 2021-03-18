@@ -13,7 +13,7 @@ deployNodes:
 
 upNodes:
 	./build/nodes/runnodes --headless
-	sleep 40
+	sleep 60
 
 downNodes:
 	-sshpass -p test ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown
@@ -40,6 +40,9 @@ prepareHostB:
 
 allocateForRelayerTest:
 	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:9999 `cat base-hash-a.txt` cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a"
+
+runServerA:
+	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`"
 
 startServerA:
 	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
