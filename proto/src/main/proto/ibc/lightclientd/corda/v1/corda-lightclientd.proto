@@ -8,7 +8,6 @@ import "ibc/core/connection/v1/connection.proto";
 import "ibc/core/channel/v1/channel.proto";
 import "ibc/core/commitment/v1/commitment.proto";
 import "ibc/lightclients/corda/v1/corda.proto";
-import "confio/proofs.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 
@@ -19,17 +18,17 @@ message State {
 }
 
 service LightClient {
-  rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
-  rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
-  rpc IsFrozen(IsFrozenRequest) returns (IsFrozenResponse);
-  rpc GetFrozenHeight(GetFrozenHeightRequest) returns (GetFrozenHeightResponse);
-  rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
-  rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
+  //rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
+  //rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
+  //rpc IsFrozen(IsFrozenRequest) returns (IsFrozenResponse);
+  //rpc GetFrozenHeight(GetFrozenHeightRequest) returns (GetFrozenHeightResponse);
+  //rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
+  //rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
   //rpc CheckHeaderAndUpdateState(CheckHeaderAndUpdateStateRequest) returns (CheckHeaderAndUpdateStateResponse);
   //rpc CheckMisbehaviourAndUpdateState(CheckMisbehaviourAndUpdateStateRequest) returns (CheckMisbehaviourAndUpdateStateResponse);
   //rpc CheckProposedHeaderAndUpdateState(CheckProposedHeaderAndUpdateStateRequest) returns (CheckProposedHeaderAndUpdateStateResponse);
-  rpc VerifyUpgrade(VerifyUpgradeRequest) returns (google.protobuf.Empty);
-  rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
+  //rpc VerifyUpgrade(VerifyUpgradeRequest) returns (google.protobuf.Empty);
+  //rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
   rpc VerifyClientState(VerifyClientStateRequest) returns (google.protobuf.Empty);
   rpc VerifyClientConsensusState(VerifyClientConsensusStateRequest) returns (google.protobuf.Empty);
   rpc VerifyConnectionState(VerifyConnectionStateRequest) returns (google.protobuf.Empty);
@@ -38,67 +37,6 @@ service LightClient {
   rpc VerifyPacketAcknowledgement(VerifyPacketAcknowledgementRequest) returns (google.protobuf.Empty);
   rpc VerifyPacketReceiptAbsence(VerifyPacketReceiptAbsenceRequest) returns (google.protobuf.Empty);
   rpc VerifyNextSequenceRecv(VerifyNextSequenceRecvRequest) returns (google.protobuf.Empty);
-}
-
-// rpc ClientType
-message ClientTypeRequest {
-  State state = 1;
-}
-message ClientTypeResponse {
-  string client_type = 1;
-}
-
-// rpc GetLatestHeight
-message GetLatestHeightRequest {
-  State state = 1;
-}
-message GetLatestHeightResponse {
-  ibc.core.client.v1.Height height = 1;
-}
-
-// rpc IsFrozen
-message IsFrozenRequest {
-  State state = 1;
-}
-message IsFrozenResponse {
-  bool is_frozen = 1;
-}
-
-// rpc GetFrozenHeight
-message GetFrozenHeightRequest {
-  State state = 1;
-}
-message GetFrozenHeightResponse {
-  ibc.core.client.v1.Height height = 1;
-}
-
-// rpc Validate
-message ValidateRequest {
-  State state = 1;
-}
-
-// rpc GetProofSpecs
-message GetProofSpecsRequest {
-  State state = 1;
-}
-message GetProofSpecsResponse {
-  repeated ics23.ProofSpec proof_specs = 1;
-}
-
-// rpc VerifyUpgrade
-message VerifyUpgradeRequest {
-  State state = 1;
-  ibc.lightclients.corda.v1.ClientState new_client = 2;
-  ibc.core.client.v1.Height upgrade_height = 3;
-  bytes proof_upgrade = 4;
-}
-
-// rpc ZeroCustomFields
-message ZeroCustomFieldsRequest {
-  State state = 1;
-}
-message ZeroCustomFieldsResponse {
-  ibc.lightclients.corda.v1.ClientState client_state = 1;
 }
 
 // rpc VerifyClientState

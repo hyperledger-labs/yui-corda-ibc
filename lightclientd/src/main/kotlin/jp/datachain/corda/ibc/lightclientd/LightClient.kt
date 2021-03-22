@@ -5,7 +5,6 @@ import ibc.lightclientd.corda.v1.CordaLightclientd
 import ibc.lightclientd.corda.v1.LightClientGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toAcknowledgement
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -35,70 +34,6 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     private fun withClientState(state: CordaLightclientd.State, f: (cs: CordaClientState) -> Unit) {
         val cs = CordaClientState(emptyList(), StateRef(SecureHash.zeroHash, 0), state.clientState, state.consensusState)
         f(cs)
-    }
-
-    override fun clientType(
-        request: CordaLightclientd.ClientTypeRequest,
-        responseObserver: StreamObserver<CordaLightclientd.ClientTypeResponse>
-    ) = withClientState(request.state) {
-        assert(it.clientType() == ClientType.CordaClient)
-        responseObserver.onNext(CordaLightclientd.ClientTypeResponse.newBuilder().setClientType("corda").build())
-        responseObserver.onCompleted()
-    }
-
-    override fun getLatestHeight(
-        request: CordaLightclientd.GetLatestHeightRequest,
-        responseObserver: StreamObserver<CordaLightclientd.GetLatestHeightResponse>
-    ) = withClientState(request.state) {
-        responseObserver.onNext(CordaLightclientd.GetLatestHeightResponse.newBuilder().setHeight(it.getLatestHeight()).build())
-        responseObserver.onCompleted()
-    }
-
-    override fun isFrozen(
-        request: CordaLightclientd.IsFrozenRequest,
-        responseObserver: StreamObserver<CordaLightclientd.IsFrozenResponse>
-    ) = withClientState(request.state) {
-        responseObserver.onNext(CordaLightclientd.IsFrozenResponse.newBuilder().setIsFrozen(it.isFrozen()).build())
-        responseObserver.onCompleted()
-    }
-
-    override fun getFrozenHeight(
-        request: CordaLightclientd.GetFrozenHeightRequest,
-        responseObserver: StreamObserver<CordaLightclientd.GetFrozenHeightResponse>
-    ) = withClientState(request.state) {
-        responseObserver.onNext(CordaLightclientd.GetFrozenHeightResponse.newBuilder().setHeight(it.getFrozenHeight()).build())
-        responseObserver.onCompleted()
-    }
-
-    override fun validate(
-        request: CordaLightclientd.ValidateRequest,
-        responseObserver: StreamObserver<Empty>
-    ) = withClientState(request.state) {
-        it.validate()
-        responseObserver.onNext(Empty.getDefaultInstance())
-        responseObserver.onCompleted()
-    }
-
-    override fun getProofSpecs(
-        request: CordaLightclientd.GetProofSpecsRequest,
-        responseObserver: StreamObserver<CordaLightclientd.GetProofSpecsResponse>
-    ) = withClientState(request.state) {
-        responseObserver.onNext(CordaLightclientd.GetProofSpecsResponse.newBuilder().addAllProofSpecs(it.getProofSpecs()).build())
-        responseObserver.onCompleted()
-    }
-
-    override fun verifyUpgrade(
-        request: CordaLightclientd.VerifyUpgradeRequest,
-        responseObserver: StreamObserver<Empty>
-    ) {
-        throw NotImplementedError()
-    }
-
-    override fun zeroCustomFields(
-        request: CordaLightclientd.ZeroCustomFieldsRequest,
-        responseObserver: StreamObserver<CordaLightclientd.ZeroCustomFieldsResponse>
-    ) {
-        throw NotImplementedError()
     }
 
     override fun verifyClientState(
