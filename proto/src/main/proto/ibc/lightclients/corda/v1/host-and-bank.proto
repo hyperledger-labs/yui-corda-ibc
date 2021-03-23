@@ -1,7 +1,7 @@
 syntax = "proto3";
 package ibc.lightclients.corda.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
+option go_package = "github.com/datachainlab/corda-ibc/go/x/ibc/light-clients/xx-corda/types";
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
 import "google/protobuf/empty.proto";
