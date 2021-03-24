@@ -50,5 +50,8 @@ pub mod tendermint {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let mut height = ibc::core::client::v1::Height::default();
+    height.version_number = 0;
+    height.version_height = 1;
+    println!("height: {:?}", height);
 }
