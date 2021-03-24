@@ -30,5 +30,8 @@ fn main() -> io::Result<()> {
     }
     println!("{:?}", include_paths);
     println!("{:?}", proto_paths);
-    prost_build::compile_protos(&proto_paths, &include_paths)
+    tonic_build::configure()
+        .build_client(true)
+        .build_server(false)
+        .compile(&proto_paths, &include_paths)
 }
