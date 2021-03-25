@@ -4,15 +4,16 @@ package ibc.lightclients.corda.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
+import "google/protobuf/empty.proto";
 
 service NodeService {
   rpc PartiesFromName (PartiesFromNameRequest) returns (PartiesFromNameResponse);
 }
 
 service IbcService {
-  rpc CreateGenesis (CreateGenesisRequest) returns (SignedTransaction);
-  rpc CreateHostAndBank (StateRef) returns (SignedTransaction);
-  rpc AllocateFund (AllocateFundRequest) returns (SignedTransaction);
+  rpc CreateGenesis (CreateGenesisRequest) returns (CreateGenesisResponse);
+  rpc CreateHostAndBank (CreateHostAndBankRequest) returns (google.protobuf.Empty);
+  rpc AllocateFund (AllocateFundRequest) returns (google.protobuf.Empty);
 }
 
 message PartiesFromNameRequest {
@@ -26,6 +27,10 @@ message PartiesFromNameResponse {
 
 message CreateGenesisRequest {
   repeated Party participants = 1;
+}
+
+message CreateGenesisResponse {
+  StateRef base_id = 1;
 }
 
 message CreateHostAndBankRequest {

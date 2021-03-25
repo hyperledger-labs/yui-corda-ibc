@@ -12,12 +12,8 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.SignatureMetadata
-import net.corda.core.crypto.TransactionSignature
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.serialization.SerializedBytes
-import net.corda.core.transactions.SignedTransaction
 import java.security.PublicKey
 
 fun SecureHash.into(): CordaTypes.SecureHash = CordaTypes.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
@@ -120,29 +116,3 @@ fun Query.Bank.into() = Bank(
         locked = locked.into(),
         minted = minted.into(),
         denoms = denoms.into())
-
-fun SignatureMetadata.into(): CordaTypes.SignatureMetadata = CordaTypes.SignatureMetadata.newBuilder()
-        .setPlatformVersion(platformVersion)
-        .setSchemeNumberId(schemeNumberID)
-        .build()
-fun CordaTypes.SignatureMetadata.into() = SignatureMetadata(
-        platformVersion = platformVersion,
-        schemeNumberID = schemeNumberId)
-
-fun TransactionSignature.into(): CordaTypes.TransactionSignature = CordaTypes.TransactionSignature.newBuilder()
-        .setBytes(ByteString.copyFrom(bytes))
-        .setBy(by.into())
-        .setSignatureMetadata(signatureMetadata.into())
-        .build()
-fun CordaTypes.TransactionSignature.into() = TransactionSignature(
-        bytes = bytes.toByteArray(),
-        by = by.into(),
-        signatureMetadata = signatureMetadata.into())
-
-fun SignedTransaction.into(): CordaTypes.SignedTransaction = CordaTypes.SignedTransaction.newBuilder()
-        .setTxBits(ByteString.copyFrom(txBits.bytes))
-        .addAllSigs(sigs.map{it.into()})
-        .build()
-fun CordaTypes.SignedTransaction.into() = SignedTransaction(
-        txBits = SerializedBytes(txBits.toByteArray()),
-        sigs = sigsList.map{it.into()})
