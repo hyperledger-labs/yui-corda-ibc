@@ -2,6 +2,8 @@ mod admin;
 mod admin_command;
 mod client;
 mod client_command;
+mod connection;
+mod connection_command;
 mod generated;
 mod genesis;
 mod genesis_command;
@@ -20,6 +22,7 @@ enum Opt {
     Genesis(genesis_command::Opt),
     HostBank(host_and_bank_command::Opt),
     Client(client_command::Opt),
+    Connection(connection_command::Opt),
 }
 
 #[tokio::main]
@@ -29,6 +32,7 @@ async fn main() -> Result<()> {
         Opt::Genesis(opt) => genesis_command::execute(opt).await?,
         Opt::HostBank(opt) => host_and_bank_command::execute(opt).await?,
         Opt::Client(opt) => client_command::execute(opt).await?,
+        Opt::Connection(opt) => connection_command::execute(opt).await?,
     }
     Ok(())
 }
