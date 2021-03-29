@@ -12,7 +12,7 @@ pub enum Opt {
 
 pub async fn execute(opt: Opt) -> Result<()> {
     match opt {
-        Opt::Shutdown { endpoint } => admin::shutdown(&endpoint).await?,
+        Opt::Shutdown { endpoint } => admin::shutdown(endpoint).await?,
     }
     Ok(())
 }

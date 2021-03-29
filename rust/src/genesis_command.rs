@@ -18,7 +18,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
         Opt::CreateGenesis {
             endpoint,
             party_name,
-        } => genesis::create_genesis(&endpoint, &party_name).await?,
+        } => genesis::create_genesis(endpoint, party_name).await?,
     }
     Ok(())
 }
