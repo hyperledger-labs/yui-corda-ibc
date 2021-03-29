@@ -1,9 +1,7 @@
 use super::generated::ibc;
 use super::Result;
-
 use ibc::core::commitment::v1 as v1commitment;
 use ibc::lightclients::corda::v1 as v1corda;
-
 use prost_types::Any;
 
 pub fn hex_to_base_id(hex: &str) -> Result<v1corda::StateRef> {
