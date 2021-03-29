@@ -27,11 +27,11 @@ pub fn hex_to_prefix(hex: &str) -> Result<v1commitment::MerklePrefix> {
     })
 }
 
-pub fn pack_any(type_url: &str, msg: &impl prost::Message) -> Result<Any> {
+pub fn pack_any(type_url: String, msg: &impl prost::Message) -> Result<Any> {
     let mut buf = Vec::default();
     msg.encode(&mut buf)?;
     Ok(Any {
-        type_url: type_url.to_owned(),
+        type_url,
         value: buf.into(),
     })
 }

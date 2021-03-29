@@ -51,10 +51,10 @@ pub async fn execute(opt: Opt) -> Result<()> {
             counterparty_notary_key,
         } => {
             client::create_corda_client(
-                &endpoint,
-                &client_id,
-                &counterparty_base_hash,
-                &counterparty_notary_key,
+                endpoint,
+                client_id,
+                counterparty_base_hash,
+                counterparty_notary_key,
             )
             .await?;
         }
@@ -62,7 +62,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
             endpoint,
             client_id,
         } => {
-            let response = client::query_client_state(&endpoint, &client_id).await?;
+            let response = client::query_client_state(endpoint, client_id).await?;
             println!("{:?}", response);
         }
         Opt::QueryConsensusState {
@@ -73,8 +73,8 @@ pub async fn execute(opt: Opt) -> Result<()> {
             latest_height,
         } => {
             let response = client::query_consensus_state(
-                &endpoint,
-                &client_id,
+                endpoint,
+                client_id,
                 version_number,
                 version_height,
                 latest_height,

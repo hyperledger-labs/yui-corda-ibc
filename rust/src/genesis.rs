@@ -3,15 +3,15 @@ use super::Result;
 
 use ibc::lightclients::corda::v1 as ibc_corda;
 
-pub async fn create_genesis(endpoint: &str, party_name: &str) -> Result<()> {
+pub async fn create_genesis(endpoint: String, party_name: String) -> Result<()> {
     let participants = {
         let mut client =
-            ibc_corda::node_service_client::NodeServiceClient::connect(endpoint.to_owned()).await?;
+            ibc_corda::node_service_client::NodeServiceClient::connect(endpoint.clone()).await?;
         let mut participants = vec![];
-        for &name in ["Notary", party_name].iter() {
+        for name in vec![String::from("Notary"), party_name] {
             let mut parties = client
                 .parties_from_name(ibc_corda::PartiesFromNameRequest {
-                    name: name.to_owned(),
+                    name,
                     exact_match: false,
                 })
                 .await?
@@ -25,8 +25,7 @@ pub async fn create_genesis(endpoint: &str, party_name: &str) -> Result<()> {
 
     let base_id = {
         let mut client =
-            ibc_corda::genesis_service_client::GenesisServiceClient::connect(endpoint.to_owned())
-                .await?;
+            ibc_corda::genesis_service_client::GenesisServiceClient::connect(endpoint).await?;
         client
             .create_genesis(ibc_corda::CreateGenesisRequest { participants })
             .await?

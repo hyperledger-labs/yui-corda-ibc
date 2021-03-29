@@ -34,14 +34,14 @@ pub enum Opt {
 pub async fn execute(opt: Opt) -> Result<()> {
     match opt {
         Opt::CreateHostAndBank { endpoint } => {
-            host_and_bank::create_host_and_bank(&endpoint).await?
+            host_and_bank::create_host_and_bank(endpoint).await?
         }
         Opt::QueryHost { endpoint } => {
-            let host = host_and_bank::query_host(&endpoint).await?;
+            let host = host_and_bank::query_host(endpoint).await?;
             println!("{:?}", host);
         }
         Opt::QueryBank { endpoint } => {
-            let bank = host_and_bank::query_bank(&endpoint).await?;
+            let bank = host_and_bank::query_bank(endpoint).await?;
             println!("{:?}", bank);
         }
         Opt::AllocateFund {
@@ -49,7 +49,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
             party_name,
             denom,
             amount,
-        } => host_and_bank::allocate_fund(&endpoint, &party_name, &denom, &amount).await?,
+        } => host_and_bank::allocate_fund(endpoint, party_name, denom, amount).await?,
     }
     Ok(())
 }
