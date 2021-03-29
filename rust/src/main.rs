@@ -1,6 +1,7 @@
 mod admin;
 mod client;
 mod generated;
+mod genesis;
 mod host_and_bank;
 mod util;
 
@@ -25,9 +26,6 @@ enum Opt {
     CreateHostAndBank {
         #[structopt(short, long, default_value = "http://localhost:9999")]
         endpoint: String,
-
-        #[structopt(short, long)]
-        base_hash: String,
     },
     QueryHost {
         #[structopt(short, long, default_value = "http://localhost:9999")]
@@ -40,9 +38,6 @@ enum Opt {
     AllocateFund {
         #[structopt(short, long, default_value = "http://localhost:9999")]
         endpoint: String,
-
-        #[structopt(short, long)]
-        base_hash: String,
 
         #[structopt(short, long, default_value = "PartyA")]
         party_name: String,
@@ -75,11 +70,10 @@ async fn main() -> Result<()> {
         Opt::CreateGenesis {
             endpoint,
             party_name,
-        } => host_and_bank::create_genesis(&endpoint, &party_name).await?,
-        Opt::CreateHostAndBank {
-            endpoint,
-            base_hash,
-        } => host_and_bank::create_host_and_bank(&endpoint, &base_hash).await?,
+        } => genesis::create_genesis(&endpoint, &party_name).await?,
+        Opt::CreateHostAndBank { endpoint } => {
+            host_and_bank::create_host_and_bank(&endpoint).await?
+        }
         Opt::QueryHost { endpoint } => {
             let host = host_and_bank::query_host(&endpoint).await?;
             println!("{:?}", host);
@@ -90,14 +84,10 @@ async fn main() -> Result<()> {
         }
         Opt::AllocateFund {
             endpoint,
-            base_hash,
             party_name,
             denom,
             amount,
-        } => {
-            host_and_bank::allocate_fund(&endpoint, &base_hash, &party_name, &denom, &amount)
-                .await?
-        }
+        } => host_and_bank::allocate_fund(&endpoint, &party_name, &denom, &amount).await?,
         Opt::CreateCordaClient {
             endpoint,
             client_id,
