@@ -27,19 +27,25 @@ prepareHostA:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10006 user1 test 9999' &
 	sleep 20
 	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:9999 PartyA base-hash-a.txt'
-	./gradlew :grpc-adapter:runClient --args "createHost localhost:9999 `cat base-hash-a.txt`"
-	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:9999 `cat base-hash-a.txt` PartyA"
+	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:9999'
+	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
+	sleep 20
+	./gradlew :grpc-adapter:runClient --args 'createHost localhost:9999'
+	./gradlew :grpc-adapter:runClient --args 'allocateFund localhost:9999 PartyA'
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:9999'
 
 prepareHostB:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10009 user1 test 19999' &
 	sleep 20
 	./gradlew :grpc-adapter:runClient --args 'createGenesis localhost:19999 PartyB base-hash-b.txt'
+	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
+	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-hash-b.txt`" &
+	sleep 20
 	./gradlew :grpc-adapter:runClient --args "createHost localhost:19999 `cat base-hash-b.txt`"
 	./gradlew :grpc-adapter:runClient --args 'shutdown localhost:19999'
 
 allocateForRelayerTest:
-	./gradlew :grpc-adapter:runClient --args "allocateFund localhost:9999 `cat base-hash-a.txt` cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a"
+	./gradlew :grpc-adapter:runClient --args 'allocateFund localhost:9999 cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a'
 
 runServerA:
 	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`"

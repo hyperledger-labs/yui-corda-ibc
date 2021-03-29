@@ -21,15 +21,16 @@ object Server {
         serverBuilder.addService(adminService)
 
         val opsReadyServices = mutableListOf<CordaRPCOpsReady>()
-        opsReadyServices += CordaNodeService(hostname, port, username, password)
-        opsReadyServices += CordaIbcService(hostname, port, username, password)
+        opsReadyServices += NodeService(hostname, port, username, password)
+        opsReadyServices += GenesisService(hostname, port, username, password)
         baseId?.let{
+            opsReadyServices += HostAndBankService(hostname, port, username, password, it)
+
             opsReadyServices += ClientTxService(hostname, port, username, password, it)
             opsReadyServices += ConnectionTxService(hostname, port, username, password, it)
             opsReadyServices += ChannelTxService(hostname, port, username, password, it)
             opsReadyServices += TransferTxService(hostname, port, username, password, it)
 
-            opsReadyServices += HostAndBankQueryService(hostname, port, username, password, it)
             opsReadyServices += ClientQueryService(hostname, port, username, password, it)
             opsReadyServices += ConnectionQueryService(hostname, port, username, password, it)
             opsReadyServices += ChannelQueryService(hostname, port, username, password, it)
