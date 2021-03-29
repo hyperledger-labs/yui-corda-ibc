@@ -23,13 +23,14 @@ fn main() -> io::Result<()> {
         "../external/cosmos-sdk/proto",
         "../external/cosmos-sdk/third_party/proto",
     ];
+    include_paths.iter().for_each(|path| {
+        println!("cargo:rerun-if-changed={}", path);
+    });
     let include_paths: Vec<PathBuf> = include_paths.iter().map(Into::into).collect();
     let mut proto_paths = vec![];
     for path in include_paths.iter() {
         proto_paths.append(&mut find_protos(path)?);
     }
-    println!("{:?}", include_paths);
-    println!("{:?}", proto_paths);
     tonic_build::configure()
         .build_client(true)
         .build_server(false)
