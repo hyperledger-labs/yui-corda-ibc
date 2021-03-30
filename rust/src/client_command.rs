@@ -4,18 +4,18 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 pub enum Opt {
-    CreateCordaClient {
-        #[structopt(short, long, default_value = "http://localhost:9999")]
-        endpoint: String,
+    CreateClients {
+        #[structopt(long, default_value = "http://localhost:9999")]
+        endpoint_a: String,
 
-        #[structopt(short, long)]
-        client_id: String,
+        #[structopt(long, default_value = "http://localhost:19999")]
+        endpoint_b: String,
 
-        #[structopt(short = "b", long)]
-        counterparty_base_hash: String,
+        #[structopt(long)]
+        client_id_a: String,
 
-        #[structopt(short = "n", long)]
-        counterparty_notary_key: String,
+        #[structopt(long)]
+        client_id_b: String,
     },
     QueryClientState {
         #[structopt(short, long, default_value = "http://localhost:9999")]
@@ -44,19 +44,13 @@ pub enum Opt {
 
 pub async fn execute(opt: Opt) -> Result<()> {
     match opt {
-        Opt::CreateCordaClient {
-            endpoint,
-            client_id,
-            counterparty_base_hash,
-            counterparty_notary_key,
+        Opt::CreateClients {
+            endpoint_a,
+            endpoint_b,
+            client_id_a,
+            client_id_b,
         } => {
-            client::create_corda_client(
-                endpoint,
-                client_id,
-                counterparty_base_hash,
-                counterparty_notary_key,
-            )
-            .await?;
+            client::create_clients(endpoint_a, endpoint_b, client_id_a, client_id_b).await?;
         }
         Opt::QueryClientState {
             endpoint,
