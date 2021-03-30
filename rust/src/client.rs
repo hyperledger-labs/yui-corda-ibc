@@ -1,12 +1,10 @@
+use super::constants::{CLIENT_STATE_TYPE_URL, CONSENSUS_STATE_TYPE_URL};
 use super::generated::ibc;
 use super::host_and_bank;
 use super::util;
 use super::Result;
 use ibc::core::client::v1 as v1client;
 use ibc::lightclients::corda::v1 as v1corda;
-
-const CORDA_CLIENT_STATE_TYPE_URL: &str = "/ibc.lightclients.corda.v1.ClientState";
-const CORDA_CONSENSUS_STATE_TYPE_URL: &str = "/ibc.lightclients.corda.v1.ConsensusState";
 
 async fn msg_client(
     endpoint: String,
@@ -28,12 +26,12 @@ pub async fn create_clients(
 ) -> Result<()> {
     let (client_id_a, client_state_a) = {
         let tmp = v1corda::ClientState { id: client_id_a };
-        let packed = util::pack_any(CORDA_CLIENT_STATE_TYPE_URL.to_owned(), &tmp)?;
+        let packed = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &tmp)?;
         (tmp.id, packed)
     };
     let (client_id_b, client_state_b) = {
         let tmp = v1corda::ClientState { id: client_id_b };
-        let packed = util::pack_any(CORDA_CLIENT_STATE_TYPE_URL.to_owned(), &tmp)?;
+        let packed = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &tmp)?;
         (tmp.id, packed)
     };
 
@@ -41,14 +39,14 @@ pub async fn create_clients(
     let host_b = host_and_bank::query_host(endpoint_b.clone()).await?;
 
     let consensus_state_a = util::pack_any(
-        CORDA_CONSENSUS_STATE_TYPE_URL.to_owned(),
+        CONSENSUS_STATE_TYPE_URL.to_owned(),
         &v1corda::ConsensusState {
             base_id: host_b.base_id,
             notary_key: host_b.notary.and_then(|n| n.owning_key),
         },
     )?;
     let consensus_state_b = util::pack_any(
-        CORDA_CONSENSUS_STATE_TYPE_URL.to_owned(),
+        CONSENSUS_STATE_TYPE_URL.to_owned(),
         &v1corda::ConsensusState {
             base_id: host_a.base_id,
             notary_key: host_a.notary.and_then(|n| n.owning_key),

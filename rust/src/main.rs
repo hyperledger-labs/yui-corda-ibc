@@ -1,9 +1,13 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod admin;
 mod admin_command;
 mod client;
 mod client_command;
 mod connection;
 mod connection_command;
+mod constants;
 mod generated;
 mod genesis;
 mod genesis_command;
