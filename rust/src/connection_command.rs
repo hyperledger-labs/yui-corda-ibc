@@ -4,7 +4,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 pub enum Opt {
-    ConnOpenInit {
+    OpenInit {
         #[structopt(short, long, default_value = "http://localhost:9999")]
         endpoint: String,
 
@@ -40,7 +40,7 @@ pub enum Opt {
 
 pub async fn execute(opt: Opt) -> Result<()> {
     match opt {
-        Opt::ConnOpenInit {
+        Opt::OpenInit {
             endpoint,
             client_id,
             connection_id,
@@ -50,7 +50,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
             version_identifier,
             version_features,
         } => {
-            connection::conn_open_init(
+            connection::open_init(
                 endpoint,
                 client_id,
                 connection_id,
