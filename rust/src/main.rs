@@ -3,6 +3,8 @@ extern crate lazy_static;
 
 mod admin;
 mod admin_command;
+mod channel;
+mod channel_command;
 mod client;
 mod client_command;
 mod connection;
@@ -27,6 +29,7 @@ enum Opt {
     HostBank(host_and_bank_command::Opt),
     Client(client_command::Opt),
     Connection(connection_command::Opt),
+    Channel(channel_command::Opt),
 }
 
 #[tokio::main]
@@ -37,6 +40,7 @@ async fn main() -> Result<()> {
         Opt::HostBank(opt) => host_and_bank_command::execute(opt).await?,
         Opt::Client(opt) => client_command::execute(opt).await?,
         Opt::Connection(opt) => connection_command::execute(opt).await?,
+        Opt::Channel(opt) => channel_command::execute(opt).await?,
     }
     Ok(())
 }

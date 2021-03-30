@@ -18,5 +18,7 @@ lazy_static! {
     };
 }
 
+pub static CHANNEL_VERSION: &str = "ics20-1";
+
 pub static CLIENT_STATE_TYPE_URL: &str = "/ibc.lightclients.corda.v1.ClientState";
 pub static CONSENSUS_STATE_TYPE_URL: &str = "/ibc.lightclients.corda.v1.ConsensusState";
