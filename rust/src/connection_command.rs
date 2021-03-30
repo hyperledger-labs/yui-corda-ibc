@@ -4,30 +4,24 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 pub enum Opt {
-    OpenInit {
-        #[structopt(short, long, default_value = "http://localhost:9999")]
-        endpoint: String,
+    Handshake {
+        #[structopt(long, default_value = "http://localhost:9999")]
+        endpoint_a: String,
+
+        #[structopt(long, default_value = "http://localhost:19999")]
+        endpoint_b: String,
 
         #[structopt(long)]
-        client_id: String,
+        client_id_a: String,
 
         #[structopt(long)]
-        connection_id: String,
+        client_id_b: String,
 
         #[structopt(long)]
-        counterparty_client_id: String,
+        connection_id_a: String,
 
         #[structopt(long)]
-        counterparty_connection_id: String,
-
-        #[structopt(long)]
-        counterparty_prefix: String,
-
-        #[structopt(long)]
-        version_identifier: String,
-
-        #[structopt(long)]
-        version_features: Vec<String>,
+        connection_id_b: String,
     },
     QueryConnection {
         #[structopt(short, long, default_value = "http://localhost:9999")]
@@ -40,25 +34,21 @@ pub enum Opt {
 
 pub async fn execute(opt: Opt) -> Result<()> {
     match opt {
-        Opt::OpenInit {
-            endpoint,
-            client_id,
-            connection_id,
-            counterparty_client_id,
-            counterparty_connection_id,
-            counterparty_prefix,
-            version_identifier,
-            version_features,
+        Opt::Handshake {
+            endpoint_a,
+            endpoint_b,
+            client_id_a,
+            client_id_b,
+            connection_id_a,
+            connection_id_b,
         } => {
-            connection::open_init(
-                endpoint,
-                client_id,
-                connection_id,
-                counterparty_client_id,
-                counterparty_connection_id,
-                counterparty_prefix,
-                version_identifier,
-                version_features,
+            connection::handshake(
+                endpoint_a,
+                endpoint_b,
+                client_id_a,
+                client_id_b,
+                connection_id_a,
+                connection_id_b,
             )
             .await?;
         }
