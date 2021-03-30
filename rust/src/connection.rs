@@ -17,7 +17,7 @@ async fn connect_query(
     Ok(client)
 }
 
-pub async fn conn_open_init(
+pub async fn open_init(
     endpoint: String,
     client_id: String,
     connection_id: String,
