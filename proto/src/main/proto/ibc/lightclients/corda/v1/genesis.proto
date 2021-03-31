@@ -1,0 +1,18 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
+
+import "ibc/lightclients/corda/v1/corda-types.proto";
+
+service GenesisService {
+  rpc CreateGenesis (CreateGenesisRequest) returns (CreateGenesisResponse);
+}
+
+message CreateGenesisRequest {
+  repeated Party participants = 1;
+}
+
+message CreateGenesisResponse {
+  StateRef base_id = 1;
+}

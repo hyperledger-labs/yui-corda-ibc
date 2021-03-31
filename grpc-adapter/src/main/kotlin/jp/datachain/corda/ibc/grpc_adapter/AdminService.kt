@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
+import com.google.protobuf.Empty
 import ibc.lightclients.corda.v1.AdminServiceGrpc
-import ibc.lightclients.corda.v1.Void
 import io.grpc.Server
 import io.grpc.stub.StreamObserver
 import java.lang.NullPointerException
@@ -9,10 +9,10 @@ import java.lang.NullPointerException
 class AdminService: AdminServiceGrpc.AdminServiceImplBase() {
     var server: Server? = null
 
-    override fun shutdown(request: Void, responseObserver: StreamObserver<Void>) {
+    override fun shutdown(request: Empty, responseObserver: StreamObserver<Empty>) {
         if (server != null) {
             server!!.shutdown()
-            responseObserver.onNext(Void.getDefaultInstance())
+            responseObserver.onNext(Empty.getDefaultInstance())
             responseObserver.onCompleted()
         } else {
             responseObserver.onError(NullPointerException())

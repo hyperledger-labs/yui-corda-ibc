@@ -4,14 +4,23 @@ package ibc.lightclients.corda.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
+import "google/protobuf/empty.proto";
 
-service QueryService {
-  rpc QueryHost (QueryHostRequest) returns (Host);
-  rpc QueryBank (QueryBankRequest) returns (Bank);
+service HostAndBankService {
+  // transactions
+  rpc CreateHostAndBank (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc AllocateFund (AllocateFundRequest) returns (google.protobuf.Empty);
+
+  // queries
+  rpc QueryHost (google.protobuf.Empty) returns (Host);
+  rpc QueryBank (google.protobuf.Empty) returns (Bank);
 }
 
-message QueryHostRequest {}
-message QueryBankRequest {}
+message AllocateFundRequest {
+  string owner = 1;
+  string denom = 2;
+  string amount = 3;
+}
 
 message Host {
   message PortChannelIdentifier {

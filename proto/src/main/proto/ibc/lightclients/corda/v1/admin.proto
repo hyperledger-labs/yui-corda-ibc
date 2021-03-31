@@ -5,8 +5,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/t
 option java_multiple_files = true;
 option java_outer_classname = "AdminProto";
 
-service AdminService {
-  rpc Shutdown (Void) returns (Void) {}
-}
+import "google/protobuf/empty.proto";
 
-message Void {}
+service AdminService {
+  rpc Shutdown (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
