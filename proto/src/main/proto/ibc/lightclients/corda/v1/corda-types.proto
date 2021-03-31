@@ -29,20 +29,3 @@ message Party {
   CordaX500Name name = 1;
   PublicKey owningKey = 2;
 }
-
-message SignatureMetadata {
-  int32 platform_version = 1;
-  int32 scheme_number_id = 2;
-}
-
-message TransactionSignature {
-  bytes bytes = 1;
-  PublicKey by = 2;
-  SignatureMetadata signature_metadata = 3;
-}
-
-message SignedTransaction {
-  bytes txBits = 1;
-  repeated TransactionSignature sigs = 2;
-}
-

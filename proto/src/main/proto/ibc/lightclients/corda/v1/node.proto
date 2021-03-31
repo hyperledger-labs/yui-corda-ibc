@@ -1,0 +1,19 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/xx-corda/types";
+
+import "ibc/lightclients/corda/v1/corda-types.proto";
+
+service NodeService {
+  rpc PartiesFromName (PartiesFromNameRequest) returns (PartiesFromNameResponse);
+}
+
+message PartiesFromNameRequest {
+  string name = 1;
+  bool exact_match = 2;
+}
+
+message PartiesFromNameResponse {
+  repeated Party parties = 1;
+}

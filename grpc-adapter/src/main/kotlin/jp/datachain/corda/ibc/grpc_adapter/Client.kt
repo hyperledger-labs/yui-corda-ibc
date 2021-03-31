@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.grpc_adapter
 
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString
+import com.google.protobuf.Empty
 import cosmos.base.query.v1beta1.Pagination
 import ibc.applications.transfer.v1.Tx
 import ibc.core.client.v1.Client.*
@@ -21,37 +22,22 @@ import ibc.core.channel.v1.QueryGrpc as ChannelQueryGrpc
 import ibc.applications.transfer.v1.MsgGrpc as TransferMsgGrpc
 import io.grpc.ManagedChannelBuilder
 import jp.datachain.corda.ibc.conversion.into
-import net.corda.client.rpc.CordaRPCClient
-import net.corda.core.contracts.StateRef
-import net.corda.core.utilities.NetworkHostAndPort
 import io.grpc.StatusRuntimeException
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Identifier
-import net.corda.core.crypto.SecureHash
 import net.corda.core.utilities.toHex
 import java.io.File
 
 object Client {
     @JvmStatic
     fun main(args: Array<String>) {
-        warmUpSerialization()
         when (args[0]) {
             "shutdown" -> shutdown(args[1])
             "createGenesis" -> createGenesis(args[1], args[2], args[3])
-            "createHost" -> createHost(args[1], args[2])
-            "allocateFund" -> allocateFund(args[1], args[2], args[3])
+            "createHost" -> createHost(args[1])
+            "allocateFund" -> allocateFund(args[1], args[2])
             "executeTest" -> executeTest(args[1], args[2], args[3], args[4])
         }
-    }
-
-    private fun warmUpSerialization() {
-        // port 0 is dummy. This instance of CordaRPCClient is never used.
-        // Before using Corda's (de)serialization mechanism, one of four
-        // pre-defined serialization environments must be initialized.
-        // In the initializer block (init { ... }) of CordaRPCClient,
-        // the "node" serialization environment is initialized.
-        // Ref: https://github.com/corda/corda/blob/release/os/4.3/client/rpc/src/main/kotlin/net/corda/client/rpc/CordaRPCClient.kt#L435
-        CordaRPCClient(NetworkHostAndPort("localhost", 0))
     }
 
     private fun connectGrpc(endpoint: String) = ManagedChannelBuilder.forTarget(endpoint)
@@ -63,7 +49,7 @@ object Client {
         val adminService = AdminServiceGrpc.newBlockingStub(channel)
 
         try {
-            adminService.shutdown(Void.getDefaultInstance())
+            adminService.shutdown(Empty.getDefaultInstance())
         } catch (e: StatusRuntimeException) {
             println(e)
         }
@@ -72,48 +58,38 @@ object Client {
     private fun createGenesis(endpoint: String, partyName: String, baseHashFilePath: String) {
         val channel = connectGrpc(endpoint)
         val nodeService = NodeServiceGrpc.newBlockingStub(channel)
-        val ibcService = IbcServiceGrpc.newBlockingStub(channel)
+        val genesisService = GenesisServiceGrpc.newBlockingStub(channel)
 
-        val partyMap = listOf(partyName, "Notary").map {
-            it to
-                    nodeService.partiesFromName(Operation.PartiesFromNameRequest.newBuilder()
-                            .setName(it)
-                            .setExactMatch(false)
-                            .build()).partiesList.single()
-        }.toMap()
+        val participants = listOf(partyName, "Notary").map {
+            nodeService.partiesFromName(Node.PartiesFromNameRequest.newBuilder()
+                .setName(it)
+                .setExactMatch(false)
+                .build()).partiesList.single()
+        }
 
-        val stxGenesis = ibcService.createGenesis(Operation.CreateGenesisRequest.newBuilder()
-                .addAllParticipants(partyMap.values)
-                .build()).into()
+        val response = genesisService.createGenesis(Genesis.CreateGenesisRequest.newBuilder()
+                .addAllParticipants(participants)
+                .build())
 
-        val baseId = StateRef(txhash = stxGenesis.id, index = 0)
+        val baseId = response.baseId
 
-        File("../", baseHashFilePath).writeText(baseId.txhash.bytes.toHex())
+        File("../", baseHashFilePath).writeText(baseId.txhash.bytes.toByteArray().toHex())
     }
 
-    private fun createHost(endpoint: String, baseHash: String) {
+    private fun createHost(endpoint: String) {
         val channel = connectGrpc(endpoint)
-        val ibcService = IbcServiceGrpc.newBlockingStub(channel)
-
-        val baseId = StateRef(txhash = SecureHash.parse(baseHash), index = 0)
-
-        ibcService.createHostAndBank(baseId.into())
+        val hostAndBankService = HostAndBankServiceGrpc.newBlockingStub(channel)
+        hostAndBankService.createHostAndBank(Empty.getDefaultInstance())
     }
 
-    private fun allocateFund(endpoint: String, baseHash: String, partyName: String) {
+    private fun allocateFund(endpoint: String, partyName: String) {
         val channel = connectGrpc(endpoint)
-        val ibcService = IbcServiceGrpc.newBlockingStub(channel)
-
-        val baseId = StateRef(txhash = SecureHash.parse(baseHash), index = 0)
-
-        ibcService.allocateFund(Operation.AllocateFundRequest.newBuilder()
-                .setBaseId(baseId.into())
+        val hostAndBankService = HostAndBankServiceGrpc.newBlockingStub(channel)
+        hostAndBankService.allocateFund(HostAndBank.AllocateFundRequest.newBuilder()
                 .setOwner(partyName)
                 .setDenom("USD")
                 .setAmount("100")
-                .build()).into()
-
-        println(baseId.txhash.bytes.toHex())
+                .build())
     }
 
     private const val CLIENT_A = "CLIENT_A"
@@ -131,7 +107,7 @@ object Client {
         val channelA = connectGrpc(endpointA)
         val channelB = connectGrpc(endpointB)
 
-        val hostAndBankQueryServiceA = QueryServiceGrpc.newBlockingStub(channelA)
+        val hostAndBankServiceA = HostAndBankServiceGrpc.newBlockingStub(channelA)
         val clientQueryServiceA = ClientQueryGrpc.newBlockingStub(channelA)
         val clientTxServiceA = ClientMsgGrpc.newBlockingStub(channelA)
         val connectionQueryServiceA = ConnectionQueryGrpc.newBlockingStub(channelA)
@@ -140,7 +116,7 @@ object Client {
         val channelTxServiceA = ChannelMsgGrpc.newBlockingStub(channelA)
         val transferTxServiceA = TransferMsgGrpc.newBlockingStub(channelA)
 
-        val hostAndBankQueryServiceB = QueryServiceGrpc.newBlockingStub(channelB)
+        val hostAndBankServiceB = HostAndBankServiceGrpc.newBlockingStub(channelB)
         val clientQueryServiceB = ClientQueryGrpc.newBlockingStub(channelB)
         val clientTxServiceB = ClientMsgGrpc.newBlockingStub(channelB)
         val connectionQueryServiceB = ConnectionQueryGrpc.newBlockingStub(channelB)
@@ -149,10 +125,10 @@ object Client {
         val channelTxServiceB = ChannelMsgGrpc.newBlockingStub(channelB)
         val transferTxServiceB = TransferMsgGrpc.newBlockingStub(channelB)
 
-        val hostA = hostAndBankQueryServiceA.queryHost(Query.QueryHostRequest.getDefaultInstance()).into()
+        val hostA = hostAndBankServiceA.queryHost(Empty.getDefaultInstance()).into()
         val consensusStateA = hostA.getConsensusState(hostA.getCurrentHeight())
 
-        val hostB = hostAndBankQueryServiceB.queryHost(Query.QueryHostRequest.getDefaultInstance()).into()
+        val hostB = hostAndBankServiceB.queryHost(Empty.getDefaultInstance()).into()
         val consensusStateB = hostB.getConsensusState(hostB.getCurrentHeight())
 
         // createClient @ A
