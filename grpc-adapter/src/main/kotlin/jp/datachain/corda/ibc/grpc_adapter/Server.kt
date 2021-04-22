@@ -24,7 +24,8 @@ object Server {
         opsReadyServices += NodeService(hostname, port, username, password)
         opsReadyServices += GenesisService(hostname, port, username, password)
         baseId?.let{
-            opsReadyServices += HostAndBankService(hostname, port, username, password, it)
+            opsReadyServices += HostService(hostname, port, username, password, it)
+            opsReadyServices += BankService(hostname, port, username, password, it)
 
             opsReadyServices += ClientTxService(hostname, port, username, password, it)
             opsReadyServices += ConnectionTxService(hostname, port, username, password, it)

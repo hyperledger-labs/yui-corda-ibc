@@ -1,14 +1,10 @@
-use super::host_and_bank;
+use super::bank;
 use super::Result;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 pub enum Opt {
-    CreateHostAndBank {
-        #[structopt(short, long, default_value = "http://localhost:9999")]
-        endpoint: String,
-    },
-    QueryHost {
+    CreateBank {
         #[structopt(short, long, default_value = "http://localhost:9999")]
         endpoint: String,
     },
@@ -33,15 +29,9 @@ pub enum Opt {
 
 pub async fn execute(opt: Opt) -> Result<()> {
     match opt {
-        Opt::CreateHostAndBank { endpoint } => {
-            host_and_bank::create_host_and_bank(endpoint).await?
-        }
-        Opt::QueryHost { endpoint } => {
-            let host = host_and_bank::query_host(endpoint).await?;
-            println!("{:?}", host);
-        }
+        Opt::CreateBank { endpoint } => bank::create_bank(endpoint).await?,
         Opt::QueryBank { endpoint } => {
-            let bank = host_and_bank::query_bank(endpoint).await?;
+            let bank = bank::query_bank(endpoint).await?;
             println!("{:?}", bank);
         }
         Opt::AllocateFund {
@@ -49,7 +39,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
             party_name,
             denom,
             amount,
-        } => host_and_bank::allocate_fund(endpoint, party_name, denom, amount).await?,
+        } => bank::allocate_fund(endpoint, party_name, denom, amount).await?,
     }
     Ok(())
 }

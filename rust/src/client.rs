@@ -1,6 +1,6 @@
 use super::constants::{CLIENT_STATE_TYPE_URL, CONSENSUS_STATE_TYPE_URL};
 use super::generated::ibc;
-use super::host_and_bank;
+use super::host;
 use super::util;
 use super::Result;
 use ibc::core::client::v1 as v1client;
@@ -35,8 +35,8 @@ pub async fn create_clients(
         (tmp.id, packed)
     };
 
-    let host_a = host_and_bank::query_host(endpoint_a.clone()).await?;
-    let host_b = host_and_bank::query_host(endpoint_b.clone()).await?;
+    let host_a = host::query_host(endpoint_a.clone()).await?;
+    let host_b = host::query_host(endpoint_b.clone()).await?;
 
     let consensus_state_a = util::pack_any(
         CONSENSUS_STATE_TYPE_URL.to_owned(),

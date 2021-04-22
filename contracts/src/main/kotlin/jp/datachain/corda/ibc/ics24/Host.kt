@@ -22,7 +22,8 @@ data class Host constructor (
         val notary: Party,
         val clientIds: List<Identifier>,
         val connIds: List<Identifier>,
-        val portChanIds: List<Pair<Identifier, Identifier>>
+        val portChanIds: List<Pair<Identifier, Identifier>>,
+        val bankIds: List<Identifier>
 ) : IbcState {
     override val id = Identifier("host")
 
@@ -30,6 +31,7 @@ data class Host constructor (
             genesisAndRef.state.data.participants,
             genesisAndRef.ref,
             genesisAndRef.state.notary,
+            emptyList(),
             emptyList(),
             emptyList(),
             emptyList()
@@ -63,5 +65,10 @@ data class Host constructor (
         val portChanId = Pair(portId, chanId)
         require(!portChanIds.contains(portChanId))
         return copy(portChanIds = portChanIds + portChanId)
+    }
+
+    fun addBank(id: Identifier) : Host {
+        require(!bankIds.contains(id))
+        return copy(bankIds = bankIds + id)
     }
 }

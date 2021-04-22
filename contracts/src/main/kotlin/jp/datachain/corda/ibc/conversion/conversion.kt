@@ -1,8 +1,9 @@
 package jp.datachain.corda.ibc.conversion
 
 import com.google.protobuf.ByteString
+import ibc.lightclients.corda.v1.BankProto
 import ibc.lightclients.corda.v1.CordaTypes
-import ibc.lightclients.corda.v1.HostAndBank
+import ibc.lightclients.corda.v1.HostProto
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
@@ -53,54 +54,57 @@ fun Party.into(): CordaTypes.Party = CordaTypes.Party.newBuilder()
         .build()
 fun CordaTypes.Party.into() = Party(name.into(), owningKey.into())
 
-fun Pair<Identifier, Identifier>.into(): HostAndBank.Host.PortChannelIdentifier = HostAndBank.Host.PortChannelIdentifier.newBuilder()
+fun Pair<Identifier, Identifier>.into(): HostProto.Host.PortChannelIdentifier = HostProto.Host.PortChannelIdentifier.newBuilder()
         .setPortId(first.id)
         .setChannelId(second.id)
         .build()
-fun HostAndBank.Host.PortChannelIdentifier.into() = Pair(Identifier(portId), Identifier(channelId))
+fun HostProto.Host.PortChannelIdentifier.into() = Pair(Identifier(portId), Identifier(channelId))
 
-fun Host.into(): HostAndBank.Host = HostAndBank.Host.newBuilder()
+fun Host.into(): HostProto.Host = HostProto.Host.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setNotary(notary.into())
         .addAllClientIds(clientIds.map{it.id})
         .addAllConnIds(connIds.map{it.id})
         .addAllPortChanIds(portChanIds.map{it.into()})
+        .addAllBankIds(bankIds.map{it.id})
         .setId(id.id)
         .build()
-fun HostAndBank.Host.into() = Host(
+fun HostProto.Host.into() = Host(
         participants = participantsList.map{it.into()},
         baseId = baseId.into(),
         notary = notary.into(),
         clientIds = clientIdsList.map(::Identifier),
         connIds = connIdsList.map(::Identifier),
-        portChanIds = portChanIdsList.map{it.into()})
+        portChanIds = portChanIdsList.map{it.into()},
+        bankIds = bankIdsList.map(::Identifier)
+)
 
-fun MutableMap<Address, Amount>.into(): HostAndBank.Bank.BalanceMapPerDenom = HostAndBank.Bank.BalanceMapPerDenom.newBuilder()
+fun MutableMap<Address, Amount>.into(): BankProto.Bank.BalanceMapPerDenom = BankProto.Bank.BalanceMapPerDenom.newBuilder()
         .putAllPubkeyToAmount(this.mapKeys{it.key.address}.mapValues{it.value.amount.toString()})
         .build()
-fun HostAndBank.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
+fun BankProto.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
         .mapKeys{Address(it.key)}
         .mapValues{Amount(it.value.toBigInteger())}
         .toMutableMap()
 
-fun MutableMap<Denom, MutableMap<Address, Amount>>.into(): HostAndBank.Bank.BalanceMap = HostAndBank.Bank.BalanceMap.newBuilder()
+fun MutableMap<Denom, MutableMap<Address, Amount>>.into(): BankProto.Bank.BalanceMap = BankProto.Bank.BalanceMap.newBuilder()
         .putAllDenomToMap(this.mapKeys{it.key.denom}.mapValues{it.value.into()})
         .build()
-fun HostAndBank.Bank.BalanceMap.into() = denomToMapMap
+fun BankProto.Bank.BalanceMap.into() = denomToMapMap
         .mapKeys{Denom(it.key)}
         .mapValues{it.value.into()}
         .toMutableMap()
 
-fun MutableMap<Denom, Denom>.into(): HostAndBank.Bank.IbcDenomMap = HostAndBank.Bank.IbcDenomMap.newBuilder()
+fun MutableMap<Denom, Denom>.into(): BankProto.Bank.IbcDenomMap = BankProto.Bank.IbcDenomMap.newBuilder()
         .putAllIbcDenomToDenom(this.mapKeys{it.key.denom}.mapValues{it.value.denom})
         .build()
-fun HostAndBank.Bank.IbcDenomMap.into() = ibcDenomToDenomMap
+fun BankProto.Bank.IbcDenomMap.into() = ibcDenomToDenomMap
         .mapKeys{Denom(it.key)}
         .mapValues{Denom(it.value)}
         .toMutableMap()
 
-fun Bank.into(): HostAndBank.Bank = HostAndBank.Bank.newBuilder()
+fun Bank.into(): BankProto.Bank = BankProto.Bank.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setAllocated(allocated.into())
@@ -109,7 +113,7 @@ fun Bank.into(): HostAndBank.Bank = HostAndBank.Bank.newBuilder()
         .setDenoms(denoms.into())
         .setId(id.id)
         .build()
-fun HostAndBank.Bank.into() = Bank(
+fun BankProto.Bank.into() = Bank(
         participants = participantsList.map{it.into()},
         baseId = baseId.into(),
         allocated = allocated.into(),

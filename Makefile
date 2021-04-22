@@ -32,9 +32,10 @@ prepareHostA:
 	$(CLIENT) admin shutdown         -e http://localhost:9999
 	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
 	sleep 20
-	$(CLIENT) host-bank create-host-and-bank -e http://localhost:9999
-	$(CLIENT) host-bank allocate-fund        -e http://localhost:9999 -p PartyA -d USD -a 100
-	$(CLIENT) admin shutdown                 -e http://localhost:9999
+	$(CLIENT) host create-host   -e http://localhost:9999
+	$(CLIENT) bank create-bank   -e http://localhost:9999
+	$(CLIENT) bank allocate-fund -e http://localhost:9999 -p PartyA -d USD -a 100
+	$(CLIENT) admin shutdown     -e http://localhost:9999
 
 prepareHostB:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10009 user1 test 19999' &
@@ -43,11 +44,12 @@ prepareHostB:
 	$(CLIENT) admin shutdown         -e http://localhost:19999
 	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-hash-b.txt`" &
 	sleep 20
-	$(CLIENT) host-bank create-host-and-bank -e http://localhost:19999
-	$(CLIENT) admin shutdown                 -e http://localhost:19999
+	$(CLIENT) host create-host -e http://localhost:19999
+	$(CLIENT) bank create-bank -e http://localhost:19999
+	$(CLIENT) admin shutdown   -e http://localhost:19999
 
 allocateForRelayerTest:
-	$(CLIENT) host-bank allocate-fund        -e http://localhost:9999 -p cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a -d USD -a 100
+	$(CLIENT) bank allocate-fund -e http://localhost:9999 -p cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a -d USD -a 100
 
 runServerA:
 	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`"

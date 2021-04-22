@@ -4,24 +4,15 @@ use ibc::lightclients::corda::v1 as v1corda;
 
 async fn connect(
     endpoint: String,
-) -> Result<
-    v1corda::host_and_bank_service_client::HostAndBankServiceClient<tonic::transport::Channel>,
-> {
-    let client =
-        v1corda::host_and_bank_service_client::HostAndBankServiceClient::connect(endpoint).await?;
+) -> Result<v1corda::bank_service_client::BankServiceClient<tonic::transport::Channel>> {
+    let client = v1corda::bank_service_client::BankServiceClient::connect(endpoint).await?;
     Ok(client)
 }
 
-pub async fn create_host_and_bank(endpoint: String) -> Result<()> {
+pub async fn create_bank(endpoint: String) -> Result<()> {
     let mut client = connect(endpoint).await?;
-    client.create_host_and_bank(()).await?;
+    client.create_bank(()).await?;
     Ok(())
-}
-
-pub async fn query_host(endpoint: String) -> Result<v1corda::Host> {
-    let mut client = connect(endpoint).await?;
-    let host = client.query_host(()).await?;
-    Ok(host.into_inner())
 }
 
 pub async fn query_bank(endpoint: String) -> Result<v1corda::Bank> {

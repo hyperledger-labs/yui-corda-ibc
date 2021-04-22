@@ -35,6 +35,7 @@ object Client {
             "shutdown" -> shutdown(args[1])
             "createGenesis" -> createGenesis(args[1], args[2], args[3])
             "createHost" -> createHost(args[1])
+            "createBank" -> createBank(args[1])
             "allocateFund" -> allocateFund(args[1], args[2])
             "executeTest" -> executeTest(args[1], args[2], args[3], args[4])
         }
@@ -78,14 +79,20 @@ object Client {
 
     private fun createHost(endpoint: String) {
         val channel = connectGrpc(endpoint)
-        val hostAndBankService = HostAndBankServiceGrpc.newBlockingStub(channel)
-        hostAndBankService.createHostAndBank(Empty.getDefaultInstance())
+        val hostService = HostServiceGrpc.newBlockingStub(channel)
+        hostService.createHost(Empty.getDefaultInstance())
+    }
+
+    private fun createBank(endpoint: String) {
+        val channel = connectGrpc(endpoint)
+        val bankService = BankServiceGrpc.newBlockingStub(channel)
+        bankService.createBank(Empty.getDefaultInstance())
     }
 
     private fun allocateFund(endpoint: String, partyName: String) {
         val channel = connectGrpc(endpoint)
-        val hostAndBankService = HostAndBankServiceGrpc.newBlockingStub(channel)
-        hostAndBankService.allocateFund(HostAndBank.AllocateFundRequest.newBuilder()
+        val bankService = BankServiceGrpc.newBlockingStub(channel)
+        bankService.allocateFund(BankProto.AllocateFundRequest.newBuilder()
                 .setOwner(partyName)
                 .setDenom("USD")
                 .setAmount("100")
@@ -107,7 +114,7 @@ object Client {
         val channelA = connectGrpc(endpointA)
         val channelB = connectGrpc(endpointB)
 
-        val hostAndBankServiceA = HostAndBankServiceGrpc.newBlockingStub(channelA)
+        val hostServiceA = HostServiceGrpc.newBlockingStub(channelA)
         val clientQueryServiceA = ClientQueryGrpc.newBlockingStub(channelA)
         val clientTxServiceA = ClientMsgGrpc.newBlockingStub(channelA)
         val connectionQueryServiceA = ConnectionQueryGrpc.newBlockingStub(channelA)
@@ -116,7 +123,7 @@ object Client {
         val channelTxServiceA = ChannelMsgGrpc.newBlockingStub(channelA)
         val transferTxServiceA = TransferMsgGrpc.newBlockingStub(channelA)
 
-        val hostAndBankServiceB = HostAndBankServiceGrpc.newBlockingStub(channelB)
+        val hostServiceB = HostServiceGrpc.newBlockingStub(channelB)
         val clientQueryServiceB = ClientQueryGrpc.newBlockingStub(channelB)
         val clientTxServiceB = ClientMsgGrpc.newBlockingStub(channelB)
         val connectionQueryServiceB = ConnectionQueryGrpc.newBlockingStub(channelB)
@@ -125,10 +132,10 @@ object Client {
         val channelTxServiceB = ChannelMsgGrpc.newBlockingStub(channelB)
         val transferTxServiceB = TransferMsgGrpc.newBlockingStub(channelB)
 
-        val hostA = hostAndBankServiceA.queryHost(Empty.getDefaultInstance()).into()
+        val hostA = hostServiceA.queryHost(Empty.getDefaultInstance()).into()
         val consensusStateA = hostA.getConsensusState(hostA.getCurrentHeight())
 
-        val hostB = hostAndBankServiceB.queryHost(Empty.getDefaultInstance()).into()
+        val hostB = hostServiceB.queryHost(Empty.getDefaultInstance()).into()
         val consensusStateB = hostB.getConsensusState(hostB.getCurrentHeight())
 
         // createClient @ A

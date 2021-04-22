@@ -2,17 +2,17 @@ syntax = "proto3";
 package ibc.lightclients.corda.v1;
 
 option go_package = "github.com/datachainlab/corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+option java_outer_classname = "BankProto";
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
 import "google/protobuf/empty.proto";
 
-service HostAndBankService {
+service BankService {
   // transactions
-  rpc CreateHostAndBank (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc CreateBank (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc AllocateFund (AllocateFundRequest) returns (google.protobuf.Empty);
 
   // queries
-  rpc QueryHost (google.protobuf.Empty) returns (Host);
   rpc QueryBank (google.protobuf.Empty) returns (Bank);
 }
 
@@ -20,20 +20,6 @@ message AllocateFundRequest {
   string owner = 1;
   string denom = 2;
   string amount = 3;
-}
-
-message Host {
-  message PortChannelIdentifier {
-    string portId = 1;
-    string channelId = 2;
-  }
-  repeated Party participants = 1;
-  StateRef base_id = 2;
-  Party notary = 3;
-  repeated string client_ids = 4;
-  repeated string conn_ids = 5;
-  repeated PortChannelIdentifier port_chan_ids = 6;
-  string id = 7;
 }
 
 message Bank {

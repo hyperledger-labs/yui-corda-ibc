@@ -42,15 +42,26 @@ class Ibc : Contract {
             }
         }
 
-        class HostAndBankCreate : TypeOnlyCommandData(), Commands {
+        class HostCreate : TypeOnlyCommandData(), Commands {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
-                "Exactly one state should be created" using (tx.outputs.size == 2)
+                "Exactly one state should be created" using (tx.outputs.size == 1)
                 val genesis = tx.inRefsOfType<Genesis>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val newBank = tx.outputsOfType<Bank>().single()
                 val expectedHost = Host(genesis)
-                val expectedBank = Bank(genesis)
+                "Output should be expected states" using (newHost == expectedHost)
+            }
+        }
+
+        class BankCreate : TypeOnlyCommandData(), Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly two states should be created" using (tx.outputs.size == 2)
+                val host = tx.inRefsOfType<Host>().single()
+                val newHost = tx.outputsOfType<Host>().single()
+                val newBank = tx.outputsOfType<Bank>().single()
+                val expectedBank = Bank(host.state.data)
+                val expectedHost = host.state.data.addBank(expectedBank.id)
                 "Output should be expected states" using (Pair(newHost, newBank) == Pair(expectedHost, expectedBank))
             }
         }

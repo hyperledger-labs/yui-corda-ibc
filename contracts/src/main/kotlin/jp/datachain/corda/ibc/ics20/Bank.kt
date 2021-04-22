@@ -1,11 +1,10 @@
 package jp.datachain.corda.ibc.ics20
 
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.ics24.Genesis
+import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.AbstractParty
 import java.math.BigInteger
@@ -21,9 +20,9 @@ data class Bank(
 ): IbcState {
     override val id = Identifier("bank")
 
-    constructor(genesisAndRef: StateAndRef<Genesis>) : this(
-            genesisAndRef.state.data.participants,
-            genesisAndRef.ref,
+    constructor(host: Host) : this(
+            host.participants,
+            host.baseId,
             mutableMapOf(),
             mutableMapOf(),
             mutableMapOf(),
