@@ -18,17 +18,18 @@ import net.corda.core.transactions.LedgerTransaction
 
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) {
-        val commandSigners = tx.commands.single()
-        val command = commandSigners.value
-        val signers = commandSigners.signers
-        when (command) {
-            is Commands -> {
-                command.verify(tx)
-            }
-            is DatagramHandler -> {
-                val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
-                command.execute(ctx, signers)
-                ctx.verifyResults(tx.outputsOfType())
+        for (commandSigners in tx.commands) {
+            val command = commandSigners.value
+            val signers = commandSigners.signers
+            when (command) {
+                is Commands -> {
+                    command.verify(tx)
+                }
+                is DatagramHandler -> {
+                    val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
+                    command.execute(ctx, signers)
+                    ctx.verifyResults(tx.outputsOfType())
+                }
             }
         }
     }

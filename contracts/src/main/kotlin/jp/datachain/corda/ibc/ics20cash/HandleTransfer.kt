@@ -15,13 +15,13 @@ import java.security.PublicKey
 
 data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
-        val amount = Amount.fromString(msg.token.amount)
+        val quantity = msg.token.amount.toLong()
         val sender = Address.fromBech32(msg.sender)
         val sourcePort = Identifier(msg.sourcePort)
         val sourceChannel = Identifier(msg.sourceChannel)
 
         // resolve real denom
-        val bank = ctx.getReference<CashBank>()
+        val bank = ctx.getInput<CashBank>()
         val denom =
                 if (msg.token.denom.hasPrefixes("ibc"))
                     bank.resolveDenom(msg.token.denom)
@@ -30,6 +30,8 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
 
         val source = !denom.hasPrefix(sourcePort, sourceChannel)
         if (source) {
+            require(!denom.isVoucher())
+
             // verify cash owner
             val cashes = ctx.getInputs<Cash.State>()
             val cashOwner = cashes.map{it.owner}.distinct().single()
@@ -37,11 +39,17 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
 
             // verify denom & amount
             val cashSum = cashes.map{it.amount}.sumOrThrow() // sumOrThrow ensures all Cashes have same token (= issuer + currency)
-            require(cashSum.token == denom.toToken())
-            require(cashSum.quantity == amount.toLong())
+            val amount = net.corda.core.contracts.Amount.fromDecimal(quantity.toBigDecimal(), cashSum.token)
+            require(cashSum.token.issuer.party.owningKey == denom.issuerKey)
+            require(cashSum.token.product == denom.currency)
+            require(cashSum >= amount)
 
             // lock assets = transfer Cash from sender to Bank user
-            ctx.addOutput(Cash.State(cashSum, bank.owner))
+            ctx.addOutput(bank)
+            ctx.addOutput(Cash.State(amount, bank.owner))
+            if (cashSum > amount) {
+                ctx.addOutput(Cash.State(cashSum - amount, cashOwner))
+            }
         } else {
             // verify voucher owner
             val vouchers = ctx.getInputs<Voucher>()
@@ -50,12 +58,15 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
 
             // verify denom & amount
             val voucherSum = vouchers.map{it.amount}.sumOrThrow() // sumCash ensures all Vouchers have same token (= issuer + currency)
-            require(voucherSum.token.issuer.party == bank.owner)
-            require(voucherSum.token.product == denom.denomTrace)
-            require(voucherSum.quantity == amount.toLong())
+            val amount = net.corda.core.contracts.Amount.fromDecimal(quantity.toBigDecimal(), voucherSum.token)
+            require(voucherSum.token == denom.denomTrace)
+            require(voucherSum >= amount)
 
             // burn vouchers
-            ctx.addOutput(ctx.getInput<CashBank>().burn(denom, amount))
+            ctx.addOutput(bank.burn(denom, Amount.fromLong(quantity)))
+            if (voucherSum > amount) {
+                ctx.addOutput(Voucher(bank.baseId, voucherSum - amount, voucherOwner))
+            }
         }
 
         val data = Transfer.FungibleTokenPacketData.newBuilder()
@@ -77,5 +88,7 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
                 .setTimeoutTimestamp(msg.timeoutTimestamp)
                 .build()
         Handler.sendPacket(ctx, packet)
+
+        require(signers.contains(sender.toPublicKey()))
     }
 }

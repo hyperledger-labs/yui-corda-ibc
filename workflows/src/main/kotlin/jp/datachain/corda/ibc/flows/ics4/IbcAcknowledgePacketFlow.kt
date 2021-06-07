@@ -2,7 +2,7 @@ package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
-import jp.datachain.corda.ibc.flows.util.queryIbcBank
+import jp.datachain.corda.ibc.flows.util.queryIbcCashBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics2.ClientState
@@ -32,9 +32,9 @@ class IbcAcknowledgePacketFlow(
         require(participants.contains(ourIdentity))
 
         // query bank if necessary
-        val bankOrNull =
+        val cashBankOrNull =
                 if (msg.packet.destinationPort == "transfer")
-                    serviceHub.vaultService.queryIbcBank(baseId)!!
+                    serviceHub.vaultService.queryIbcCashBank(baseId)!!
                 else
                     null
 
@@ -53,8 +53,8 @@ class IbcAcknowledgePacketFlow(
         // create command and outputs
         val command = HandlePacketAcknowledgement(msg)
         val ctx = Context(
-                if (bankOrNull != null) {
-                    setOf(chan.state.data, bankOrNull.state.data)
+                if (cashBankOrNull != null) {
+                    setOf(chan.state.data, cashBankOrNull.state.data)
                 } else {
                     setOf(chan.state.data)
                 },
@@ -71,7 +71,7 @@ class IbcAcknowledgePacketFlow(
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
-        bankOrNull?.let{builder.addInputState(it)}
+        cashBankOrNull?.let{builder.addInputState(it)}
         ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)

@@ -17,51 +17,48 @@ class ModuleCallbacks: ModuleCallbacks {
     override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
         val data = packet.data.toFungibleTokenPacketData()
         val denom = Denom.fromString(data.denom)
-        val amount = Amount.fromLong(data.amount)
+        val quantity = data.amount
         val receiver = Address.fromBech32(data.receiver)
 
-        val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
-        val source = denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         val bank = ctx.getInput<CashBank>()
 
+        val source = denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         if (source) {
-            try {
-                // verify cash owner
-                val cashes = ctx.getInputs<Cash.State>()
-                val cashOwner = cashes.map{it.owner}.distinct().single()
-                require(cashOwner == bank.owner)
+            // verify cash owner
+            val cashes = ctx.getInputs<Cash.State>()
+            val cashOwner = cashes.map{it.owner}.distinct().single()
+            require(cashOwner == bank.owner)
 
-                // verify denom & amount
-                val cashSum = cashes.map{it.amount}.sumOrThrow() // sumOrThrow ensures all Cashes have same token (= issuer + currency)
-                val unprefixedDenom = denom.removePrefix()
-                require(cashSum.token == unprefixedDenom.toToken())
-                require(cashSum.quantity == amount.toLong())
+            // verify denom & amount
+            val cashSum = cashes.map{it.amount}.sumOrThrow() // sumOrThrow ensures all Cashes have same token (= issuer + currency)
+            val denom = denom.removePrefix()
+            val amount = net.corda.core.contracts.Amount.fromDecimal(quantity.toBigDecimal(), cashSum.token)
+            require(!denom.isVoucher())
+            require(cashSum.token.issuer.party.owningKey == denom.issuerKey)
+            require(cashSum.token.product == denom.currency)
+            require(cashSum >= amount)
 
-                // unlock assets = transfer Cash from Bank user to receiver
-                ctx.addOutput(Cash.State(cashSum, AnonymousParty(receiver.toPublicKey())))
-
-                ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
-            } catch (e: IllegalArgumentException) {
-                ctx.addOutput(bank.copy())
-                ackBuilder.error = e.message!!
+            // unlock assets = transfer Cash from Bank user to receiver
+            ctx.addOutput(bank)
+            ctx.addOutput(Cash.State(amount, AnonymousParty(receiver.toPublicKey())))
+            if (cashSum > amount) {
+                ctx.addOutput(Cash.State(cashSum - amount, bank.owner))
             }
         } else {
-            try {
-                // prefix locak port/channel identifiers to denom
-                val denom = denom.addPath(Identifier(packet.destinationPort), Identifier(packet.destinationChannel))
+            require(!denom.isVoucher())
 
-                // mint voucher
-                val (bank, voucher) = bank.recordDenom(denom).mint(receiver, denom, amount)
-                ctx.addOutput(bank)
-                ctx.addOutput(voucher)
+            // prefix locak port/channel identifiers to denom
+            val denom = denom.addPath(Identifier(packet.destinationPort), Identifier(packet.destinationChannel))
 
-                ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
-            } catch (e: IllegalArgumentException) {
-                ctx.addOutput(bank.copy())
-                ackBuilder.error = e.message!!
-            }
+            // mint voucher
+            val (bank, voucher) = bank.recordDenom(denom).mint(receiver, denom, Amount.fromLong(quantity))
+            ctx.addOutput(bank)
+            ctx.addOutput(voucher)
         }
-        return ackBuilder.build()
+
+        return ChannelOuterClass.Acknowledgement.newBuilder()
+                .setResult(ByteString.copyFrom(ByteArray(1){1}))
+                .build()
     }
 
     override fun onAcknowledgePacket(ctx: Context, packet: ChannelOuterClass.Packet, acknowledgement: ChannelOuterClass.Acknowledgement) {
@@ -77,12 +74,15 @@ class ModuleCallbacks: ModuleCallbacks {
     private fun refundTokens(ctx: Context, packet: ChannelOuterClass.Packet) {
         val data = packet.data.toFungibleTokenPacketData()
         val denom = Denom.fromString(data.denom)
-        val amount = Amount.fromLong(data.amount)
+        val quantity = data.amount
         val sender = Address.fromBech32(data.sender)
 
-        val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         val bank = ctx.getInput<CashBank>()
+
+        val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         if (source) {
+            require(!denom.isVoucher())
+
             // verify cash owner
             val cashes = ctx.getInputs<Cash.State>()
             val cashOwner = cashes.map{it.owner}.distinct().single()
@@ -90,14 +90,21 @@ class ModuleCallbacks: ModuleCallbacks {
 
             // verify denom & amount
             val cashSum = cashes.map{it.amount}.sumOrThrow() // sumOrThrow ensures all Cashes have same token (= issuer + currency)
-            require(cashSum.token == denom.toToken())
-            require(cashSum.quantity == amount.toLong())
+            val amount = net.corda.core.contracts.Amount.fromDecimal(quantity.toBigDecimal(), cashSum.token)
+            require(cashSum.token.issuer.party.owningKey == denom.issuerKey)
+            require(cashSum.token.product == denom.currency)
+            require(cashSum >= amount)
 
-            // unlock assets = refund Cash from Bank user to receiver
-            ctx.addOutput(Cash.State(cashSum, AnonymousParty(sender.toPublicKey())))
+            // unlock assets = refund Cash from Bank user to sender
+            ctx.addOutput(Cash.State(amount, AnonymousParty(sender.toPublicKey())))
+            if (cashSum > amount) {
+                ctx.addOutput(Cash.State(cashSum - amount, bank.owner))
+            }
         } else {
+            require(denom.isVoucher())
+
             // re-mint voucher
-            val (bank, voucher) = bank.mint(sender, denom, amount)
+            val (bank, voucher) = bank.mint(sender, denom, Amount.fromLong(quantity))
             ctx.addOutput(bank)
             ctx.addOutput(voucher)
         }

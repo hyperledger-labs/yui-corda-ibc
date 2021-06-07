@@ -8,13 +8,13 @@ import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.flows.ics20cash.IbcCashBankCreateFlow
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20cash.CashBank
-import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.OpaqueBytes
+import net.corda.finance.AMOUNT
 import net.corda.finance.flows.CashIssueAndPaymentFlow
 import java.util.*
 
@@ -36,7 +36,7 @@ class CashBankService(host: String, port: Int, username: String, password: Strin
 
     override fun allocateCash(request: CashBankProto.AllocateCashRequest, responseObserver: StreamObserver<Empty>) {
         val flowRequest = CashIssueAndPaymentFlow.IssueAndPaymentRequest(
-                amount = Amount(
+                amount = AMOUNT(
                         request.amount.toLong(),
                         Currency.getInstance(request.currency)
                 ),

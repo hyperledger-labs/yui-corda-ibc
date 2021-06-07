@@ -120,6 +120,7 @@ data class CordaClientState constructor(
         }.toSet()
         val context = SerializationFactory.defaultFactory.defaultContext
                 .withClassLoader(attachmentsClassLoader)
+                .withLenientCarpenter()
                 .withCustomSerializers(serializers)
         val outputs = SerializationFactory.defaultFactory.withCurrentContext(context) {
             proof.toSignedTransaction().tx.outputsOfType<T>()

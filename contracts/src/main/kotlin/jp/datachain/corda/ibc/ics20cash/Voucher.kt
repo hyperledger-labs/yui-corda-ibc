@@ -2,25 +2,21 @@ package jp.datachain.corda.ibc.ics20cash
 
 import ibc.applications.transfer.v1.Transfer
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.states.IbcFungibleState
 import net.corda.core.contracts.*
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.serialization.CordaSerializable
-import java.security.PublicKey
 
 @BelongsToContract(Ibc::class)
 @CordaSerializable
 data class Voucher(
-        override val participants: List<AbstractParty>,
-        override val owner: AnonymousParty,
-        override val amount: Amount<Issued<Transfer.DenomTrace>>
-): FungibleAsset<Transfer.DenomTrace> {
-    override val exitKeys: Collection<PublicKey> get() = setOf(owner.owningKey, amount.token.issuer.party.owningKey)
+        override val baseId: StateRef,
+        override val amount: Amount<Transfer.DenomTrace>,
+        override val owner: AbstractParty
+): IbcFungibleState<Transfer.DenomTrace>(), OwnableState {
+    override val participants get() = listOf(owner)
 
     override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
-        throw NotImplementedError()
-    }
-    override fun withNewOwnerAndAmount(newAmount: Amount<Issued<Transfer.DenomTrace>>, newOwner: AbstractParty): FungibleAsset<Transfer.DenomTrace> {
         throw NotImplementedError()
     }
 }

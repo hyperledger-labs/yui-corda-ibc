@@ -13,8 +13,12 @@ fun String.addPath(portId: Identifier, channelId: Identifier): String {
 
 fun String.removePrefix(): String {
     val components = split('/', ignoreCase = false, limit = 3)
-    require(components.size == 3)
-    return components.last()
+    return if (components.size == 2) {
+        ""
+    } else {
+        require(components.size == 3)
+        components.last()
+    }
 }
 
 fun String.hasPrefixes(vararg prefixes: String): Boolean {

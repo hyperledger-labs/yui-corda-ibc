@@ -1,6 +1,6 @@
 .PHONY: build
 .PHONY: deployNodes upNodes downNodes
-.PHONY: prepareHostA startServerA shutdownServerA
+.PHONY: prepareHostA startServerA shutdownServerA startServerBankA shutdownServerBankA
 .PHONY: prepareHostB startServerB shutdownServerB
 .PHONY: executeTest executeOldTest
 .PHONY: test oldTest
@@ -50,18 +50,22 @@ prepareHostB:
 	$(CLIENT) admin shutdown             -e http://localhost:19999
 
 runServerA:
-	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 9999 `cat base-hash-a.txt`"
+	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`"
 
 startServerA:
-	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 9999 `cat base-hash-a.txt`" &
+	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
 	sleep 10
 
 startServerB:
-	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 19999 `cat base-hash-b.txt`" &
+	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-hash-b.txt`" &
+	sleep 10
+
+startServerBankA:
+	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 29999 `cat base-hash-a.txt`" &
 	sleep 10
 
 executeOldTest:
-	./gradlew :grpc-adapter:runClient --args "executeTest localhost:9999 localhost:19999 `$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA` `$(CLIENT) node address-from-name -e http://localhost:19999 -n PartyB`"
+	./gradlew :grpc-adapter:runClient --args "executeTest localhost:9999 localhost:19999 localhost:29999 `$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA` `$(CLIENT) node address-from-name -e http://localhost:19999 -n PartyB`"
 
 executeTest:
 	$(CLIENT) client create-clients \
@@ -84,6 +88,9 @@ shutdownServerA:
 shutdownServerB:
 	$(CLIENT) admin shutdown -e http://localhost:19999
 
+shutdownServerBankA:
+	$(CLIENT) admin shutdown -e http://localhost:29999
+
 test: prepareHostA prepareHostB startServerA startServerB executeTest shutdownServerA shutdownServerB
 
-oldTest: prepareHostA prepareHostB startServerA startServerB executeOldTest shutdownServerA shutdownServerB
+oldTest: prepareHostA prepareHostB startServerA startServerB startServerBankA executeOldTest shutdownServerA shutdownServerB shutdownServerBankA

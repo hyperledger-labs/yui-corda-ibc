@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.ics26
 
+import jp.datachain.corda.ibc.states.IbcFungibleState
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.hash
@@ -33,8 +34,8 @@ class Context(val inStates: Collection<ContractState>, val refStates: Collection
         expectedOutputStates.forEach{require(outStates.contains(it)){"$it is not included in outStates"}}
 
         // Confirm that all input states are included in output states
-        require(outIbcStates.map{it.linearId}.containsAll(
-                inIbcStates.map{it.linearId}))
+        require(outIbcStates.filter{it !is IbcFungibleState<*>}.map{it.linearId}.containsAll(
+                inIbcStates.filter{it !is IbcFungibleState<*>}.map{it.linearId}))
 
         // Confirm all baseIds in states are same
         val baseId = outIbcStates.first().baseId
