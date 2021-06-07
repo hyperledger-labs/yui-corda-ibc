@@ -1,7 +1,8 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.ics24
 
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.flows.util.queryIbcGenesis
 import jp.datachain.corda.ibc.ics24.Host
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -11,7 +12,7 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcHostCreateFlow(val baseId: StateRef) : FlowLogic<SignedTransaction>() {
+class IbcHostCreateFlow(private val baseId: StateRef) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -30,13 +31,12 @@ class IbcHostCreateFlow(val baseId: StateRef) : FlowLogic<SignedTransaction>() {
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-        val stx = subFlow(FinalityFlow(tx, sessions))
-        return stx
+        return subFlow(FinalityFlow(tx, sessions))
     }
 }
 
 @InitiatedBy(IbcHostCreateFlow::class)
-class IbcHostCreateResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+class IbcHostCreateResponderFlow(private val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))

@@ -1,7 +1,8 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.ics20
 
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.flows.util.queryIbcBank
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
@@ -41,13 +42,12 @@ class IbcFundAllocateFlow(
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-        val stx = subFlow(FinalityFlow(tx, sessions))
-        return stx
+        return subFlow(FinalityFlow(tx, sessions))
     }
 }
 
 @InitiatedBy(IbcFundAllocateFlow::class)
-class IbcFundAllocateResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+class IbcFundAllocateResponderFlow(private val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))

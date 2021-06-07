@@ -1,10 +1,14 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.ics20
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.channel.v1.Tx
+import ibc.applications.transfer.v1.Tx
+import jp.datachain.corda.ibc.flows.util.queryIbcBank
+import jp.datachain.corda.ibc.flows.util.queryIbcHost
+import jp.datachain.corda.ibc.flows.util.queryIbcState
+import jp.datachain.corda.ibc.ics2.ClientState
+import jp.datachain.corda.ibc.ics20.CreateOutgoingPacket
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics26.HandleChanCloseInit
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
@@ -16,9 +20,9 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcChanCloseInitFlow(
-        val baseId: StateRef,
-        val msg: Tx.MsgChannelCloseInit
+class IbcSendTransferFlow(
+        private val baseId: StateRef,
+        private val msg: Tx.MsgTransfer
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
@@ -27,38 +31,50 @@ class IbcChanCloseInitFlow(
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        // query channel from vault
-        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.channelId))!!
+        // query chan from vault
+        val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.sourceChannel))!!
 
-        // query connection from vault
+        // query conn from vault
         val connId = Identifier(chan.state.data.end.connectionHopsList.single())
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, connId)!!
 
-        // create command and outputs
-        val command = HandleChanCloseInit(msg)
-        val ctx = Context(setOf(chan.state.data), setOf(host, conn).map{it.state.data})
+        // query client from vault
+        val clientId = Identifier(conn.state.data.end.clientId)
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
+
+        // query bank from vault
+        val bank = serviceHub.vaultService.queryIbcBank(baseId)!!
+
+        // execute command for obtaining outputs
+        val ctx = Context(
+                setOf(chan, bank).map{it.state.data},
+                setOf(host, client, conn).map{it.state.data}
+        )
         val signers = listOf(ourIdentity.owningKey)
+        val command = CreateOutgoingPacket(msg)
         command.execute(ctx, signers)
 
-        // build tx
+        // build transaction
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-                .addCommand(command, signers)
+        builder.addCommand(command, signers)
                 .addReferenceState(ReferencedStateAndRef(host))
+                .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
-        ctx.outStates.forEach{builder.addOutputState(it)}
+                .addInputState(bank)
+        ctx.outStates.forEach { builder.addOutputState(it) }
 
+        // sign transaction (by initiator)
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-        val stx = subFlow(FinalityFlow(tx, sessions))
-        return stx
+        return subFlow(FinalityFlow(tx, sessions))
     }
 }
 
-@InitiatedBy(IbcChanCloseInitFlow::class)
-class IbcChanCloseInitResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(IbcSendTransferFlow::class)
+class IbcSendTransferResponderFlow(private val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))

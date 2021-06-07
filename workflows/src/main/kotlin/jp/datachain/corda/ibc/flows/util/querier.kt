@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.util
 
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics24.Genesis

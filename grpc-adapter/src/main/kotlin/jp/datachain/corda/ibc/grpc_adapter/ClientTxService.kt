@@ -3,7 +3,7 @@ package jp.datachain.corda.ibc.grpc_adapter
 import ibc.core.client.v1.Client
 import ibc.core.client.v1.MsgGrpc
 import io.grpc.stub.StreamObserver
-import jp.datachain.corda.ibc.flows.IbcClientCreateFlow
+import jp.datachain.corda.ibc.flows.ics2.IbcClientCreateFlow
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
 

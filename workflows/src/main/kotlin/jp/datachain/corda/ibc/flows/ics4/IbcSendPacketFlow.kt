@@ -1,11 +1,14 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.channel.v1.Tx
+import ibc.core.channel.v1.ChannelOuterClass
+import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.flows.util.queryIbcHost
+import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
@@ -17,26 +20,23 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcAcknowledgePacketFlow(
-        val baseId: StateRef,
-        val msg: Tx.MsgAcknowledgement
+class IbcSendPacketFlow(
+        private val baseId: StateRef,
+        private val packet: ChannelOuterClass.Packet
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
+        val notary = serviceHub.networkMapCache.notaryIdentities.single()
+
+        val builder = TransactionBuilder(notary)
+
         // query host from vault
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        // query bank if necessary
-        val bankOrNull =
-                if (msg.packet.destinationPort == "transfer")
-                    serviceHub.vaultService.queryIbcBank(baseId)!!
-                else
-                    null
-
         // query chan from vault
-        val chanId = Identifier(msg.packet.sourceChannel)
+        val chanId = Identifier(packet.sourceChannel)
         val chan = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, chanId)!!
 
         // query conn from vault
@@ -47,40 +47,25 @@ class IbcAcknowledgePacketFlow(
         val clientId = Identifier(conn.state.data.end.clientId)
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
-        // create command and outputs
-        val command = HandlePacketAcknowledgement(msg)
-        val ctx = Context(
-                if (bankOrNull != null) {
-                    setOf(chan.state.data, bankOrNull.state.data)
-                } else {
-                    setOf(chan.state.data)
-                },
-                setOf(host, client, conn).map{it.state.data}
-        )
-        val signers = listOf(ourIdentity.owningKey)
-        command.execute(ctx, signers)
+        val ctx = Context(setOf(chan.state.data), setOf(host.state.data, client.state.data, conn.state.data))
+        Handler.sendPacket(ctx, packet)
 
-        // build tx
-        val notary = serviceHub.networkMapCache.notaryIdentities.single()
-        val builder = TransactionBuilder(notary)
-                .addCommand(command, signers)
+        builder.addCommand(Ibc.Commands.SendPacket(packet), ourIdentity.owningKey)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
-        bankOrNull?.let{builder.addInputState(it)}
         ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-        val stx = subFlow(FinalityFlow(tx, sessions))
-        return stx
+        return subFlow(FinalityFlow(tx, sessions))
     }
 }
 
-@InitiatedBy(IbcAcknowledgePacketFlow::class)
-class IbcAcknowledgePacketResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(IbcSendPacketFlow::class)
+class IbcSendPacketResponderFlow(private val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))

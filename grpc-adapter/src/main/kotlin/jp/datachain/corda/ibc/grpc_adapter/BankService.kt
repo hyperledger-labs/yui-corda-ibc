@@ -5,8 +5,8 @@ import ibc.lightclients.corda.v1.BankProto
 import ibc.lightclients.corda.v1.BankServiceGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.conversion.into
-import jp.datachain.corda.ibc.flows.IbcBankCreateFlow
-import jp.datachain.corda.ibc.flows.IbcFundAllocateFlow
+import jp.datachain.corda.ibc.flows.ics20.IbcBankCreateFlow
+import jp.datachain.corda.ibc.flows.ics20.IbcFundAllocateFlow
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
