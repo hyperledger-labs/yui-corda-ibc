@@ -4,6 +4,7 @@ import ibc.applications.transfer.v1.Transfer
 import jp.datachain.corda.ibc.contracts.Ibc
 import net.corda.core.contracts.*
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.serialization.CordaSerializable
 import java.security.PublicKey
 
@@ -11,7 +12,7 @@ import java.security.PublicKey
 @CordaSerializable
 data class Voucher(
         override val participants: List<AbstractParty>,
-        override val owner: AbstractParty,
+        override val owner: AnonymousParty,
         override val amount: Amount<Issued<Transfer.DenomTrace>>
 ): FungibleAsset<Transfer.DenomTrace> {
     override val exitKeys: Collection<PublicKey> get() = setOf(owner.owningKey, amount.token.issuer.party.owningKey)

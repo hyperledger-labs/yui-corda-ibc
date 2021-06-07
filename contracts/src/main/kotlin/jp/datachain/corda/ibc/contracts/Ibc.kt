@@ -5,6 +5,7 @@ import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics25.Handler
@@ -12,6 +13,7 @@ import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import net.corda.core.contracts.*
 import net.corda.core.contracts.Requirements.using
+import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 
 class Ibc : Contract {
@@ -62,6 +64,21 @@ class Ibc : Contract {
                 val newBank = tx.outputsOfType<Bank>().single()
                 val expectedBank = Bank(host.state.data)
                 val expectedHost = host.state.data.addBank(expectedBank.id)
+                "Output should be expected states" using (Pair(newHost, newBank) == Pair(expectedHost, expectedBank))
+            }
+        }
+
+        data class CashBankCreate(val owner: Party) :  Commands {
+            override fun verify(tx: LedgerTransaction) = requireThat {
+                "Exactly one state should be consumed" using (tx.inputs.size == 1)
+                "Exactly two states should be created" using (tx.outputs.size == 2)
+                val signers = tx.commands.requireSingleCommand<BankCreate>().signers
+                val host = tx.inRefsOfType<Host>().single()
+                val newHost = tx.outputsOfType<Host>().single()
+                val newBank = tx.outputsOfType<CashBank>().single()
+                val expectedBank = CashBank(host.state.data, owner)
+                val expectedHost = host.state.data.addBank(expectedBank.id)
+                "Signed by bank owner" using (signers.contains(owner.owningKey))
                 "Output should be expected states" using (Pair(newHost, newBank) == Pair(expectedHost, expectedBank))
             }
         }

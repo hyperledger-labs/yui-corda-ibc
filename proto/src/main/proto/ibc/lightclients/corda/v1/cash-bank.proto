@@ -1,0 +1,44 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/datachainlab/corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+option java_outer_classname = "CashBankProto";
+
+import "ibc/lightclients/corda/v1/corda-types.proto";
+import "google/protobuf/empty.proto";
+
+service CashBankService {
+  // transactions
+  rpc CreateCashBank (CreateCashBankRequest) returns (google.protobuf.Empty);
+  rpc AllocateCash (AllocateCashRequest) returns (google.protobuf.Empty);
+
+  // queries
+  rpc QueryCashBank (google.protobuf.Empty) returns (CashBank);
+}
+
+message CreateCashBankRequest {
+  Party bank = 1;
+}
+
+message AllocateCashRequest {
+  Party owner = 1;
+  string currency = 2;
+  string amount = 3;
+}
+
+message CashBank {
+  message SupplyMap {
+    map<string, string> denomToAmount = 1;
+  }
+
+  message IbcDenomMap {
+    map<string, string> ibcDenomToDenom = 1;
+  }
+
+  repeated Party participants = 1;
+  StateRef baseId = 2;
+  Party owner = 3;
+  SupplyMap supply = 4;
+  IbcDenomMap denoms = 5;
+  string id = 6;
+}

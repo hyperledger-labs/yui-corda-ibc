@@ -2,12 +2,14 @@ package jp.datachain.corda.ibc.conversion
 
 import com.google.protobuf.ByteString
 import ibc.lightclients.corda.v1.BankProto
+import ibc.lightclients.corda.v1.CashBankProto
 import ibc.lightclients.corda.v1.CordaTypes
 import ibc.lightclients.corda.v1.HostProto
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
 import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.contracts.StateRef
@@ -125,3 +127,30 @@ fun BankProto.Bank.into() = Bank(
         locked = locked.into(),
         minted = minted.into(),
         denoms = denoms.into())
+
+fun Map<Denom, Amount>.into() = CashBankProto.CashBank.SupplyMap.newBuilder()
+        .putAllDenomToAmount(this
+                .mapKeys{it.key.toString()}
+                .mapValues{it.value.toString()})
+        .build()
+fun CashBankProto.CashBank.SupplyMap.into(): Map<Denom, Amount> = denomToAmountMap
+        .mapKeys{Denom.fromString(it.key)}
+        .mapValues{Amount.fromString(it.value)}
+
+fun Map<String, Denom>.into(): CashBankProto.CashBank.IbcDenomMap = CashBankProto.CashBank.IbcDenomMap.newBuilder()
+        .putAllIbcDenomToDenom(this
+                .mapKeys{it.key}
+                .mapValues{it.value.toString()})
+        .build()
+fun CashBankProto.CashBank.IbcDenomMap.into(): Map<String, Denom> = ibcDenomToDenomMap
+        .mapValues{Denom.fromString(it.value)}
+        .toMap()
+
+fun CashBank.into() = CashBankProto.CashBank.newBuilder()
+        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
+        .setBaseId(baseId.into())
+        .setOwner(owner.into())
+        .setSupply(supply.into())
+        .setDenoms(denoms.into())
+        .setId(id.id)
+        .build()

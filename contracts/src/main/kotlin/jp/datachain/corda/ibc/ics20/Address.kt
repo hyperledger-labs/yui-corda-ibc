@@ -1,12 +1,12 @@
 package jp.datachain.corda.ibc.ics20
 
 import net.corda.core.crypto.Crypto
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.parseAsHex
 import net.corda.core.utilities.toHexString
 import org.bitcoinj.core.Bech32
+import java.security.PublicKey
 
 @CordaSerializable
 class Address(bytes: ByteArray): OpaqueBytes(bytes) {
@@ -22,10 +22,10 @@ class Address(bytes: ByteArray): OpaqueBytes(bytes) {
 
         fun fromHex(hex: String) = Address(hex.parseAsHex())
         fun fromBech32(bech32: String) = Address(decodeBech32(bech32))
-        fun fromAnonParty(party: AnonymousParty) = Address(party.owningKey.encoded)
+        fun fromPublicKey(pubkey: PublicKey) = Address(pubkey.encoded)
     }
 
     fun toHex() : String = bytes.toHexString()
     fun toBech32() : String = encodeBech32(bytes)
-    fun toAnonParty() = AnonymousParty(Crypto.decodePublicKey(bytes))
+    fun toPublicKey() = Crypto.decodePublicKey(bytes)
 }

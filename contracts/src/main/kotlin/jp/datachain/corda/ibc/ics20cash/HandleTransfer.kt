@@ -21,7 +21,7 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
         val sourceChannel = Identifier(msg.sourceChannel)
 
         // resolve real denom
-        val bank = ctx.getReference<Bank>()
+        val bank = ctx.getReference<CashBank>()
         val denom =
                 if (msg.token.denom.hasPrefixes("ibc"))
                     bank.resolveDenom(msg.token.denom)
@@ -33,7 +33,7 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
             // verify cash owner
             val cashes = ctx.getInputs<Cash.State>()
             val cashOwner = cashes.map{it.owner}.distinct().single()
-            require(cashOwner.owningKey == sender.toAnonParty().owningKey)
+            require(cashOwner.owningKey == sender.toPublicKey())
 
             // verify denom & amount
             val cashSum = cashes.map{it.amount}.sumOrThrow() // sumOrThrow ensures all Cashes have same token (= issuer + currency)
@@ -46,7 +46,7 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
             // verify voucher owner
             val vouchers = ctx.getInputs<Voucher>()
             val voucherOwner = vouchers.map{it.owner}.distinct().single()
-            require(voucherOwner.owningKey == sender.toAnonParty().owningKey)
+            require(voucherOwner.owningKey == sender.toPublicKey())
 
             // verify denom & amount
             val voucherSum = vouchers.map{it.amount}.sumOrThrow() // sumCash ensures all Vouchers have same token (= issuer + currency)
@@ -55,7 +55,7 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
             require(voucherSum.quantity == amount.toLong())
 
             // burn vouchers
-            ctx.addOutput(ctx.getInput<Bank>().burn(denom, amount))
+            ctx.addOutput(ctx.getInput<CashBank>().burn(denom, amount))
         }
 
         val data = Transfer.FungibleTokenPacketData.newBuilder()

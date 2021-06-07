@@ -10,6 +10,7 @@ import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.ModuleCallbacks
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
+import net.corda.core.identity.AnonymousParty
 import net.corda.finance.contracts.asset.Cash
 
 class ModuleCallbacks: ModuleCallbacks {
@@ -21,7 +22,7 @@ class ModuleCallbacks: ModuleCallbacks {
 
         val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
         val source = denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
-        val bank = ctx.getInput<Bank>()
+        val bank = ctx.getInput<CashBank>()
 
         if (source) {
             try {
@@ -37,7 +38,7 @@ class ModuleCallbacks: ModuleCallbacks {
                 require(cashSum.quantity == amount.toLong())
 
                 // unlock assets = transfer Cash from Bank user to receiver
-                ctx.addOutput(Cash.State(cashSum, receiver.toAnonParty()))
+                ctx.addOutput(Cash.State(cashSum, AnonymousParty(receiver.toPublicKey())))
 
                 ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
@@ -66,7 +67,7 @@ class ModuleCallbacks: ModuleCallbacks {
     override fun onAcknowledgePacket(ctx: Context, packet: ChannelOuterClass.Packet, acknowledgement: ChannelOuterClass.Acknowledgement) {
         when (acknowledgement.responseCase) {
             ChannelOuterClass.Acknowledgement.ResponseCase.RESULT ->
-                ctx.addOutput(ctx.getInput<Bank>().copy())
+                ctx.addOutput(ctx.getInput<CashBank>().copy())
             ChannelOuterClass.Acknowledgement.ResponseCase.ERROR ->
                 refundTokens(ctx, packet)
             else -> throw java.lang.IllegalArgumentException()
@@ -80,7 +81,7 @@ class ModuleCallbacks: ModuleCallbacks {
         val sender = Address.fromBech32(data.sender)
 
         val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
-        val bank = ctx.getInput<Bank>()
+        val bank = ctx.getInput<CashBank>()
         if (source) {
             // verify cash owner
             val cashes = ctx.getInputs<Cash.State>()
@@ -93,7 +94,7 @@ class ModuleCallbacks: ModuleCallbacks {
             require(cashSum.quantity == amount.toLong())
 
             // unlock assets = refund Cash from Bank user to receiver
-            ctx.addOutput(Cash.State(cashSum, sender.toAnonParty()))
+            ctx.addOutput(Cash.State(cashSum, AnonymousParty(sender.toPublicKey())))
         } else {
             // re-mint voucher
             val (bank, voucher) = bank.mint(sender, denom, amount)
