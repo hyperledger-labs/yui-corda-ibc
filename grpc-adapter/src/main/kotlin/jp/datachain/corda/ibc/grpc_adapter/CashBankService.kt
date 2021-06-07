@@ -6,6 +6,7 @@ import ibc.lightclients.corda.v1.CashBankServiceGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.flows.ics20cash.IbcCashBankCreateFlow
+import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20cash.CashBank
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateRef
@@ -18,28 +19,30 @@ import net.corda.finance.flows.CashIssueAndPaymentFlow
 import java.util.*
 
 class CashBankService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): CashBankServiceGrpc.CashBankServiceImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
-    override fun createCashBank(request: CashBankProto.CreateCashBankRequest, responseObserver: StreamObserver<Empty>) {
-        ops.startFlow(::IbcCashBankCreateFlow, baseId, request.bank.into()).returnValue.get()
-        responseObserver.onNext(Empty.getDefaultInstance())
-        responseObserver.onCompleted()
-    }
-
     private fun vaultQueryCashBank() = ops.vaultQueryBy<CashBank>(
             QueryCriteria.LinearStateQueryCriteria(
                     externalId = listOf(baseId.toString())
             )
     )
 
+    private fun addressToParty(address: String) = ops.partyFromKey(Address.fromBech32(address).toPublicKey())!!
+
+    override fun createCashBank(request: CashBankProto.CreateCashBankRequest, responseObserver: StreamObserver<Empty>) {
+        val bank = addressToParty(request.bankAddress)
+        ops.startFlow(::IbcCashBankCreateFlow, baseId, bank).returnValue.get()
+        responseObserver.onNext(Empty.getDefaultInstance())
+        responseObserver.onCompleted()
+    }
+
     override fun allocateCash(request: CashBankProto.AllocateCashRequest, responseObserver: StreamObserver<Empty>) {
-        val notary = vaultQueryCashBank().statesMetadata.single().notary as Party
         val flowRequest = CashIssueAndPaymentFlow.IssueAndPaymentRequest(
                 amount = Amount(
                         request.amount.toLong(),
                         Currency.getInstance(request.currency)
                 ),
                 issueRef = OpaqueBytes(ByteArray(1)),
-                recipient = request.owner.into(),
-                notary = notary,
+                recipient = addressToParty(request.ownerAddress),
+                notary = vaultQueryCashBank().statesMetadata.single().notary as Party,
                 anonymous = false)
         ops.startFlow(::CashIssueAndPaymentFlow, flowRequest).returnValue.get()
         responseObserver.onNext(Empty.getDefaultInstance())

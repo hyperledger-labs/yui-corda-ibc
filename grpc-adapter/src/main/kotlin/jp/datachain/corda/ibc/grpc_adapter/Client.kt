@@ -62,10 +62,10 @@ object Client {
         val genesisService = GenesisServiceGrpc.newBlockingStub(channel)
 
         val participants = listOf(partyName, "Notary").map {
-            nodeService.partiesFromName(Node.PartiesFromNameRequest.newBuilder()
+            nodeService.partyFromName(Node.PartyFromNameRequest.newBuilder()
                 .setName(it)
                 .setExactMatch(false)
-                .build()).partiesList.single()
+                .build()).party
         }
 
         val response = genesisService.createGenesis(Genesis.CreateGenesisRequest.newBuilder()

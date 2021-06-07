@@ -6,14 +6,24 @@ option go_package = "github.com/datachainlab/corda-ibc/go/x/ibc/light-clients/xx
 import "ibc/lightclients/corda/v1/corda-types.proto";
 
 service NodeService {
-  rpc PartiesFromName (PartiesFromNameRequest) returns (PartiesFromNameResponse);
+  rpc PartyFromName (PartyFromNameRequest) returns (PartyFromNameResponse);
+  rpc AddressFromName (AddressFromNameRequest) returns (AddressFromNameResponse);
 }
 
-message PartiesFromNameRequest {
+message PartyFromNameRequest {
   string name = 1;
   bool exact_match = 2;
 }
 
-message PartiesFromNameResponse {
-  repeated Party parties = 1;
+message PartyFromNameResponse {
+  Party party = 1;
+}
+
+message AddressFromNameRequest {
+  string name = 1;
+  bool exact_match = 2;
+}
+
+message AddressFromNameResponse {
+  string address = 1;
 }

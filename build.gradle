@@ -98,6 +98,8 @@ dependencies {
     // CorDapp dependencies.
     cordapp project(":workflows")
     cordapp project(":contracts")
+    cordapp("$corda_release_group:corda-finance-contracts:$corda_release_version")
+    cordapp("$corda_release_group:corda-finance-workflows:$corda_release_version")
 
     cordaCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
     cordaCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
@@ -120,6 +122,9 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
         }
         cordapp project(':contracts')
         cordapp project(':workflows')
+        cordapp("$corda_release_group:corda-finance-contracts:$corda_release_version")
+        cordapp("$corda_release_group:corda-finance-workflows:$corda_release_version")
+        runSchemaMigration = true
     }
     node {
         name "O=Notary,L=London,C=GB"
@@ -153,7 +158,7 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
         rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
     node {
-        name "O=BankA,L=Beijing,C=CN"
+        name "O=Bank,L=Beijing,C=CN"
         p2pPort 10011
         rpcSettings {
             address("localhost:10012")

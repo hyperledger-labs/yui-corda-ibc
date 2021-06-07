@@ -17,11 +17,11 @@ service CashBankService {
 }
 
 message CreateCashBankRequest {
-  Party bank = 1;
+  string bank_address = 1;
 }
 
 message AllocateCashRequest {
-  Party owner = 1;
+  string owner_address = 1;
   string currency = 2;
   string amount = 3;
 }

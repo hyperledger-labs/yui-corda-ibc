@@ -72,7 +72,7 @@ class Ibc : Contract {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly two states should be created" using (tx.outputs.size == 2)
-                val signers = tx.commands.requireSingleCommand<BankCreate>().signers
+                val signers = tx.commands.requireSingleCommand<CashBankCreate>().signers
                 val host = tx.inRefsOfType<Host>().single()
                 val newHost = tx.outputsOfType<Host>().single()
                 val newBank = tx.outputsOfType<CashBank>().single()
