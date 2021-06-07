@@ -2,8 +2,8 @@
 .PHONY: deployNodes upNodes downNodes
 .PHONY: prepareHostA startServerA shutdownServerA
 .PHONY: prepareHostB startServerB shutdownServerB
-.PHONY: executeTest
-.PHONY: test
+.PHONY: executeTest executeOldTest
+.PHONY: test oldTest
 
 CLIENT ?= ./rust/target/release/corda-ibc-client
 
@@ -34,7 +34,7 @@ prepareHostA:
 	sleep 20
 	$(CLIENT) host create-host   -e http://localhost:9999
 	$(CLIENT) bank create-bank   -e http://localhost:9999
-	$(CLIENT) bank allocate-fund -e http://localhost:9999 -p PartyA -d USD -a 100
+	$(CLIENT) bank allocate-fund -e http://localhost:9999 -p cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a -d USD -a 100
 	$(CLIENT) admin shutdown     -e http://localhost:9999
 
 prepareHostB:
@@ -62,6 +62,9 @@ startServerB:
 	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-hash-b.txt`" &
 	sleep 10
 
+executeOldTest:
+	./gradlew :grpc-adapter:runClient --args "executeTest localhost:9999 localhost:19999 cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a"
+
 executeTest:
 	$(CLIENT) client create-clients \
 		--client-id-a aliceclient \
@@ -84,3 +87,5 @@ shutdownServerB:
 	$(CLIENT) admin shutdown -e http://localhost:19999
 
 test: prepareHostA prepareHostB startServerA startServerB executeTest shutdownServerA shutdownServerB
+
+oldTest: prepareHostA prepareHostB startServerA startServerB executeOldTest shutdownServerA shutdownServerB

@@ -24,6 +24,7 @@ buildscript {
         grpc_version = constants.getProperty('grpcVersion')
         protobuf_version = constants.getProperty('protobufVersion')
         protoc_version = constants.getProperty('protocVersion')
+        bitcoinj_version = constants.getProperty('bitcoinjVersion')
     }
 
     repositories {

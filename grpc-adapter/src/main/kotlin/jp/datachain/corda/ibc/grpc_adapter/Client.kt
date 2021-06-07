@@ -426,10 +426,9 @@ object Client {
             transferTxServiceB.transfer(Tx.MsgTransfer.newBuilder().apply {
                 sourcePort = PORT_B
                 sourceChannel = CHANNEL_B
-                tokenBuilder.denom = Denom("USD")
-                        .addPrefix(Identifier(PORT_B), Identifier(CHANNEL_B))
-                        .ibcDenom
-                        .denom
+                tokenBuilder.denom = Denom.fromString("USD")
+                        .addPath(Identifier(PORT_B), Identifier(CHANNEL_B))
+                        .toIbcDenom()
                 tokenBuilder.amount = amount
                 sender = partyNameB
                 receiver = partyNameA

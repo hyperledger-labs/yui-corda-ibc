@@ -96,6 +96,7 @@ data class CordaClientState constructor(
                 "ConnectionEndSerializer",
                 "CordaClientStateSerializer",
                 "CordaConsensusStateSerializer",
+                "DenomTraceSerializer",
                 "FabricClientStateSerializer",
                 "FabricConsensusStateSerializer",
                 "HeightSerializer",

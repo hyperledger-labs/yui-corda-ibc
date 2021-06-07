@@ -26,9 +26,9 @@ class BankService(host: String, port: Int, username: String, password: String, p
     override fun allocateFund(request: BankProto.AllocateFundRequest, responseObserver: StreamObserver<Empty>) {
         ops.startFlow(::IbcFundAllocateFlow,
                 baseId,
-                Address(request.owner),
-                Denom(request.denom),
-                Amount(request.amount)
+                Address.fromBech32(request.owner),
+                Denom.fromString(request.denom),
+                Amount.fromString(request.amount)
         ).returnValue.get()
         responseObserver.onNext(Empty.getDefaultInstance())
         responseObserver.onCompleted()

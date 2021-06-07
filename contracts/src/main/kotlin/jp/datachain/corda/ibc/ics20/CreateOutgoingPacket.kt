@@ -12,19 +12,19 @@ import java.security.PublicKey
 
 data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
-        val denom = Denom(msg.token.denom)
-        val amount = Amount(msg.token.amount)
-        val sender = Address(msg.sender)
+        val amount = Amount.fromString(msg.token.amount)
+        val sender = Address.fromBech32(msg.sender)
         val sourcePort = Identifier(msg.sourcePort)
         val sourceChannel = Identifier(msg.sourceChannel)
 
         val bank = ctx.getInput<Bank>()
-        val resolvedDenom =
-                if (denom.hasIbcPrefix())
-                    bank.resolveDenom(denom)
+        val denom =
+                if (msg.token.denom.hasPrefixes("ibc"))
+                    bank.resolveDenom(msg.token.denom)
                 else
-                    denom
-        val source = !resolvedDenom.hasPrefix(sourcePort, sourceChannel)
+                    Denom.fromString(msg.token.denom)
+
+        val source = !denom.hasPrefix(sourcePort, sourceChannel)
         if (source) {
             ctx.addOutput(bank.lock(sender, denom, amount))
         } else {
@@ -32,7 +32,7 @@ data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
         }
 
         val data = Transfer.FungibleTokenPacketData.newBuilder()
-                .setDenom(resolvedDenom.denom)
+                .setDenom(denom.toString())
                 .setAmount(msg.token.amount.toLong())
                 .setSender(msg.sender)
                 .setReceiver(msg.receiver)

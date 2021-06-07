@@ -16,7 +16,7 @@ data class Bank(
         val allocated: MutableMap<Denom, MutableMap<Address, Amount>>,
         val locked: MutableMap<Denom, MutableMap<Address, Amount>>,
         val minted: MutableMap<Denom, MutableMap<Address, Amount>>,
-        val denoms: MutableMap<Denom, Denom>
+        val denoms: MutableMap<String, Denom>
 ): IbcState {
     override val id = Identifier("bank")
 
@@ -77,8 +77,8 @@ data class Bank(
     }
 
     fun recordDenom(denom: Denom) = deepCopy().apply{
-        denoms[denom.ibcDenom] = denom
+        denoms[denom.toIbcDenom()] = denom
     }
 
-    fun resolveDenom(ibcDenom: Denom) = denoms[ibcDenom] ?: throw IllegalArgumentException()
+    fun resolveDenom(ibcDenom: String) = denoms[ibcDenom] ?: throw java.lang.IllegalArgumentException("unknown IBC denom: $ibcDenom")
 }
