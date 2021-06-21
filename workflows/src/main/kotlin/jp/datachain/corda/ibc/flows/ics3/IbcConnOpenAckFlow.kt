@@ -1,11 +1,14 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.ics3
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.connection.v1.Tx
+import jp.datachain.corda.ibc.flows.util.queryIbcHost
+import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
-import jp.datachain.corda.ibc.ics26.HandleConnOpenInit
+import jp.datachain.corda.ibc.ics26.HandleConnOpenAck
+import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -15,40 +18,46 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcConnOpenInitFlow(
-        val baseId: StateRef,
-        val msg: Tx.MsgConnectionOpenInit
+class IbcConnOpenAckFlow(
+        private val baseId: StateRef,
+        private val msg: Tx.MsgConnectionOpenAck
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
+        // query host state
         val host = serviceHub.vaultService.queryIbcHost(baseId)!!
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(msg.clientId))!!
+        // query conn state
+        val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, Identifier(msg.connectionId))!!
+        // query client state
+        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(conn.state.data.end.clientId))!!
 
-        val command = HandleConnOpenInit(msg)
-        val ctx = Context(setOf(host.state.data), setOf(client.state.data))
+        // create command and outputs
+        val command = HandleConnOpenAck(msg)
+        val ctx = Context(setOf(conn.state.data), setOf(host.state.data, client.state.data))
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)
 
+        // build tx
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-        builder.addCommand(command, ourIdentity.owningKey)
-                .addInputState(host)
+                .addCommand(command, signers)
+                .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
+                .addInputState(conn)
         ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-        val stx = subFlow(FinalityFlow(tx, sessions))
-        return stx
+        return subFlow(FinalityFlow(tx, sessions))
     }
 }
 
-@InitiatedBy(IbcConnOpenInitFlow::class)
-class IbcConnOpenInitResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(IbcConnOpenAckFlow::class)
+class IbcConnOpenAckResponderFlow(private val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))

@@ -96,6 +96,7 @@ data class CordaClientState constructor(
                 "ConnectionEndSerializer",
                 "CordaClientStateSerializer",
                 "CordaConsensusStateSerializer",
+                "DenomTraceSerializer",
                 "FabricClientStateSerializer",
                 "FabricConsensusStateSerializer",
                 "HeightSerializer",
@@ -119,6 +120,7 @@ data class CordaClientState constructor(
         }.toSet()
         val context = SerializationFactory.defaultFactory.defaultContext
                 .withClassLoader(attachmentsClassLoader)
+                .withLenientCarpenter()
                 .withCustomSerializers(serializers)
         val outputs = SerializationFactory.defaultFactory.withCurrentContext(context) {
             proof.toSignedTransaction().tx.outputsOfType<T>()

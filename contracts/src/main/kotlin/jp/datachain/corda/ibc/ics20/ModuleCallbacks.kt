@@ -9,9 +9,9 @@ import jp.datachain.corda.ibc.ics26.ModuleCallbacks
 class ModuleCallbacks: ModuleCallbacks {
     override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
         val data = packet.data.toFungibleTokenPacketData()
-        val denom = Denom(data.denom)
-        val amount = Amount(data.amount)
-        val receiver = Address(data.receiver)
+        val denom = Denom.fromString(data.denom)
+        val amount = Amount.fromLong(data.amount)
+        val receiver = Address.fromBech32(data.receiver)
 
         val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
         val source = denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
@@ -27,10 +27,10 @@ class ModuleCallbacks: ModuleCallbacks {
             }
         } else {
             try {
-                val prefixedDenom = denom.addPrefix(Identifier(packet.destinationPort), Identifier(packet.destinationChannel))
+                val prefixedDenom = denom.addPath(Identifier(packet.destinationPort), Identifier(packet.destinationChannel))
                 ctx.addOutput(bank
                         .recordDenom(prefixedDenom)
-                        .mint(receiver, prefixedDenom.ibcDenom, amount))
+                        .mint(receiver, prefixedDenom, amount))
                 ackBuilder.result = ByteString.copyFrom(ByteArray(1){1})
             } catch (e: IllegalArgumentException) {
                 ctx.addOutput(bank.copy())
@@ -52,16 +52,16 @@ class ModuleCallbacks: ModuleCallbacks {
 
     private fun refundTokens(ctx: Context, packet: ChannelOuterClass.Packet) {
         val data = packet.data.toFungibleTokenPacketData()
-        val denom = Denom(data.denom)
-        val amount = Amount(data.amount)
-        val sender = Address(data.sender)
+        val denom = Denom.fromString(data.denom)
+        val amount = Amount.fromLong(data.amount)
+        val sender = Address.fromBech32(data.sender)
 
         val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))
         val bank = ctx.getInput<Bank>()
         if (source) {
             ctx.addOutput(bank.unlock(sender, denom, amount))
         } else {
-            ctx.addOutput(bank.mint(sender, denom.ibcDenom, amount))
+            ctx.addOutput(bank.mint(sender, denom, amount))
         }
     }
 }

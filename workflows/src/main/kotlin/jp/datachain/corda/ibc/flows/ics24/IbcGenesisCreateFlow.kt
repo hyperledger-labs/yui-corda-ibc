@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc.flows
+package jp.datachain.corda.ibc.flows.ics24
 
 import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
@@ -10,7 +10,7 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcGenesisCreateFlow(val participants: List<Party>) : FlowLogic<SignedTransaction>() {
+class IbcGenesisCreateFlow(private val participants: List<Party>) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         require(participants.contains(ourIdentity))
@@ -25,13 +25,12 @@ class IbcGenesisCreateFlow(val participants: List<Party>) : FlowLogic<SignedTran
         val tx = serviceHub.signInitialTransaction(builder)
 
         val sessions = (participants - ourIdentity).map{initiateFlow(it)}
-        val stx = subFlow(FinalityFlow(tx, sessions))
-        return stx
+        return subFlow(FinalityFlow(tx, sessions))
     }
 }
 
 @InitiatedBy(IbcGenesisCreateFlow::class)
-class IbcGenesisCreateResponderFlow(val counterPartySession: FlowSession) : FlowLogic<Unit>() {
+class IbcGenesisCreateResponderFlow(private val counterPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         val stx = subFlow(ReceiveFinalityFlow(counterPartySession))

@@ -1,33 +1,77 @@
 package jp.datachain.corda.ibc.ics20
 
+import ibc.applications.transfer.v1.Transfer
 import jp.datachain.corda.ibc.ics24.Identifier
+import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.utilities.hexToByteArray
 import net.corda.core.utilities.toHex
+import java.security.PublicKey
+import java.util.*
 
 @CordaSerializable
-data class Denom(val denom: String) {
-    fun hasPrefix(portId: Identifier, chanId: Identifier): Boolean {
-        denom.split('/').let {
-            return it.size == 3 && it[0] == portId.id && it[1] == chanId.id
+data class Denom(val denomTrace: Transfer.DenomTrace) {
+
+    companion object {
+        private fun encodeIssuedCurrency(issuerKey: PublicKey, currency: Currency) : String {
+            val issuerKeyString = issuerKey.encoded.toHex()
+            val currencyString = currency.currencyCode
+            return "$issuerKeyString:$currencyString"
         }
-    }
 
-    fun addPrefix(portId: Identifier, chanId: Identifier) = Denom("${portId.id}/${chanId.id}/$denom")
-
-    fun removePrefix(): Denom = denom.split('/').let {
-        assert(it.size == 3)
-        Denom(it[2])
-    }
-
-    fun hasIbcPrefix(): Boolean = denom.split('/').let {
-        assert(it.size == 2)
-        it[0] == "ibc"
-    }
-
-    val ibcDenom: Denom
-        get() {
-            val hash = SecureHash.sha256(denom).bytes.toHex()
-            return Denom("ibc/$hash")
+        private fun decodeIssuedCurrency(issuedCurrency: String) : Pair<PublicKey, Currency> {
+            val words = issuedCurrency.split(':')
+            require(words.size == 2)
+            val issuerKey = Crypto.decodePublicKey(words[0].hexToByteArray())
+            val currency = Currency.getInstance(words[1])!!
+            return Pair(issuerKey, currency)
         }
+
+        fun fromIssuedCurrency(issuerKey: PublicKey, currency: Currency) = fromString(encodeIssuedCurrency(issuerKey, currency))
+
+        fun fromString(denom: String) = Denom(
+                denom.split('/').let {
+                    Transfer.DenomTrace.newBuilder()
+                            .setPath(it.dropLast(1).joinToString("/"))
+                            .setBaseDenom(it.last())
+                            .build()
+                })
+    }
+
+    fun addPath(portId: Identifier, chanId: Identifier) = Denom(denomTrace.toBuilder()
+            .setPath(denomTrace.path.addPath(portId, chanId))
+            .build())
+
+    fun hasPrefix(portId: Identifier, chanId: Identifier)
+            = denomTrace.path.hasPrefixes(portId.id, chanId.id)
+
+    fun removePrefix() = Denom(denomTrace.toBuilder()
+            .setPath(denomTrace.path.removePrefix())
+            .build())
+
+    fun isVoucher() = denomTrace.path.isNotEmpty()
+
+    val issuerKey: PublicKey get() {
+        require(!isVoucher())
+        val (issuerKey, _) = decodeIssuedCurrency(denomTrace.baseDenom)
+        return issuerKey
+    }
+
+    val currency: Currency get() {
+        require(!isVoucher())
+        val (_, currency) = decodeIssuedCurrency(denomTrace.baseDenom)
+        return currency
+    }
+
+    override fun toString() = if (isVoucher()) {
+        "${denomTrace.path}/${denomTrace.baseDenom}"
+    } else {
+        denomTrace.baseDenom!!
+    }
+
+    fun toIbcDenom() : String {
+        val hash = SecureHash.sha256(toString()).bytes.toHex()
+        return "ibc/$hash"
+    }
 }

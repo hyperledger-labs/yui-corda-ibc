@@ -26,6 +26,7 @@ object Server {
         baseId?.let{
             opsReadyServices += HostService(hostname, port, username, password, it)
             opsReadyServices += BankService(hostname, port, username, password, it)
+            opsReadyServices += CashBankService(hostname, port, username, password, it)
 
             opsReadyServices += ClientTxService(hostname, port, username, password, it)
             opsReadyServices += ConnectionTxService(hostname, port, username, password, it)

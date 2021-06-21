@@ -5,8 +5,8 @@ import ibc.lightclients.corda.v1.BankProto
 import ibc.lightclients.corda.v1.BankServiceGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.conversion.into
-import jp.datachain.corda.ibc.flows.IbcBankCreateFlow
-import jp.datachain.corda.ibc.flows.IbcFundAllocateFlow
+import jp.datachain.corda.ibc.flows.ics20.IbcBankCreateFlow
+import jp.datachain.corda.ibc.flows.ics20.IbcFundAllocateFlow
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
@@ -26,9 +26,9 @@ class BankService(host: String, port: Int, username: String, password: String, p
     override fun allocateFund(request: BankProto.AllocateFundRequest, responseObserver: StreamObserver<Empty>) {
         ops.startFlow(::IbcFundAllocateFlow,
                 baseId,
-                Address(request.owner),
-                Denom(request.denom),
-                Amount(request.amount)
+                Address.fromBech32(request.owner),
+                Denom.fromString(request.denom),
+                Amount.fromString(request.amount)
         ).returnValue.get()
         responseObserver.onNext(Empty.getDefaultInstance())
         responseObserver.onCompleted()

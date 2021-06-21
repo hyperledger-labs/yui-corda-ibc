@@ -1,40 +1,46 @@
 package jp.datachain.corda.ibc.ics26
 
+import jp.datachain.corda.ibc.states.IbcFungibleState
 import jp.datachain.corda.ibc.states.IbcState
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.hash
 
-class Context(val inStates: Collection<IbcState>, val refStates: Collection<IbcState>) {
-    val outStates = mutableSetOf<IbcState>()
+class Context(val inStates: Collection<ContractState>, val refStates: Collection<ContractState>) {
+    val outStates = mutableSetOf<ContractState>()
 
-    inline fun <reified T: IbcState> getInput(): T {
-        return inStates.filter{it is T}.single() as T
+    private val inIbcStates get() = inStates.mapNotNull{it as? IbcState}
+    private val refIbcStates get() = refStates.mapNotNull{it as? IbcState}
+    private val outIbcStates get() = outStates.mapNotNull{it as? IbcState}
+
+    inline fun <reified T: ContractState> getInputs(): List<T> {
+        return inStates.filterIsInstance<T>()
     }
+    inline fun <reified T: ContractState> getInput() = getInputs<T>().single()
+    inline fun <reified T: ContractState> getInputOrNull() = getInputs<T>().singleOrNull()
 
-    inline fun <reified T: IbcState> getInputOrNull(): T? {
-        return inStates.filter{it is T}.singleOrNull() as T?
+    inline fun <reified T: ContractState> getReferences(): List<T> {
+        return refStates.filterIsInstance<T>()
     }
+    inline fun <reified T: ContractState> getReference() = getReferences<T>().single()
 
-    inline fun <reified T: IbcState> getReference(): T {
-        return refStates.filter{it is T}.single() as T
-    }
-
-    inline fun <reified T: IbcState> addOutput(state: T) {
+    inline fun <reified T: ContractState> addOutput(state: T) {
         assert(outStates.none{it is T})
         outStates.add(state)
     }
 
-    fun verifyResults(expectedStates: Collection<IbcState>) {
+    fun verifyResults(expectedOutputStates: Collection<ContractState>) {
         // Confirm that output states are expected ones
-        require(expectedStates.map{it}.sortedBy{it.id}
-                == outStates.map{it}.sortedBy{it.id})
+        require(expectedOutputStates.size == outStates.size)
+        expectedOutputStates.forEach{require(outStates.contains(it)){"$it is not included in outStates"}}
 
         // Confirm that all input states are included in output states
-        require(outStates.map{it.linearId}.containsAll(
-                inStates.map{it.linearId}))
+        require(outIbcStates.filter{it !is IbcFungibleState<*>}.map{it.linearId}.containsAll(
+                inIbcStates.filter{it !is IbcFungibleState<*>}.map{it.linearId}))
 
         // Confirm all baseIds in states are same
-        val baseId = outStates.first().baseId
-        inStates.forEach{require(it.baseId == baseId)}
-        refStates.forEach{require(it.baseId == baseId)}
-        outStates.forEach{require(it.baseId == baseId)}
+        val baseId = outIbcStates.first().baseId
+        inIbcStates.forEach{require(it.baseId == baseId)}
+        refIbcStates.forEach{require(it.baseId == baseId)}
+        outIbcStates.forEach{require(it.baseId == baseId)}
     }
 }

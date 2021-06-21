@@ -37,7 +37,7 @@ object Client {
             "createHost" -> createHost(args[1])
             "createBank" -> createBank(args[1])
             "allocateFund" -> allocateFund(args[1], args[2])
-            "executeTest" -> executeTest(args[1], args[2], args[3], args[4])
+            "executeTest" -> executeTest(args[1], args[2], args[3], args[4], args[5])
         }
     }
 
@@ -62,10 +62,10 @@ object Client {
         val genesisService = GenesisServiceGrpc.newBlockingStub(channel)
 
         val participants = listOf(partyName, "Notary").map {
-            nodeService.partiesFromName(Node.PartiesFromNameRequest.newBuilder()
+            nodeService.partyFromName(Node.PartyFromNameRequest.newBuilder()
                 .setName(it)
                 .setExactMatch(false)
-                .build()).partiesList.single()
+                .build()).party
         }
 
         val response = genesisService.createGenesis(Genesis.CreateGenesisRequest.newBuilder()
@@ -110,11 +110,13 @@ object Client {
     private const val CHANNEL_VERSION_A = "CHANNEL_VERSION_A"
     private const val CHANNEL_VERSION_B = "CHANNEL_VERSION_B"
 
-    private fun executeTest(endpointA: String, endpointB: String, partyNameA: String, partyNameB: String) {
+    private fun executeTest(endpointA: String, endpointB: String, endpointBankA: String, partyNameA: String, partyNameB: String) {
         val channelA = connectGrpc(endpointA)
         val channelB = connectGrpc(endpointB)
+        val channelBankA = connectGrpc(endpointBankA)
 
         val hostServiceA = HostServiceGrpc.newBlockingStub(channelA)
+        val cashBankServiceA = CashBankServiceGrpc.newBlockingStub(channelA)
         val clientQueryServiceA = ClientQueryGrpc.newBlockingStub(channelA)
         val clientTxServiceA = ClientMsgGrpc.newBlockingStub(channelA)
         val connectionQueryServiceA = ConnectionQueryGrpc.newBlockingStub(channelA)
@@ -131,6 +133,9 @@ object Client {
         val channelQueryServiceB = ChannelQueryGrpc.newBlockingStub(channelB)
         val channelTxServiceB = ChannelMsgGrpc.newBlockingStub(channelB)
         val transferTxServiceB = TransferMsgGrpc.newBlockingStub(channelB)
+
+        val channelQueryServiceBankA = ChannelQueryGrpc.newBlockingStub(channelBankA)
+        val channelTxServiceBankA = ChannelMsgGrpc.newBlockingStub(channelBankA)
 
         val hostA = hostServiceA.queryHost(Empty.getDefaultInstance()).into()
         val consensusStateA = hostA.getConsensusState(hostA.getCurrentHeight())
@@ -282,6 +287,8 @@ object Client {
             proofHeight = chanAck.proofHeight
         }.build())
 
+        val baseDenom = "${cashBankServiceA.queryCashBank(Empty.getDefaultInstance()).owner.into().owningKey.encoded.toHex()}:USD"
+
         val pageReq = Pagination.PageRequest.newBuilder().apply{
             key = ByteString.copyFrom("", Charsets.US_ASCII)
             offset = 0
@@ -295,7 +302,7 @@ object Client {
             transferTxServiceA.transfer(Tx.MsgTransfer.newBuilder().apply {
                 sourcePort = PORT_A
                 sourceChannel = CHANNEL_A
-                tokenBuilder.denom = "USD"
+                tokenBuilder.denom = baseDenom
                 tokenBuilder.amount = amount
                 sender = partyNameA
                 receiver = partyNameB
@@ -418,18 +425,17 @@ object Client {
             }
         }
 
-        listOf(1, 58, 1).forEachIndexed { i, amount ->
+        listOf(1, 58, 1).forEachIndexed { i, quantity ->
             val seq = (i + 1).toLong()
-            val amount = amount.toString()
+            val amount = quantity.toString()
 
             // transfer back @ B
             transferTxServiceB.transfer(Tx.MsgTransfer.newBuilder().apply {
                 sourcePort = PORT_B
                 sourceChannel = CHANNEL_B
-                tokenBuilder.denom = Denom("USD")
-                        .addPrefix(Identifier(PORT_B), Identifier(CHANNEL_B))
-                        .ibcDenom
-                        .denom
+                tokenBuilder.denom = Denom.fromString(baseDenom)
+                        .addPath(Identifier(PORT_B), Identifier(CHANNEL_B))
+                        .toIbcDenom()
                 tokenBuilder.amount = amount
                 sender = partyNameB
                 receiver = partyNameA
@@ -443,14 +449,14 @@ object Client {
                 channelId = CHANNEL_B
                 sequence = seq
             }.build())
-            channelTxServiceA.recvPacket(MsgRecvPacket.newBuilder().apply {
+            channelTxServiceBankA.recvPacket(MsgRecvPacket.newBuilder().apply {
                 packet = Packet.parseFrom(packetCommitment.commitment)
                 proof = packetCommitment.proof
                 proofHeight = packetCommitment.proofHeight
             }.build())
 
             // recv ack @ B
-            val packetAcknowledgement = channelQueryServiceA.packetAcknowledgement(QueryPacketAcknowledgementRequest.newBuilder().apply {
+            val packetAcknowledgement = channelQueryServiceBankA.packetAcknowledgement(QueryPacketAcknowledgementRequest.newBuilder().apply {
                 portId = PORT_A
                 channelId = CHANNEL_A
                 sequence = seq

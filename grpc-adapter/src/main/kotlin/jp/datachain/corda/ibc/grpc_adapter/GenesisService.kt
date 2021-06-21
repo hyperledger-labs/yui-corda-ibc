@@ -4,7 +4,7 @@ import ibc.lightclients.corda.v1.Genesis
 import ibc.lightclients.corda.v1.GenesisServiceGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.conversion.into
-import jp.datachain.corda.ibc.flows.IbcGenesisCreateFlow
+import jp.datachain.corda.ibc.flows.ics24.IbcGenesisCreateFlow
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
 
