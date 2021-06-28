@@ -1,0 +1,1197 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>IBC/TAO for Corda &mdash; corda-ibc  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ICS-20 for Corda" href="ics-20.html" />
+    <link rel="prev" title="Introduction of Corda" href="corda.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> corda-ibc
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../ja/index.html">Corda-IBCドキュメント</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Corda-IBC Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="corda.html">Introduction of Corda</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">IBC/TAO for Corda</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ibc-overview">IBC Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#requirements-for-blockchains-that-can-support-ibc">Requirements for blockchains that can support IBC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#approach-of-corda-ibc">Approach of Corda-IBC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#problem-how-can-we-uniquely-identify-state-data-in-corda">Problem: How can we uniquely identify state data in Corda?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#approach-genesis-host-method">Approach: Genesis-Host method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#light-client-for-corda-ibc">Light client for Corda-IBC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#limitation-corda-ibc-can-t-handle-packet-receive-timeout">Limitation: Corda-IBC can’t handle packet receive timeout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#detailed-specification-of-ibc-tao-for-corda">Detailed specification of IBC/TAO for Corda</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-host-part">IBC contract: Host part</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-client-part">IBC contract: Client part</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-connection-part">IBC contract: Connection part</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-channel-part">IBC contract: Channel part</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ics-20.html">ICS-20 for Corda</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">corda-ibc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Corda-IBC Documentation</a> &raquo;</li>
+        
+      <li>IBC/TAO for Corda</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/en/corda-ibc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ibc-tao-for-corda">
+<h1>IBC/TAO for Corda<a class="headerlink" href="#ibc-tao-for-corda" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ibc-overview">
+<h2>IBC Overview<a class="headerlink" href="#ibc-overview" title="Permalink to this headline">¶</a></h2>
+<p>The inter-blockchain communication protocol(<a class="reference external" href="https://github.com/cosmos/ibc">IBC</a>) is a protocol that
+allows heterogeneous blockchains to connect to each other without
+trusting a middleman (called the relayer).
+This protocol consists of the following two layers.</p>
+<dl class="simple">
+<dt>Transport, Authentication and Ordering layer protocol (IBC/TAO)</dt><dd><p>The protocol for communication (handshaking and packet
+transmission / reception) between blockchains</p>
+</dd>
+<dt>Application layer protocol (IBC/APP)</dt><dd><p>The general term for protocols, linking blockchain
+applications (smart contracts) that work on two blockchains,
+based on IBC/TAO</p>
+</dd>
+</dl>
+<p>Packets are sent, received and acknowledged by IBC/TAO as follows.</p>
+<ol class="arabic simple">
+<li><p>Source chain sends packet</p></li>
+<li><p>Dest chain receives packet and replys ACK</p>
+<ul class="simple">
+<li><p>Dest chain verifies that source chain sent packet correctly</p></li>
+</ul>
+</li>
+<li><p>Source chain receives ACK</p>
+<ul class="simple">
+<li><p>Source chain verifies that dest chain received packet correctly</p></li>
+</ul>
+</li>
+</ol>
+<p>On the other hand, cross-chain applications (IBC/APP) work as follows.</p>
+<ol class="arabic simple">
+<li><p>Source chain sends packet and <strong>performs additional processing
+defined for send by an IBC/APP protocol</strong></p></li>
+<li><p>Dest chain receives packet, <strong>performs additional processing defined
+for receive by an IBC/APP protocol</strong>, and replys ACK</p>
+<ul class="simple">
+<li><p>Dest chain verifies that source chain sent packet correctly</p></li>
+</ul>
+</li>
+<li><p>Source chain receives ACK and <strong>performs additional processing
+defined for ACK-receive by an IBC/APP protocol</strong></p>
+<ul class="simple">
+<li><p>Source chain verifies that dest chain received packet correctly</p></li>
+</ul>
+</li>
+</ol>
+<p>Comparing the above two, you can find that any IBC/APP protocols use
+the same mechanism defined by IBC/TAO for blockchain interoperability.
+The feature of IBC is that a wide variety of cross-chain applications
+can be easily designed by simply defining plugins to be added to packet
+transmission, reception and acknowledgement through IBC/TAO.</p>
+</div>
+<div class="section" id="requirements-for-blockchains-that-can-support-ibc">
+<h2>Requirements for blockchains that can support IBC<a class="headerlink" href="#requirements-for-blockchains-that-can-support-ibc" title="Permalink to this headline">¶</a></h2>
+<p>The detailed requirements for blockchains to be connected over IBC
+are specified in <a class="reference external" href="https://github.com/cosmos/ibc/tree/master/spec/core/ics-024-host-requirements">ICS-24</a>,
+but they are roughly as follows.</p>
+<ul class="simple">
+<li><p>State data specified by IBC (for example, ClientState,
+ConsensusState, Connection, Channel, PacketCommitment,
+Acknowledgement) can be stored in an unmodifiable manner.</p></li>
+<li><p>State data specified by IBC must be able to transition in
+accordance with the rules specified by IBC.</p></li>
+<li><p>State data specified by IBC cannot be modified or erased in a
+manner other than the rules specified by IBC</p></li>
+<li><p>State data specified by IBC can be uniquely identified and can be
+queried.</p></li>
+<li><p>State data acquired through the RPC can be verified to be valid,
+outside the blockchain, using an appropriate light client
+protocol.</p></li>
+</ul>
+</div>
+<div class="section" id="approach-of-corda-ibc">
+<h2>Approach of Corda-IBC<a class="headerlink" href="#approach-of-corda-ibc" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Corda-IBC is a framework allowing for communication through IBC
+between Corda networks or between a Corda network and other
+blockchain.</p></li>
+<li><p>However, Corda network or ledger is not itself a platform that meets
+the requirements of IBC.</p></li>
+<li><p>Therefore, Corda-IBC does not treat an entire Corda network or ledger
+as a endpoint of communication through IBC; instead, it constructs
+IBC-compliant states and transitions inside an application running on
+Corda, called a CorDapp, and connects them to other blockchains using
+IBC.</p></li>
+</ul>
+</div>
+<div class="section" id="problem-how-can-we-uniquely-identify-state-data-in-corda">
+<h2>Problem: How can we uniquely identify state data in Corda?<a class="headerlink" href="#problem-how-can-we-uniquely-identify-state-data-in-corda" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>IBC requires that states can be uniquely identified (and queried).</p></li>
+<li><p>On the other hand, state data in Corda is difficult to uniquely
+identify.</p></li>
+<li><p>Of course, it is easy to make a state have an immutable ID.</p>
+<ul>
+<li><p>For example, it is sufficient to assign an ID at the time of state
+generation and to enforce by contract that the ID does not change
+during subsequent state transitions.</p></li>
+</ul>
+</li>
+<li><p>But Corda doesn’t have a mechanism to ensure consistency across all
+states on the network, so it’s difficult to prohibit states from having
+duplicate IDs, even if they belong to the same contract.</p></li>
+</ul>
+</div>
+<div class="section" id="approach-genesis-host-method">
+<h2>Approach: Genesis-Host method<a class="headerlink" href="#approach-genesis-host-method" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Overview</p>
+<ul>
+<li><p>Somebody (anyone is ok) generates a state called Genesis first,
+then consumes it and generates a state called Host instead.</p></li>
+<li><p>At this time, the txid of the transaction including Genesis is
+embedded as prefix of the ID of the Host.</p></li>
+<li><p>Since a notary ensures that Genesis can be consumed by only one
+transaction, this also ensures the uniqueness of the ID of the
+Host.</p></li>
+<li><p>When generating various IBC-complicant states, by enforcing them
+to have the same ID prefix as that of the Host, we can enforce the
+uniqueness of the IDs of these states.</p></li>
+<li><p>This Host plays as an endpoint to be connected to other blockchain
+using the IBC protocol.</p></li>
+</ul>
+</li>
+<li><p>Genesis state</p>
+<ul>
+<li><p>A state used to make an ID of Host unique</p></li>
+<li><p>Txids of transactions containing Genesis is set to Host as
+“baseID”.</p></li>
+<li><p>Under a single notary, all transactions have different txids and a
+single transaction can’t be consumed more than once, ensuring that
+only one Host can have a given baseID.</p></li>
+</ul>
+</li>
+<li><p>Host state</p>
+<ul>
+<li><p>A state that centrally manages the issuance of IDs for various
+IBC-compliant states</p></li>
+<li><p>Host generates all IBC states so that their IDs are unique to each
+other and they all have “baseID” same as that of the Host.</p></li>
+<li><p>States belonging to different Hosts can be distinguished because
+they have different baseIDs.</p></li>
+</ul>
+</li>
+<li><p>Uniqueness of ID in Genesis-Host method</p>
+<ul>
+<li><p>Notary can be uniquely identified by public key</p></li>
+<li><p>Within the scope of notary, Host can be uniquely identified by
+baseID</p></li>
+<li><p>Within the scope of Host, each state can be uniquely identified by
+stateID</p></li>
+<li><p>Therefore, the combination of notary public key + baseID + stateID
+uniquely identifies every state of IBC</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="light-client-for-corda-ibc">
+<h2>Light client for Corda-IBC<a class="headerlink" href="#light-client-for-corda-ibc" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Light client consists of the following data</p>
+<ul>
+<li><p>The public key of a notary</p>
+<ul>
+<li><p>This key uniquely identifies the notary under which the Host
+that is the endpoint of IBC exists.</p></li>
+</ul>
+</li>
+<li><p>baseID</p>
+<ul>
+<li><p>This baseID uniquely identifies the Host that is the endpoint
+of IBC.</p>
+<ul>
+<li><p>The Host is regarded as a “blockchain” for the Light client.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>How to verify state</p>
+<ul>
+<li><p>Proof</p>
+<ul>
+<li><p>The transaction signed by the notary and containing the output to
+be verified is used as proof.</p></li>
+</ul>
+</li>
+<li><p>Verification for state existence works as follows.</p>
+<ol class="arabic simple">
+<li><p>Checking that the transaction is signed by the given notary.</p></li>
+<li><p>Checking that the state is included in output of the transaction.</p></li>
+<li><p>Checking that the state has the given baseID.</p></li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="limitation-corda-ibc-can-t-handle-packet-receive-timeout">
+<h2>Limitation: Corda-IBC can’t handle packet receive timeout<a class="headerlink" href="#limitation-corda-ibc-can-t-handle-packet-receive-timeout" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>In the IBC spec, a packet expiration date in units of height or
+timestamp can be set when a packet is transmitted. If a packet isn’t
+received by the expiration date, receiving the packet will fail.</p></li>
+<li><p>Corda-IBC does not define height or timestamp, so if Corda is the
+receiver of the packet, it cannot handle the receive timeout.</p></li>
+</ul>
+</div>
+<div class="section" id="detailed-specification-of-ibc-tao-for-corda">
+<h2>Detailed specification of IBC/TAO for Corda<a class="headerlink" href="#detailed-specification-of-ibc-tao-for-corda" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ibc-contract-host-part">
+<h3>IBC contract: Host part<a class="headerlink" href="#ibc-contract-host-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="states">
+<h4>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Genesis</span></code></dt>
+<dd><p>A state class determining baseID of Host</p>
+<dl class="py attribute">
+<dt id="Genesis.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Genesis.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set of users to share Genesis, Host and all states to be
+generated by the Host</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Host</span></code></dt>
+<dd><p>A state class representing an endpoint of communication via Corda-IBC</p>
+<dl class="py attribute">
+<dt id="Host.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Host.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>participants inherited from Genesis (with the same content)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#Host.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reference to Genesis (txhash)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.notary">
+<code class="sig-name descname"><span class="pre">notary</span></code><em class="property"><span class="pre">:</span> <span class="pre">Party</span></em><a class="headerlink" href="#Host.notary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identity of notary that notarized Genesis</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.clientIds">
+<code class="sig-name descname"><span class="pre">clientIds</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;Identifier&gt;</span></em><a class="headerlink" href="#Host.clientIds" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of IDs of ClientState states created under Host, used to
+prevent duplicate IDs from being assigned to different ClientState
+states</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.connIds">
+<code class="sig-name descname"><span class="pre">connIds</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;Identifier&gt;</span></em><a class="headerlink" href="#Host.connIds" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of IDs of Connection states created under Host, used to
+prevent duplicate IDs from being assigned to different Connection
+states.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.portChanIds">
+<code class="sig-name descname"><span class="pre">portChanIds</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;Pair&lt;Identifier,</span> <span class="pre">Identifier&gt;&gt;</span></em><a class="headerlink" href="#Host.portChanIds" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of pairs of portId and channelID of Channel states created
+under Host, used to prevent duplicate ID pairs from being
+assigned, but allowing identical channelIDs to be used on
+different ports.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="commands">
+<h4>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">GenesisCreate</span></code></dt>
+<dd><p>A command creating Genesis</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Genesis</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>Transaction must not contain any other input or output state</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HostCreate</span></code></dt>
+<dd><p>A command consuming Genesis and creating Host</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Genesis</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host.participants == Genesis.participants</p></li>
+<li><p>Host.baseId == refOf(Genesis)</p></li>
+<li><p>Host.notary == notaryOf(Genesis)</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="ibc-contract-client-part">
+<h3>IBC contract: Client part<a class="headerlink" href="#ibc-contract-client-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h4>States<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">ClientState</span></code></dt>
+<dd><p>A state class representing ClientState defined in ICS-2</p>
+<dl class="py attribute">
+<dt id="ClientState.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#ClientState.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>participants inherited from Host</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#ClientState.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>baseId inherited from Host</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#ClientState.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of the ClientState</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.clientState">
+<code class="sig-name descname"><span class="pre">clientState</span></code><em class="property"><span class="pre">:</span> <span class="pre">Any</span></em><a class="headerlink" href="#ClientState.clientState" title="Permalink to this definition">¶</a></dt>
+<dd><p>ClientState body encoded in protobuf, of which content is
+different for each type of blockchain that ClientState verifies</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.consensusStates">
+<code class="sig-name descname"><span class="pre">consensusStates</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Height,</span> <span class="pre">ConsensusState&gt;</span></em><a class="headerlink" href="#ClientState.consensusStates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associative array with height as the key and ConsensusState as the
+value</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h4>Commands<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleClientCreate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgCreateClient</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command creating a new ClientState state</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host (clientIds + = &lt;ID of ClientState to be created&gt;)</p></li>
+<li><p>ClientState</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All input states must also be included in output states
+(because states of Corda-IBC are never deleted once created)</p></li>
+<li><p>ID of the new ClientState must be added to clientIds of Host.</p></li>
+<li><p>ClientState must be correctly created using ClientState and
+ConsensusState given in MsgCreateClient and set in transaction
+output.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="ibc-contract-connection-part">
+<h3>IBC contract: Connection part<a class="headerlink" href="#ibc-contract-connection-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h4>States<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">IbcConnection</span></code></dt>
+<dd><p>A state class representing Connection defined in ICS-3</p>
+<dl class="py attribute">
+<dt id="IbcConnection.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#IbcConnection.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>participants inherited from Host (with the same content)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcConnection.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#IbcConnection.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>baseId inherited from Host (with the same value)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcConnection.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#IbcConnection.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of this connection</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcConnection.end">
+<code class="sig-name descname"><span class="pre">end</span></code><em class="property"><span class="pre">:</span> <span class="pre">ConnectionEnd</span></em><a class="headerlink" href="#IbcConnection.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instance of the ConnectionEnd class automatically generated by
+protobuf</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id4">
+<h4>Commands<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenInit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenInit</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing connOpenInit</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host (connIds + = &lt;ID of the new connection&gt;)</p></li>
+<li><p>IbcConnection(end.state == INIT)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>ID of the new IbcConnection must be added to connIds of the
+Host.</p></li>
+<li><p>Requirements for connOpenInit defined in ICS-3 must be filled.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenTry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenTry</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing connOpenTry</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[optional] IbcConnection(end.state == INIT)</p>
+<ul>
+<li><p>As specified in ICS-3, the IbcConnection in INIT state may
+or may not have been created in advance.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host (connIds + = &lt;ID of the new IbcConnection ID&gt;)</p></li>
+<li><p>IbcConnection(end.state == TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>ID of the new IbcConnection must be added to connIds of Host.</p>
+<ul>
+<li><p>If IbcConnection has been created in advance and set in
+input, new IbcConnection must not created.</p></li>
+</ul>
+</li>
+<li><p>Requirements for connOpenTry defined in ICS-3 must be filled.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenAck</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenAck</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing connOpenAck</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>IbcConnection(end.state == INIT or TRYOPEN)</p>
+<ul>
+<li><p>As specified in ICS-3, there are two possible IbcConnection
+states: INIT or TRYOPEN.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcConnection(end.state == OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Requirements for connOpenAck defined in ICS-3 must be filled.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenConfirm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenConfirm</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing connOpenConfirm</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>IbcConnection(end.state == TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcConnection(end.state == OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Requirements for connOpenConfirm defined in ICS-3 must be
+filled.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="ibc-contract-channel-part">
+<h3>IBC contract: Channel part<a class="headerlink" href="#ibc-contract-channel-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h4>States<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">IbcChannel</span></code></dt>
+<dd><p>A state class representing Channel define in ICS-4</p>
+<dl class="py attribute">
+<dt id="IbcChannel.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#IbcChannel.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>participants inherited from Host (with the same content)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#IbcChannel.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>baseId inherited from Host (with the same value)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#IbcChannel.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifier of this channel</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.portId">
+<code class="sig-name descname"><span class="pre">portId</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#IbcChannel.portId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port identifier of this channel</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.end">
+<code class="sig-name descname"><span class="pre">end</span></code><em class="property"><span class="pre">:</span> <span class="pre">Channel</span></em><a class="headerlink" href="#IbcChannel.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instance of Channel class automatically generated by protobuf</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.nextSequenceSend">
+<code class="sig-name descname"><span class="pre">nextSequenceSend</span></code><em class="property"><span class="pre">:</span> <span class="pre">Long</span></em><a class="headerlink" href="#IbcChannel.nextSequenceSend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sequence to be used for next packet to be sent</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.nextSequenceRecv">
+<code class="sig-name descname"><span class="pre">nextSequenceRecv</span></code><em class="property"><span class="pre">:</span> <span class="pre">Long</span></em><a class="headerlink" href="#IbcChannel.nextSequenceRecv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sequence of next packet to be received (used only for channel with
+type of ORDERED)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.nextSequenceAck">
+<code class="sig-name descname"><span class="pre">nextSequenceAck</span></code><em class="property"><span class="pre">:</span> <span class="pre">Long</span></em><a class="headerlink" href="#IbcChannel.nextSequenceAck" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sequence of next ACK to be received (used only for channel with
+type of ORDERED)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.packets">
+<code class="sig-name descname"><span class="pre">packets</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Long,</span> <span class="pre">Packet&gt;</span></em><a class="headerlink" href="#IbcChannel.packets" title="Permalink to this definition">¶</a></dt>
+<dd><p>An associative array with sequence as the key and packet as the
+value</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.receipts">
+<code class="sig-name descname"><span class="pre">receipts</span></code><em class="property"><span class="pre">:</span> <span class="pre">Set&lt;Long&gt;</span></em><a class="headerlink" href="#IbcChannel.receipts" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set of sequences of received packets</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.acknowledgements">
+<code class="sig-name descname"><span class="pre">acknowledgements</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Long,</span> <span class="pre">Acknowledgement&gt;</span></em><a class="headerlink" href="#IbcChannel.acknowledgements" title="Permalink to this definition">¶</a></dt>
+<dd><p>An associative array with sequence as the key and acknowledgement
+as the value</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h4>Commands<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenInit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenInit</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing chanOpenInit</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(portChanIds += Pair(Channel.portId, Channel.id))</p></li>
+<li><p>IbcChannel(end.state = INIT)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Port Id and Channel ID of the new IbcChannel must be added to
+portChanIds of Host</p></li>
+<li><p>Requirements for chanOpenInit defined in ICS-4 must be
+satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenTry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenTry</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing chanOpenTry</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>[optional] IbcChannel(end.state = INIT)</p>
+<ul>
+<li><p>As specified in ICS-4, IbcChannel in INIT state may or may
+not have been created in advance.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(portChanIds += Pair(Channel.portId, Channel.id))</p></li>
+<li><p>IbcChannel(end.state = TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Port ID and channel ID of the new IbcChannel must be added to
+the portChanIds of Host</p>
+<ul>
+<li><p>If the IbcChannel has been created in advance, new
+IbcChannel must not be created.</p></li>
+</ul>
+</li>
+<li><p>Requirements for chanOpenTry defined in ICS-4 must be
+satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenAck</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenAck</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing chanOpenAck</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = INIT or TRYOPEN)</p>
+<ul>
+<li><p>As specified in ICS-4, there are two possible IbcChannel
+states : INIT or TRYOPEN.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Requirements for chanOpenAck defined in ICS-4 must be
+satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenConfirm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenConfirm</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing chanOpenConfirm</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Requirements for chanOpenConfirm defined in ICS-4 must be
+satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanCloseInit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelCloseInit</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing chanCloseInit</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = CLOSED)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Requirements for chanCloseInit defined in ICS-4 must be
+satisfield.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanCloseConfirm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelCloseConfirm</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing chanCloseConfirm</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = CLOSED)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All Input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created)</p></li>
+<li><p>Requirements for chanCloseConfirm defined in ICS-4 must be
+satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="ics-20.html" class="btn btn-neutral float-right" title="ICS-20 for Corda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="corda.html" class="btn btn-neutral float-left" title="Introduction of Corda" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Datachain, Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

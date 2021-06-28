@@ -1,0 +1,1100 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>IBC/TAO for Corda &mdash; corda-ibc  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ICS-20 for Corda" href="ics-20.html" />
+    <link rel="prev" title="Introduction of Corda" href="corda.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> corda-ibc
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Corda-IBCドキュメント</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="corda.html">Introduction of Corda</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">IBC/TAO for Corda</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ibc">IBC概要</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">IBCを実行するための要件</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#corda-ibc">Corda-IBCのアプローチ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id">課題: IDによる状態データの一意な指定</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#genesis-host">解決方式: Genesis-Host方式</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#corda-ibclight-client">Corda-IBCに対するLight client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">制限: パケット受信タイムアウトの扱い</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">IBC/TAO for Corda詳細仕様</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-host-part">Ibc contract: Host part</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-client-part">Ibc contract: Client part</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-connection-part">Ibc contract: Connection part</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ibc-contract-channel-part">Ibc contract: Channel part</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ics-20.html">ICS-20 for Corda</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../en/index.html">Corda-IBC Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">corda-ibc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Corda-IBCドキュメント</a> &raquo;</li>
+        
+      <li>IBC/TAO for Corda</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/ja/corda-ibc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ibc-tao-for-corda">
+<h1>IBC/TAO for Corda<a class="headerlink" href="#ibc-tao-for-corda" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ibc">
+<h2>IBC概要<a class="headerlink" href="#ibc" title="Permalink to this headline">¶</a></h2>
+<p>Inter-Blockchain Communication(<a class="reference external" href="https://github.com/cosmos/ibc">IBC</a>)プロトコルは
+異種のブロックチェーン同士でデータ仲介者(Relayer)を信頼することなく
+通信するためのプロトコルです。
+このプロトコルは以下の2レイヤーから成ります。</p>
+<dl class="simple">
+<dt>TAO(Transport, Authentication and Ordering layer)プロトコル</dt><dd><p>ブロックチェーン間の通信(ハンドシェークとパケット送受信)を
+実現するプロトコル</p>
+</dd>
+<dt>APP(APPlication layer)プロトコル</dt><dd><p>IBC/TAOを利用してクロスチェーンのアプリケーションを実現する
+プロトコル群の総称</p>
+</dd>
+</dl>
+<p>IBC/TAOでは以下の手順でパケットが送受信されます。</p>
+<ol class="arabic simple">
+<li><p>Srcチェーン: パケット送信</p></li>
+<li><p>Dstチェーン: パケット受信 + ACK返信</p>
+<ul class="simple">
+<li><p>Srcチェーンが確実にパケット送信処理を実行したことを検証</p></li>
+</ul>
+</li>
+<li><p>Srcチェーン: ACK受信</p>
+<ul class="simple">
+<li><p>Dstチェーンが確実にパケット受信処理を実行したことを検証</p></li>
+</ul>
+</li>
+</ol>
+<p>一方でIBC/APPによって以下の手順でクロスチェーンアプリケーションが
+動作します。</p>
+<ol class="arabic simple">
+<li><p>Srcチェーン: パケット送信 + <strong>送信時APP処理</strong></p></li>
+<li><p>Dstチェーン: パケット受信 + <strong>受信時APP処理</strong> + ACK返信</p>
+<ul class="simple">
+<li><p>Srcチェーンが確実にパケット送信処理を実行したことを検証</p></li>
+</ul>
+</li>
+<li><p>Srcチェーン: ACK受信 + <strong>ACK受信時APP処理</strong></p>
+<ul class="simple">
+<li><p>Dstチェーンが確実にパケット受信処理を実行したことを検証</p></li>
+</ul>
+</li>
+</ol>
+<p>両者を比較すると、ブロックチェーン間の相互運用性の
+仕組み(ハンドシェーク・パケット送受信)はIBC/TAOで完結している
+ことが分かります。
+両ブロックチェーン上でIBC/TAOのパケット送受信の処理に
+IBC/APPの処理を連動させるだけで、多様なアプリケーションの相互運用が
+実現できることがIBCの特長です。</p>
+</div>
+<div class="section" id="id2">
+<h2>IBCを実行するための要件<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>IBCは <a class="reference external" href="https://github.com/cosmos/ibc/tree/master/spec/core/ics-024-host-requirements">ICS-24</a> でプラットフォームの詳細な要件を規定していますが、
+大まかにIBCは以下のような性質をプラットフォームに要求します。</p>
+<ul class="simple">
+<li><p>IBCが規定する状態データ(ClientState, ConsensusState, Connection, Channel, PacketCommitment, Acknowledgement等)が改ざん不能な形で記録できること</p></li>
+<li><p>IBCが規定する状態データが、IBCが規定する規則に従い正しく状態遷移できること</p></li>
+<li><p>IBCが規定する状態データが、IBCが規定する規則以外の方法での変更・消去が不可能であること</p></li>
+<li><p>IBCが規定する状態データを、IDによって一意に指定して取得可能であること</p></li>
+<li><p>取得した状態データの正しさを、プラットフォームの外で、適切なLight clientを用いて検証できること</p></li>
+</ul>
+</div>
+<div class="section" id="corda-ibc">
+<h2>Corda-IBCのアプローチ<a class="headerlink" href="#corda-ibc" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Corda-IBCは、Cordaネットワーク同士あるいはCordaネットワークと他のブロックチェーンをIBCを用いて接続するためのフレームワークである</p></li>
+<li><p>しかしCordaにおけるネットワーク/台帳は、それ自体はIBCが求める要件を満たしたプラットフォームにはなっていない</p></li>
+<li><p>そこでCorda-IBCでは、Cordaによるネットワーク/台帳の全体をIBCによって接続する対象として扱うのではなく、Corda上で動作するアプリケーション(CorDapp)の内部にIBCに適合する状態と状態遷移を構成し、これをIBCによって他のブロックチェーンと接続する</p></li>
+</ul>
+</div>
+<div class="section" id="id">
+<h2>課題: IDによる状態データの一意な指定<a class="headerlink" href="#id" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>IBCは各種stateをIDによって一意に指定して取得可能であることを要求する</p></li>
+<li><p>これに対してCordaにおけるstateは単純にIDによって一意に識別することは困難</p></li>
+<li><p>もちろん或る一つのstateが不変なIDを持つようにすることは容易</p>
+<ul>
+<li><p>例えばstate生成時にIDを付与する</p></li>
+<li><p>以降の状態遷移ではIDが変化しないようcontractで強制すればよい</p></li>
+</ul>
+</li>
+<li><p>しかしCordaではネットワーク上の全てのstate間の整合性を保証するような仕組みが無いため、同じcontractに従う複数のstateが同じIDを持たないよう強制することは難しい</p></li>
+</ul>
+</div>
+<div class="section" id="genesis-host">
+<h2>解決方式: Genesis-Host方式<a class="headerlink" href="#genesis-host" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>概要</p>
+<ul>
+<li><p>まずGenesisというstateを生成し、続いてこれを消費して代わりにHostという状態を生成する</p></li>
+<li><p>この時にHostのIDの一部として、Genesisを含むトランザクションのtxidを埋め込む</p></li>
+<li><p>notaryが二重消費の防止によってGenesisが唯一つのトランザクションにより消費されることを保証するため、これによりHostのIDの一意性も保証される</p></li>
+<li><p>Hostを起点としてIBCの各種stateを生成することで、これらstateのIDの一意性を強制する</p></li>
+<li><p>このHostが、Corda-IBCによって、IBCプロトコルを用いて他のブロックチェーンと接続される対象となる</p></li>
+</ul>
+</li>
+<li><p>Genesis state</p>
+<ul>
+<li><p>HostのIDの一意性を得るために利用されるstate</p></li>
+<li><p>Genesisを含むトランザクションのtxidは”baseID”としてHostに設定される</p></li>
+<li><p>一つのnotaryの下で同じtxidを持つ複数のトランザクションを消費することは出来ないため、或るbaseIDを持つHostは唯一つであることが保証される</p></li>
+</ul>
+</li>
+<li><p>Host state</p>
+<ul>
+<li><p>IBCの各種stateのID発行を集中管理するstate</p></li>
+<li><p>IBCの各種stateは全ていずれかのHostから派生して(Hostをinputに持つトランザクションを通じて)生成する</p></li>
+<li><p>これら全てのstateに同じbaseIDが埋め込まれるため、異なるHostに属するstateは(例えstate IDが同一でも)区別できる</p></li>
+</ul>
+</li>
+<li><p>Genesis-Host方式におけるIDの一意性</p>
+<ul>
+<li><p>notaryは公開鍵によって一意に識別できる</p></li>
+<li><p>notaryのスコープにおいて、HostはbaseIDによって一意に識別できる</p></li>
+<li><p>Hostのスコープにおいて、各stateはIDによって一意に識別できる</p></li>
+<li><p>したがって、notary公開鍵+baseID+stateIDの組によって、全てのIBCのstateは一意に識別できる</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="corda-ibclight-client">
+<h2>Corda-IBCに対するLight client<a class="headerlink" href="#corda-ibclight-client" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Light clientの内部データ</p>
+<ul>
+<li><p>Notary公開鍵</p>
+<ul>
+<li><p>対象Notaryを一意に識別するため</p></li>
+</ul>
+</li>
+<li><p>baseID</p>
+<ul>
+<li><p>対象Hostを一意に識別するため</p>
+<ul>
+<li><p>当該HostをLight client対象の「ブロックチェーン」と見做す。</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Stateの検証方法</p>
+<ul>
+<li><p>Proof = 検証対象stateをOutputに持つ署名済トランザクション</p></li>
+<li><p>検証手順</p>
+<ol class="arabic simple">
+<li><p>当該StateがトランザクションのOutputとして含まれることを検証</p></li>
+<li><p>当該Stateが所定baseIDを持つことを検証</p></li>
+<li><p>トランザクションが所定Notaryに署名されていることを検証</p></li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>制限: パケット受信タイムアウトの扱い<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>IBCではパケット送信の際、height単位もしくはtimestamp単位でのパケット有効期限を設定可能な仕様になっており、この有効期限を過ぎてからパケット受信をしても失敗する</p></li>
+<li><p>Corda-IBCではheightやtimestampを定義していないため、Cordaがパケットの受信側として動作する場合、受信タイムアウトを扱うことはできない。</p></li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2>IBC/TAO for Corda詳細仕様<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ibc-contract-host-part">
+<h3>Ibc contract: Host part<a class="headerlink" href="#ibc-contract-host-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="states">
+<h4>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Genesis</span></code></dt>
+<dd><p>HostのbaseIDを規定するためのstate class</p>
+<dl class="py attribute">
+<dt id="Genesis.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Genesis.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>本Genesis/Host及びそこから派生する全てのstateの共有先となるユーザのリスト</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Host</span></code></dt>
+<dd><p>Hostを表現するstate class</p>
+<dl class="py attribute">
+<dt id="Host.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Host.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Genesisから引き継いだ(同一内容の)participants</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#Host.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Genesisのreference(= txhash + output index)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.notary">
+<code class="sig-name descname"><span class="pre">notary</span></code><em class="property"><span class="pre">:</span> <span class="pre">Party</span></em><a class="headerlink" href="#Host.notary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Genesisをnotarizeするnotary</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.clientIds">
+<code class="sig-name descname"><span class="pre">clientIds</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;Identifier&gt;</span></em><a class="headerlink" href="#Host.clientIds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Host配下で作成したClientStateのIDのリスト。
+同一のIDを振り出さないようにするために使う。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.connIds">
+<code class="sig-name descname"><span class="pre">connIds</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;Identifier&gt;</span></em><a class="headerlink" href="#Host.connIds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Host配下で作成したConnectionのIDのリスト。
+同一のIDを振り出さないようにするために使う。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Host.portChanIds">
+<code class="sig-name descname"><span class="pre">portChanIds</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;Pair&lt;Identifier,</span> <span class="pre">Identifier&gt;&gt;</span></em><a class="headerlink" href="#Host.portChanIds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Host配下で作成したChannelのportID及びchannelIDのペアのリスト。
+同一のIDペアを振り出さないようにするために使う。
+異なるportで同一のchannelIDが使われることは許容する。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="commands">
+<h4>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">GenesisCreate</span></code></dt>
+<dd><p>Genesisの作成を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Genesis</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>トランザクションに他のinput/output stateが含まれていないこと</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HostCreate</span></code></dt>
+<dd><p>GenesisをconsumeしてHostを作成する指示のcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Genesis</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host.participants == Genesis.participants</p></li>
+<li><p>Host.baseId == refOf(Genesis)</p></li>
+<li><p>Host.notary == notaryOf(Genesis)</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="ibc-contract-client-part">
+<h3>Ibc contract: Client part<a class="headerlink" href="#ibc-contract-client-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h4>States<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">ClientState</span></code></dt>
+<dd><p>ICS-2のClientStateを表現するstate class</p>
+<dl class="py attribute">
+<dt id="ClientState.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#ClientState.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostから引き継いだ(同一内容の)participants</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#ClientState.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostから引き継いだ(同一内容の)baseId</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#ClientState.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>本ClientStateのidentifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.clientState">
+<code class="sig-name descname"><span class="pre">clientState</span></code><em class="property"><span class="pre">:</span> <span class="pre">Any</span></em><a class="headerlink" href="#ClientState.clientState" title="Permalink to this definition">¶</a></dt>
+<dd><p>protobufでencodeされたClientStateの本体(対応チェーン毎に異なる)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ClientState.consensusStates">
+<code class="sig-name descname"><span class="pre">consensusStates</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Height,</span> <span class="pre">ConsensusState&gt;</span></em><a class="headerlink" href="#ClientState.consensusStates" title="Permalink to this definition">¶</a></dt>
+<dd><p>HandleClientCreate及びHandleClientUpdateによって与えられたheightとConsensusStateのペアの連想配列</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h4>Commands<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleClientCreate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgCreateClient</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>ClientStateの作成を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(clientIds += 新ClientStateのID)</p></li>
+<li><p>ClientState</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput statesがOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>HostのclientIdsに新ClientStateのIDが追加されていること</p></li>
+<li><p>MsgCreateClientで与えられたClientState及びConsensusStateを用いて正しく作成したClientStateが出力になっていること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="ibc-contract-connection-part">
+<h3>Ibc contract: Connection part<a class="headerlink" href="#ibc-contract-connection-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h4>States<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">IbcConnection</span></code></dt>
+<dd><p>ICS-3のConnectionを表現するstate class</p>
+<dl class="py attribute">
+<dt id="IbcConnection.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#IbcConnection.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostから引き継いだ(同一内容の)participants</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcConnection.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#IbcConnection.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostから引き継いだ(同一内容の)baseId</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcConnection.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#IbcConnection.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>本Connectionのidentifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcConnection.end">
+<code class="sig-name descname"><span class="pre">end</span></code><em class="property"><span class="pre">:</span> <span class="pre">ConnectionEnd</span></em><a class="headerlink" href="#IbcConnection.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>protobufで自動生成したConnectionEnd</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id8">
+<h4>Commands<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenInit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenInit</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>connOpenInitを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(connIds += 新ConnectionのID)</p></li>
+<li><p>IbcConnection(end.state == INIT)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>HostのconnIdsに新IbcConnectionのIDが追加されていること</p></li>
+<li><p>その他ICS-3のconnOpenInitで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenTry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenTry</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>connOpenTryを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[optional] IbcConnection(end.state == INIT)</p>
+<ul>
+<li><p>ICS-3のconnOpenTryで規定されている通り、予めINIT状態のIbcConnectionを作成済みでも未作成でも良い</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(connIds += 新IbcConnectionのID)</p></li>
+<li><p>IbcConnection(end.state == TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>HostのconnIdsに新IbcConnectionのIDが追加されていること</p>
+<ul>
+<li><p>予めIbcConnection作成済みの場合は追加なし</p></li>
+</ul>
+</li>
+<li><p>その他ICS-3のconnOpenTryで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenAck</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenAck</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>connOpenAckを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>IbcConnection(end.state == INIT or TRYOPEN)</p>
+<ul>
+<li><p>ICS-3のconnOpenAckで規定されている通り、IbcConnection状態はINIT状態の場合とTRYOPEN状態の2通りが可能</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcConnection(end.state == OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>ICS-3のconnOpenAckで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleConnOpenConfirm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgConnectionOpenConfirm</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>connOpenConfirmを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>IbcConnection(end.state == TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcConnection(end.state == OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>ICS-3のconnOpenConfirmで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="ibc-contract-channel-part">
+<h3>Ibc contract: Channel part<a class="headerlink" href="#ibc-contract-channel-part" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h4>States<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">IbcChannel</span></code></dt>
+<dd><p>ICS-4のChannelを表現するstate class</p>
+<dl class="py attribute">
+<dt id="IbcChannel.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#IbcChannel.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostから引き継いだ(同一内容の)participants</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#IbcChannel.baseId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostから引き継いだ(同一内容の)baseId</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.id">
+<code class="sig-name descname"><span class="pre">id</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#IbcChannel.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>本Channelのchannel identifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.portId">
+<code class="sig-name descname"><span class="pre">portId</span></code><em class="property"><span class="pre">:</span> <span class="pre">Identifier</span></em><a class="headerlink" href="#IbcChannel.portId" title="Permalink to this definition">¶</a></dt>
+<dd><p>本Channelのport identifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.end">
+<code class="sig-name descname"><span class="pre">end</span></code><em class="property"><span class="pre">:</span> <span class="pre">Channel</span></em><a class="headerlink" href="#IbcChannel.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>protobufで自動生成したChannel</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.nextSequenceSend">
+<code class="sig-name descname"><span class="pre">nextSequenceSend</span></code><em class="property"><span class="pre">:</span> <span class="pre">Long</span></em><a class="headerlink" href="#IbcChannel.nextSequenceSend" title="Permalink to this definition">¶</a></dt>
+<dd><p>次回の送信パケットに使用するsequence</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.nextSequenceRecv">
+<code class="sig-name descname"><span class="pre">nextSequenceRecv</span></code><em class="property"><span class="pre">:</span> <span class="pre">Long</span></em><a class="headerlink" href="#IbcChannel.nextSequenceRecv" title="Permalink to this definition">¶</a></dt>
+<dd><p>(ORDEREDの場合のみ使用する)次回の受信予定パケットのsequence</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.nextSequenceAck">
+<code class="sig-name descname"><span class="pre">nextSequenceAck</span></code><em class="property"><span class="pre">:</span> <span class="pre">Long</span></em><a class="headerlink" href="#IbcChannel.nextSequenceAck" title="Permalink to this definition">¶</a></dt>
+<dd><p>(ORDEREDの場合のみ使用する)次回の受信予定ACKのsequence</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.packets">
+<code class="sig-name descname"><span class="pre">packets</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Long,</span> <span class="pre">Packet&gt;</span></em><a class="headerlink" href="#IbcChannel.packets" title="Permalink to this definition">¶</a></dt>
+<dd><p>送信済みパケットのsequenceによる連想配列</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.receipts">
+<code class="sig-name descname"><span class="pre">receipts</span></code><em class="property"><span class="pre">:</span> <span class="pre">Set&lt;Long&gt;</span></em><a class="headerlink" href="#IbcChannel.receipts" title="Permalink to this definition">¶</a></dt>
+<dd><p>受信済みパケットのsequenceの集合</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="IbcChannel.acknowledgements">
+<code class="sig-name descname"><span class="pre">acknowledgements</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Long,</span> <span class="pre">Acknowledgement&gt;</span></em><a class="headerlink" href="#IbcChannel.acknowledgements" title="Permalink to this definition">¶</a></dt>
+<dd><p>送信済みACKのsequenceによる連想配列</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id10">
+<h4>Commands<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenInit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenInit</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>chanOpenInitを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(portChanIds += Pair(Channel.portId, Channel.id))</p></li>
+<li><p>IbcChannel(end.state = INIT)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>HostのportChanIdsに新IbcChannelのportId/channelIdが追加されていること</p></li>
+<li><p>その他ICS-4のchanOpenInitで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenTry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenTry</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>chanOpenTryを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>[optional] IbcChannel(end.state = INIT)</p>
+<ul>
+<li><p>ICS-4のchanOpenTryで規定されている通り、予めINIT状態のIbcChannelを作成済みでも未作成でも良い</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Host(portChanIds += Pair(Channel.portId, Channel.id))</p></li>
+<li><p>IbcChannel(end.state = TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>HostのportChanIdsに新IbcChannelのportId/channelIdが追加されていること</p>
+<ul>
+<li><p>予めIbcChannel作成済みの場合は追加なし</p></li>
+</ul>
+</li>
+<li><p>その他ICS-4のchanOpenTryで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenAck</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenAck</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>chanOpenAckを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = INIT or TRYOPEN)</p>
+<ul>
+<li><p>ICS-4のchanOpenAckで規定されている通り、IbcChannel状態はINIT状態の場合とTRYOPEN状態の2通りが可能</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>その他ICS-4のchanOpenAckで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanOpenConfirm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelOpenConfirm</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>chanOpenConfirmを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = TRYOPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>その他ICS-4のchanOpenConfirmで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanCloseInit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelCloseInit</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>chanCloseInitを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = CLOSED)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>その他ICS-4のchanCloseInitで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleChanCloseConfirm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgChannelCloseConfirm</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>chanCloseConfirmを指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel(end.state = OPEN)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(end.state = CLOSED)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>全てのInput/Output statesが同一のbaseIdを共有していること</p></li>
+<li><p>全てのInput states(readonlyを除く)がOutput statesにも含まれること(IBCのstateは作成後に消去されることはないため)</p></li>
+<li><p>その他ICS-4のchanCloseConfirmで規定されているルールに準拠すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="ics-20.html" class="btn btn-neutral float-right" title="ICS-20 for Corda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="corda.html" class="btn btn-neutral float-left" title="Introduction of Corda" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Datachain, Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

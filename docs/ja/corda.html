@@ -1,0 +1,742 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Introduction of Corda &mdash; corda-ibc  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="IBC/TAO for Corda" href="corda-ibc.html" />
+    <link rel="prev" title="Corda-IBCドキュメント" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> corda-ibc
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Corda-IBCドキュメント</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Introduction of Corda</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">概要</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">許可型ネットワーク</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">非対称な台帳</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">トランザクションフロー</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">トランザクションモデル</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notarisation-finality">Notarisation (Finality)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rpc">台帳の更新と問い合わせ(RPC)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Cordaアプリケーションの例</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cash-contract">Cash(現金) contract</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#commercialpaper-cp-contract">CommercialPaper(CP) contract</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="corda-ibc.html">IBC/TAO for Corda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ics-20.html">ICS-20 for Corda</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../en/index.html">Corda-IBC Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">corda-ibc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Corda-IBCドキュメント</a> &raquo;</li>
+        
+      <li>Introduction of Corda</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/ja/corda.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction-of-corda">
+<h1>Introduction of Corda<a class="headerlink" href="#introduction-of-corda" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>概要<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://docs.corda.net/">Corda</a> は <a class="reference external" href="https://www.r3.com/">R3</a> がオープンソースで開発するDistributed Ledger Technology(DLT)のプラットフォームです。
+エンタープライズ向けに開発され、プライバシーやスケーラビリティに強みがあります。</p>
+</div>
+<div class="section" id="id2">
+<h2>許可型ネットワーク<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>CordaはNode群及び幾つかのTTP(Trusted Third Party)群からなる許可型ネットワークを形成して動作する</p></li>
+<li><p>TTP</p>
+<dl class="simple">
+<dt>Network Map Service</dt><dd><p>各Nodeの物理情報を管理</p>
+</dd>
+<dt>Root CA</dt><dd><p>各Nodeの公開鍵に対する証明書を管理</p>
+</dd>
+<dt>Notary</dt><dd><p>UTXOモデルを採用するCordaにおいてoutputの正当な消費を公証して二重消費を防止</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>非対称な台帳<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Cordaは一般的なブロックチェーンと同様、各Nodeが台帳を持ち、ネットワークにトランザクションが提案され、検証され、適用されることを通じて更新される</p></li>
+<li><p>一方で一般的なブロックチェーンと異なり、このトランザクションの処理に関与するのは当該取引の当事者Node達のみであり(e.g. 送金であれば送金元と送金先)、それ以外のNodeにはトランザクションの存在自体が開示されない</p></li>
+<li><p>結果として各Nodeが持つ台帳は、当該Nodeが当事者となっているトランザクションのみを適用した結果として構成されるため、一般的にNode毎に異なった内容となる</p></li>
+<li><p>したがってNode間の通信も、一般的なブロックチェーンで行われる同報通信(e.g. gossipなど)ではなく、関係者間の一対一通信を用いる</p></li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2>トランザクションフロー<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>トランザクションは以下の流れを経て確定し、当事者Nodeたちの台帳を更新する</p>
+<ol class="arabic simple">
+<li><p>最初のNode(initiator)がトランザクションを作成して自身で署名</p></li>
+<li><p>Initiator nodeは、署名が必要なNode(responder)群へトランザクション内容の検証及び署名を依頼</p></li>
+<li><p>Responder nodeはトランザクションの以下の点を検証してOKならば署名して返信</p>
+<ul>
+<li><p>トランザクションの整合性を検証(詳細は次項で説明)</p></li>
+<li><p>(ビジネス観点で)取引を受け入れるかどうか判断</p></li>
+</ul>
+</li>
+<li><p>Initiator nodeは、Notaryへ二重消費の検証及び署名を依頼</p></li>
+<li><p>Notaryはトランザクションが二重消費をしていないことを検証してOKならば署名して返信</p></li>
+<li><p>Initiator nodeは、Responder群及びNotaryによる必要な全ての署名が付与されたトランザクションを、取引当事者へ配布。</p></li>
+</ol>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2>トランザクションモデル<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>CordaはUTXOモデルを採用している</p>
+<ul>
+<li><p>BitcoinのUTXOモデル</p>
+<dl class="simple">
+<dt>状態</dt><dd><ul class="simple">
+<li><p>BTCの数量</p></li>
+</ul>
+</dd>
+<dt>消費条件</dt><dd><ul class="simple">
+<li><p>消費対象outputが未消費(unspent)であること</p></li>
+<li><p>消費対象outputに埋め込まれたlocking scriptと整合するunlocking scriptが、消費側transactionに埋め込まれていること</p>
+<ul>
+<li><p>例: P2PKH(Pay-to-PubKey-Hash)</p>
+<ul>
+<li><p>locking script</p>
+<ul>
+<li><p>BTCの送付先アドレス(公開鍵のハッシュ値)</p></li>
+</ul>
+</li>
+<li><p>unlocking script</p>
+<ul>
+<li><p>BTCの所有アドレスに対応する公開鍵及び署名</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>CordaのUTXOモデル</p>
+<dl class="simple">
+<dt>状態</dt><dd><ul class="simple">
+<li><p>一定のinterfaceを実装した任意のJVMオブジェクト</p></li>
+</ul>
+</dd>
+<dt>消費条件</dt><dd><ul class="simple">
+<li><p>一定のinterfaceを実装した任意のJVMクラスによって定義</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</li>
+<li><p>トランザクションは概して以下の構成要素から成る。</p>
+<ul class="simple">
+<li><p>Input states(plural)</p></li>
+<li><p>Output states(plural)</p></li>
+<li><p>Contracts(plural)</p></li>
+<li><p>Commands(plural)</p></li>
+<li><p>Notaryの指定(optional)</p></li>
+</ul>
+</li>
+<li><p>Input/Output state</p>
+<ul class="simple">
+<li><p>net.corda.core.contracts.ContractStateインターフェースを実装したJVMクラスのインスタンス</p></li>
+<li><p>各Stateクラスは唯一つのContractクラスと対応</p></li>
+</ul>
+</li>
+<li><p>Contract</p>
+<ul class="simple">
+<li><p>net.corda.core.contracts.Contractインターフェースを実装したJVMクラス</p></li>
+<li><p>Contract::verifyメソッドによってトランザクションを検証するロジックを定義する</p></li>
+<li><p>トランザクションは、格納する全てのInput/Output stateに対応する、全てのContractクラスのverifyメソッドを通過できるものでなくてはならない。</p></li>
+<li><p>トランザクションにはContractクラス及びそれが依存する全てのコードがjar形式で埋め込まれる。</p></li>
+</ul>
+</li>
+<li><p>Command</p>
+<ul>
+<li><p>net.corda.core.contracts.Commandクラスのインスタンス</p></li>
+<li><p>以下の2要素から成る。</p>
+<p>CommandData</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>実行目的(入出力関係)の指定</p></li>
+<li><p>例えばCash contractはCommandDataとして3種類のCash.Issue(発行)/Cash.Move(移転)/Cash.Exit(回収)を持つ</p></li>
+<li><p>Contract::verifyメソッドは指定されたCommandDataに応じたロジックでトランザクションを検証する</p></li>
+</ul>
+</div></blockquote>
+<p>Signers</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>必要な署名者(複数)の指定</p></li>
+<li><p>例えばCommandDataがCash.Moveである場合、SignersとしてはInputとして指定された全てのCash.Stateの所有者を指定する必要が有る(指定しないとContract::verifyメソッドに弾かれる)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="notarisation-finality">
+<h2>Notarisation (Finality)<a class="headerlink" href="#notarisation-finality" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Notaryの目的</p>
+<ul>
+<li><p>CordaはUTXOモデルを採用しているため、トランザクションに含まれる一つ以上のInput stateが他のトランザクションによって消費済みだと、トランザクションは不正となる(二重消費)</p></li>
+<li><p>トランザクションの当事者内での検証だけでは、トランザクションが二重消費を起こしていないことを確定することはできない</p></li>
+<li><p>異なる複数の当事者群が並行してトランザクション処理を行う中で、最初に当該Input stateを消費したトランザクションを確定する、信頼できる第三者が必要</p></li>
+<li><p>このような役割を担うのがNotary</p></li>
+<li><p>Notaryはトランザクションに含まれる全てのInput statesを検証し(過去に消費されたOutput statesの記録と照合する)、二重消費が起きていない場合のみ、当該トランザクションに署名を付与する。</p></li>
+</ul>
+</li>
+<li><p>Validating notaryとNon-validating notary</p>
+<ul>
+<li><p>Notaryの目的は二重消費の防止であるため、トランザクションのInput states以外の内容をNotaryに開示する必要性は必ずしも無い。</p></li>
+<li><p>各Notaryは以下二種類のいずれかの振る舞いを選択する。</p>
+<ul>
+<li><p>Validating notary</p>
+<ul>
+<li><p>二重消費が無いことを検証する</p></li>
+<li><p>トランザクションのvalidity(Contractを満足し、必要な署名を揃えていること)も検証した上で署名する</p></li>
+<li><p>トランザクションのvalidityがNotary署名のみで確定する利点がある</p></li>
+</ul>
+</li>
+<li><p>Non-validating notary</p>
+<ul>
+<li><p>二重消費が無いことだけを検証する</p></li>
+<li><p>トランザクションのInput states以外の要素をNotaryに対して秘匿できる</p></li>
+<li><p>トランザクションのvalidityは別途トランザクション当事者が検証することを想定する</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>このようにNotaryには挙動の違いがあり、特にValidating notaryにはトランザクション内容全部が開示されることもあり、一般的に同一のネットワークに複数の異なるNotaryを運用して選択することが可能であり、使用するNotaryの指定もトランザクションの構成要素になっている</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="rpc">
+<h2>台帳の更新と問い合わせ(RPC)<a class="headerlink" href="#rpc" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Nodeに対してRPCを通じて以下の処理を実行できる</p>
+<dl class="simple">
+<dt>更新(Flowの実行)</dt><dd><ul class="simple">
+<li><p>Flowとは、トランザクションフローをプログラムコードの形で定義したものである</p></li>
+<li><p>RPC経由でFlowの開始を指示し、実行結果を受け取ることができる</p></li>
+</ul>
+</dd>
+<dt>問い合わせ</dt><dd><ul class="simple">
+<li><p>当該Nodeが当事者となったトランザクションのUTXOを幾つかの条件で検索して取得できる</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h2>Cordaアプリケーションの例<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cash-contract">
+<h3>Cash(現金) contract<a class="headerlink" href="#cash-contract" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="states">
+<h4>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">State</span></code></dt>
+<dd><p>現金を表現するstate class</p>
+<dl class="py attribute">
+<dt id="Cash.State.amount">
+<code class="sig-name descname"><span class="pre">amount</span></code><em class="property"><span class="pre">:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><a class="headerlink" href="#Cash.State.amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>現金の数量、発行者、および通貨単位</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Cash.State.exitKeys">
+<code class="sig-name descname"><span class="pre">exitKeys</span></code><em class="property"><span class="pre">:</span> <span class="pre">Collection&lt;PublicKey&gt;</span></em><a class="headerlink" href="#Cash.State.exitKeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>本Cash.Stateに対してCash.Exitを実行するために署名が必要な鍵の一覧。
+Cash.Stateが実装しているFungibleAssetインターフェースに由来し、
+Cash.Stateにおいては発行者及び現所有者の鍵</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Cash.State.owner">
+<code class="sig-name descname"><span class="pre">owner</span></code><em class="property"><span class="pre">:</span> <span class="pre">AbstractParty</span></em><a class="headerlink" href="#Cash.State.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>現所有者</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Cash.State.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Cash.State.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>本stateの当事者、つまり本stateを台帳に記録する者。
+Cash.Stateが実装しているContractStateインターフェースに由来し、
+Cash.Stateにおいては現所有者のみが該当</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="commands">
+<h4>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">Issue</span></code></dt>
+<dd><p>Cashの発行を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Cash.State(owner = issuer自身)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>当該Cash.Stateのissuer</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">Move</span></code></dt>
+<dd><p>Cashの所有権移転を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[複数可] Cash.State(owner = 移転前の所有者)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[複数可] Cash.State(owner = 移転後の所有者)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>Input側のCash.Stateのowner</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>InputとOutputの双方の合計amountが(issuer, currencyを含め)一致すること(但し後述のExit分を除く)</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">Exit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">amount:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Cashの回収(消去)を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[複数可] Cash.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[複数可] Cash.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>Input側のCash.Stateのowner</p></li>
+<li><p>Input側のCash.Stateのissuer</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>InputとOutputの双方の合計amountの差が、本コマンドのamount属性と一致すること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="commercialpaper-cp-contract">
+<h3>CommercialPaper(CP) contract<a class="headerlink" href="#commercialpaper-cp-contract" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h4>States<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">CommercialPaper.</span></code><code class="sig-name descname"><span class="pre">State</span></code></dt>
+<dd><p>CPを表現するstate class</p>
+<dl class="py attribute">
+<dt id="CommercialPaper.State.faceValue">
+<code class="sig-name descname"><span class="pre">faceValue</span></code><em class="property"><span class="pre">:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><a class="headerlink" href="#CommercialPaper.State.faceValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>額面</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.issuance">
+<code class="sig-name descname"><span class="pre">issuance</span></code><em class="property"><span class="pre">:</span> <span class="pre">PartyAndReference</span></em><a class="headerlink" href="#CommercialPaper.State.issuance" title="Permalink to this definition">¶</a></dt>
+<dd><p>発行者及び付随情報</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.maturityDate">
+<code class="sig-name descname"><span class="pre">maturityDate</span></code><em class="property"><span class="pre">:</span> <span class="pre">Instant</span></em><a class="headerlink" href="#CommercialPaper.State.maturityDate" title="Permalink to this definition">¶</a></dt>
+<dd><p>償還日</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.owner">
+<code class="sig-name descname"><span class="pre">owner</span></code><em class="property"><span class="pre">:</span> <span class="pre">AbstractParty</span></em><a class="headerlink" href="#CommercialPaper.State.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>現所有者</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#CommercialPaper.State.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>本stateの当事者、すなわち台帳に記録する者。
+CommercialPaper.Stateが実装しているContractStateインターフェースに
+由来し、CommercialPaper.Stateにおいては現所有者のみが該当</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id8">
+<h4>Commands<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">CommercialPaper.</span></code><code class="sig-name descname"><span class="pre">Issue</span></code></dt>
+<dd><p>CPの発行を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(owner = issuer自身)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>当該CommercialPaper.Stateのissuer</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Move</span></code></dt>
+<dd><p>CPの所有権移転を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(owner = 移転前の所有者)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(owner = 移転後の所有者)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>Input側のCommercialPaper.Stateのowner</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>owner以外の要素(faceValue等)に変更が無いこと</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Redeem</span></code></dt>
+<dd><p>CPの償還を指示するcommand class</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(faceValue = CP額面, issuer = CP発行者, owner = CP現所有者)</p></li>
+<li><p>[複数可] Cash.State(owner = CP発行者, amount = CP額面)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[複数可] Cash.State(owner = CP現所有者, amount = CP額面)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>当該CommercialPaper.Stateのowner (CommercialPaper.Stateの消滅を許可するため)</p></li>
+<li><p>当該CommercialPaper.Stateのissuer (Cash.Stateの移転を許可するため)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>当該CommercialPaperがOutputに含まれないこと(消滅すること)</p></li>
+<li><p>CP額面と同額分のCash.StateがCP発行者からCP現所有者へ(CPと引き換えに)Cash.Moveされること</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="corda-ibc.html" class="btn btn-neutral float-right" title="IBC/TAO for Corda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Corda-IBCドキュメント" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Datachain, Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
