@@ -1,0 +1,789 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Introduction of Corda &mdash; corda-ibc  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="IBC/TAO for Corda" href="corda-ibc.html" />
+    <link rel="prev" title="Corda-IBC Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> corda-ibc
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../ja/index.html">Corda-IBCドキュメント</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Corda-IBC Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Introduction of Corda</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#corda-overview">Corda Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#permissioned-network">Permissioned network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#asymmetric-ledgers">Asymmetric ledgers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transaction-flow">Transaction flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transaction-model">Transaction model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notarisation-finality">Notarisation (Finality)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#updates-and-queries-for-ledgers-rpc">Updates and queries for ledgers (RPC)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples-of-applications-of-corda">Examples of applications of Corda</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cash-contract">Cash contract</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#commercialpaper-cp-contract">CommercialPaper(CP) contract</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="corda-ibc.html">IBC/TAO for Corda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ics-20.html">ICS-20 for Corda</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">corda-ibc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Corda-IBC Documentation</a> &raquo;</li>
+        
+      <li>Introduction of Corda</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/en/corda.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction-of-corda">
+<h1>Introduction of Corda<a class="headerlink" href="#introduction-of-corda" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="corda-overview">
+<h2>Corda Overview<a class="headerlink" href="#corda-overview" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://docs.corda.net/">Corda</a> is an opensource Distribute Ledger Technology (DLT) platform
+developed by <a class="reference external" href="https://www.r3.com/">R3</a>.
+Developed for enterprise, it has strengths in privacy and scalability.</p>
+</div>
+<div class="section" id="permissioned-network">
+<h2>Permissioned network<a class="headerlink" href="#permissioned-network" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Corda works by forming a permissioned network consisting of
+participating nodes and some TTP(Trusted Third Party) nodes.</p></li>
+<li><p>TTP</p>
+<dl class="simple">
+<dt>Network Map Service</dt><dd><p>Manages node’s location on the network</p>
+</dd>
+<dt>Root CA</dt><dd><p>Manages certificates for nodes’ public keys</p>
+</dd>
+<dt>Notary</dt><dd><p>In Corda, which uses the UTXO model, validity of output
+consumption is notarized to prevent double consumption.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="asymmetric-ledgers">
+<h2>Asymmetric ledgers<a class="headerlink" href="#asymmetric-ledgers" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>In Corda, like a general blockchain, a ledger of each node is updated
+as transactions are proposed, validated and applied.</p></li>
+<li><p>On the other hand, unlike a general blockchain, only nodes that
+participate in the transaction are involved in processing the
+transaction (for example, in the case of payment, the source and
+destination of payment), and even existence of the transaction is not
+disclosed to other nodes.</p></li>
+<li><p>Each node’s ledger consists of the result of applying only the
+transactions in which that node is a participant. As a result, each
+node’s ledger generally has different contents from each other.</p></li>
+<li><p>Therefore, nodes use P2P communication instead of broadcast
+communication (for example, gossip protocol) utilized in typical
+blockchains.</p></li>
+</ul>
+</div>
+<div class="section" id="transaction-flow">
+<h2>Transaction flow<a class="headerlink" href="#transaction-flow" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The nodes confirm a transaction through the following flow and update
+their own ledgers.</p>
+<ol class="arabic simple">
+<li><p>The first node, called an initiator, creates the transaction and
+signs it using the node’s own private key.</p></li>
+<li><p>The initiator node asks responder nodes, who participate in the
+transaction, to verify the content of it and to sign it.</p></li>
+<li><p>The responder node verifies the following aspects of the
+transaction, signs the transaction and returns it to the initiator
+node if OK.</p>
+<ul>
+<li><p>Transaction integrity (described in the next section)</p></li>
+<li><p>Whether to accept the transaction (from a business point of
+view)</p></li>
+</ul>
+</li>
+<li><p>The initiator node asks the notary to verify that the transaction
+causes no double consumption and to sign it.</p></li>
+<li><p>The notary verifies that the transaction is not double-consuming,
+and if OK, signs the transaction and sends it to participating
+nodes.</p></li>
+<li><p>The initiator distributes to the parties the transaction signed by
+all the required signers and the notary.</p></li>
+</ol>
+</li>
+</ul>
+</div>
+<div class="section" id="transaction-model">
+<h2>Transaction model<a class="headerlink" href="#transaction-model" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Corda has adopted the following UTXO model</p>
+<dl class="simple">
+<dt>Transaction input</dt><dd><ul class="simple">
+<li><p>A reference to an output state to be consumed, which consists of a transaction id and an output index</p></li>
+</ul>
+</dd>
+<dt>Transaction output</dt><dd><ul class="simple">
+<li><p>An arbitrary JVM object that implements the ContractState
+interface defined in Corda</p></li>
+</ul>
+</dd>
+<dt>Conditions for consumption of outputs</dt><dd><ul class="simple">
+<li><p>Conditions are defined in the form of a JVM class that
+implements the Contract interface defined in Corda.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>A transaction generally consists of the following components.</p>
+<ul class="simple">
+<li><p>Zero or more input states</p></li>
+<li><p>One or more output states</p></li>
+<li><p>Contracts to which the input and output states belong</p></li>
+<li><p>Commands</p></li>
+<li><p>Notary (optional)</p></li>
+</ul>
+</li>
+<li><p>(Input or output) State</p>
+<ul class="simple">
+<li><p>Instances of classes that implement the
+net.corda.core.contracts.ContractState interface</p></li>
+<li><p>Each state class corresponds to only one Contract class</p></li>
+</ul>
+</li>
+<li><p>Contract</p>
+<ul class="simple">
+<li><p>Classes that implement the net.corda.core.contracts.Contract
+interface</p></li>
+<li><p>Contracts define the way to verify transactions by implementing
+the “verify” method</p></li>
+<li><p>A transaction must pass all the validation defined by the verify
+methods of the child classes of Contract that correspond to all
+input and output states contained in the transaction.</p></li>
+<li><p>A transaction contains the classes derived from Contract to be
+used and all the code the classes depends on in the form of jar.</p></li>
+</ul>
+</li>
+<li><p>Command</p>
+<ul>
+<li><p>Instances of classes that extend the
+net.corda.core.contracts.Command class</p></li>
+<li><p>It consists of the following two elements.</p>
+<dl class="simple">
+<dt>CommandData</dt><dd><ul class="simple">
+<li><p>Data which specify the purpose of transaction execution (in
+other words, relationship between input and output states)</p></li>
+<li><p>For example, the Cash contract has three types of
+CommandData, Cash.Issue, Cash.Move and Cash.Exit.</p></li>
+<li><p>The verify method of classes derived from Contract verifies
+the transaction based on the specified CommandData.</p></li>
+</ul>
+</dd>
+<dt>Signers</dt><dd><ul class="simple">
+<li><p>Data which assign parties who must sign the transaction</p></li>
+<li><p>For example, if a transaction contains the Command of which
+CommandData is Cash.Move, all the owners of the Cash states
+included in the transaction as input are supposed to be
+assigned as signers of the Command. Otherwise the
+transaction is regarded invalid by the Cash::verify method.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="notarisation-finality">
+<h2>Notarisation (Finality)<a class="headerlink" href="#notarisation-finality" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Purpose of Notary</p>
+<ul>
+<li><p>Because Corda uses the UTXO model, if one or more input states in
+a transaction have been consumed by other transactions, the
+transaction will be invalid (double consumption).</p></li>
+<li><p>Veritying a transaction within the parties of the transaction
+doesn’t make sure that the transaction is not double-consuming.</p></li>
+<li><p>Since multiple transactions might attempt to consume the same
+state, a trusted third party is needed to determine which
+transaction has consumed the state first.</p></li>
+<li><p>Notary plays this role.</p></li>
+<li><p>The notary ensures all input states in a transaction have not been
+consumed in the past and signs the transaction only if double
+consumption doesn’t occur. To do so, the notary maintains the
+record of the states that have been consumed.</p></li>
+</ul>
+</li>
+<li><p>Validating notary and non-validating notary</p>
+<ul>
+<li><p>Since the original purpose of notarization is only to prevent
+double consumption, it is not necessary to disclose any content
+other than the input states of the transaction to notary.</p></li>
+<li><p>Each notary can be configured to select one of the following two
+types of behavior.</p>
+<ul>
+<li><p>Validating notary</p>
+<ul>
+<li><p>Verifying not only that there is no double consumption but
+also validity of the transaction by checking that it
+satisfies all the conditions defined by the Contract classes
+included in it and is signed by all the signers required by
+the Command objects included in it.</p></li>
+<li><p>This type of notaries has the advantage that the transaction
+is assured to be valid only by the notary signature.</p></li>
+</ul>
+</li>
+<li><p>Non-validating notary</p>
+<ul>
+<li><p>Verifying only that there is no double consumption</p></li>
+<li><p>This type of notaries has the advantage that elements other
+than input states of a transaction can be hidden from the
+notary.</p></li>
+<li><p>It is assumed that transaction is validated by parties to
+the transaction.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>In this way, notaries have different behavior, and in particular,
+validating notaries can see the entire contents of a transaction.
+In general, multiple notaries can operate on the same network,
+each transaction can choose and designate one of them from the
+point of view of privacy.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="updates-and-queries-for-ledgers-rpc">
+<h2>Updates and queries for ledgers (RPC)<a class="headerlink" href="#updates-and-queries-for-ledgers-rpc" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Clients can execute the following operations on nodes through the
+Corda RPC</p>
+<dl class="simple">
+<dt>Updating ledger = Executing flow</dt><dd><ul class="simple">
+<li><p>Flow is definition of a transaction processing from initiation
+to notarization, in the form of program code.</p></li>
+<li><p>Clients can order the node to initiate a new flow through the
+Corda RPC and receive the result.</p></li>
+</ul>
+</dd>
+<dt>Querying (unconsumed) states from ledger</dt><dd><ul class="simple">
+<li><p>Clients can ask a node to search UTXOs of transactions to which
+the node is a party by several conditions and to return it.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="examples-of-applications-of-corda">
+<h2>Examples of applications of Corda<a class="headerlink" href="#examples-of-applications-of-corda" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cash-contract">
+<h3>Cash contract<a class="headerlink" href="#cash-contract" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="states">
+<h4>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">State</span></code></dt>
+<dd><p>State class representing cash</p>
+<dl class="py attribute">
+<dt id="Cash.State.amount">
+<code class="sig-name descname"><span class="pre">amount</span></code><em class="property"><span class="pre">:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><a class="headerlink" href="#Cash.State.amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a quantity, an issuer and currency unit of this cash</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Cash.State.exitKeys">
+<code class="sig-name descname"><span class="pre">exitKeys</span></code><em class="property"><span class="pre">:</span> <span class="pre">Collection&lt;PublicKey&gt;</span></em><a class="headerlink" href="#Cash.State.exitKeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents keys required to execute the Cash.Exit command on
+this cash. This field comes from the FungibleAsset interface,
+which is implemented by the Cash.State class, and consists of
+an owner key and an issuer key.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Cash.State.owner">
+<code class="sig-name descname"><span class="pre">owner</span></code><em class="property"><span class="pre">:</span> <span class="pre">AbstractParty</span></em><a class="headerlink" href="#Cash.State.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an owner of this cash</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Cash.State.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Cash.State.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents parties to this cash, in other words, those who
+store this state in their ledger. This field comes from the
+ContractState interface, which is implemented by the
+Cash.State class, and consists of an owner only.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="commands">
+<h4>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">Issue</span></code></dt>
+<dd><p>A command allowing new cash states to be issued</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>Cash.State(owner = issuer)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>The issuer of the Cash.State</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="Cash.Move">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">Move</span></code><a class="headerlink" href="#Cash.Move" title="Permalink to this definition">¶</a></dt>
+<dd><p>A command transfering ownership of cash states</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[Multiple] Cash.State(owner = &lt;original owner&gt;)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[Multiple] Cash.State(owner = &lt;next owner&gt;)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>The original owner of the Cash.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>The sums of amounts, including issuer and currency, of input
+and output must equal to each other (except for amounts of
+“exited” Cash described below).</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">Cash.</span></code><code class="sig-name descname"><span class="pre">Exit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">amount:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command withdrawing cash states from ledgers of Corda</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[Multiple] Cash.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[Multiple] Cash.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>The owner of the input side Cash.State</p></li>
+<li><p>The issuer of the input side Cash.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>The difference between the sums of the amounts of input and
+output must equal to the amount attribute specified for his
+command.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="commercialpaper-cp-contract">
+<h3>CommercialPaper(CP) contract<a class="headerlink" href="#commercialpaper-cp-contract" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h4>States<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">CommercialPaper.</span></code><code class="sig-name descname"><span class="pre">State</span></code></dt>
+<dd><p>State class representing the CP</p>
+<dl class="py attribute">
+<dt id="CommercialPaper.State.faceValue">
+<code class="sig-name descname"><span class="pre">faceValue</span></code><em class="property"><span class="pre">:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><a class="headerlink" href="#CommercialPaper.State.faceValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a face value of this CP</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.issuance">
+<code class="sig-name descname"><span class="pre">issuance</span></code><em class="property"><span class="pre">:</span> <span class="pre">PartyAndReference</span></em><a class="headerlink" href="#CommercialPaper.State.issuance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an issuer of this CP and additional information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.maturityDate">
+<code class="sig-name descname"><span class="pre">maturityDate</span></code><em class="property"><span class="pre">:</span> <span class="pre">Instant</span></em><a class="headerlink" href="#CommercialPaper.State.maturityDate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a maturity date of this CP</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.owner">
+<code class="sig-name descname"><span class="pre">owner</span></code><em class="property"><span class="pre">:</span> <span class="pre">AbstractParty</span></em><a class="headerlink" href="#CommercialPaper.State.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an owner of this CP</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="CommercialPaper.State.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#CommercialPaper.State.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represnets parties to this CP, in other words, those who store
+this state in their ledger. This field comes from the
+ContractState interface, which is implemented by the
+CommercialPaper.State class, and consists of an owner only.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h4>Commands<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">CommercialPaper.</span></code><code class="sig-name descname"><span class="pre">Issue</span></code></dt>
+<dd><p>A command allowing new commercial papers to be issued</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State (owner = issuer)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>The issuer of the CommercialPaper.State</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Move</span></code></dt>
+<dd><p>A command transfering ownership of a commercial paper</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(owner = &lt;original owner&gt;)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(owner = &lt;next owner&gt;)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>The original owner of CommercialPaper.State</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>The attributes of the commercial paper other than owner (such
+as faceValue) remain unchanged.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Redeem</span></code></dt>
+<dd><p>A command redeeming a commercial paper</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>CommercialPaper.State(faceValue, issuer, owner)</p></li>
+<li><p>[Multiple] Cash.State(owner = &lt;issuer of CP&gt;, amount =
+&lt;faceValue of CP&gt;)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[Multiple] Cash.State(owner = &lt;owner of CP&gt;, amount =
+&lt;faceValue of CP&gt;)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Required</span> <span class="pre">signers</span></code></dt>
+<dd><ul class="simple">
+<li><p>The owner of the the CommercialPaper.State (to allow the
+redemption of the commercial paper)</p></li>
+<li><p>The issuer of the CommercialPaper.State (to allow the transfer
+of the cash states)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>The CommercialPaper.State is not included in output and removed
+from ledgers.</p></li>
+<li><p>The cash states equivalent to to the face value of the CP is
+transfered from the issuer of the CP to the owner of the CP (in
+exchange for the CP).</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="corda-ibc.html" class="btn btn-neutral float-right" title="IBC/TAO for Corda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Corda-IBC Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Datachain, Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

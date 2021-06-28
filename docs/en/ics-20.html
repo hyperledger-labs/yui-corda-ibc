@@ -1,0 +1,766 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ICS-20 for Corda &mdash; corda-ibc  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="IBC/TAO for Corda" href="corda-ibc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> corda-ibc
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../ja/index.html">Corda-IBCドキュメント</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Corda-IBC Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="corda.html">Introduction of Corda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corda-ibc.html">IBC/TAO for Corda</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ICS-20 for Corda</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ics-20-overview">ICS-20 Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#design-of-ics-20-for-corda-when-using-the-cash-contract-of-corda">Design of ICS-20 for Corda (when using the Cash contract of Corda)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#key-point">Key point</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#security-assumption">Security assumption</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#procedure">Procedure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#detailed-specification">Detailed specification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#design-of-ics-20-for-corda-when-defining-new-asset-type-for-ics-20">Design of ICS-20 for Corda (when defining new asset type for ICS-20)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Key point</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Security assumption</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Procedure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Detailed specification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">corda-ibc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Corda-IBC Documentation</a> &raquo;</li>
+        
+      <li>ICS-20 for Corda</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/en/ics-20.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ics-20-for-corda">
+<h1>ICS-20 for Corda<a class="headerlink" href="#ics-20-for-corda" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ics-20-overview">
+<h2>ICS-20 Overview<a class="headerlink" href="#ics-20-overview" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/cosmos/ibc/blob/master/spec/app/ics-020-fungible-token-transfer/README.md">ICS-20</a>
+is an IBC/APP protocol included in the IBC spec
+that enables a two-way peg between blockchains by linking packet
+transmission, reception and acknowledgement with
+token locking, unlocking, burning and minting.
+This cross-chain protocol works as follows.</p>
+<ol class="arabic simple">
+<li><p>Src: The sender of a token sends a packet to a destination chain
+and at the same time locks a token in escrow.</p></li>
+<li><p>Dst: The IBC module on the destination chain receives the packet
+and at the same time mints a voucher token to a receiver.</p></li>
+<li><p>Dst: The minted voucher token can be transfered arbitrarily.</p></li>
+<li><p>Dst: The sender of a voucher token sends a packet to the source
+chain and at the same time burns the voucher token.</p></li>
+<li><p>Src: The IBC module on the source chain receives the packet
+and at the same time unlocks a token in escrow.</p></li>
+</ol>
+</div>
+<div class="section" id="design-of-ics-20-for-corda-when-using-the-cash-contract-of-corda">
+<h2>Design of ICS-20 for Corda (when using the Cash contract of Corda)<a class="headerlink" href="#design-of-ics-20-for-corda-when-using-the-cash-contract-of-corda" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="key-point">
+<h3>Key point<a class="headerlink" href="#key-point" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>ICS-20 assumes that smart contract called the IBC module is
+responsible for escrowing tokens and minting vouchers.</p></li>
+<li><p>But Corda’s existing asset (e.g. Cash) is supposed to be owned by a
+specific user (node), making it difficult for tokens to be locked in
+smart contracts or to be minted by smart contracts.</p></li>
+<li><p>Therefore in the current implementation of Corda-IBC, a trusted
+special node (such as a financial institution) is responsible for the
+role (escrowing tokens and minting vouchers).</p>
+<ul>
+<li><p>Hereinafter, this node will be referred to as “bank”.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="security-assumption">
+<h3>Security assumption<a class="headerlink" href="#security-assumption" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>It is assumed that an issuer of Cash issues Cash tokens properly in a
+source chain. (trust in the issuer)</p></li>
+<li><p>It is assumed that bank nodes lock (execute Cash.Move), unlock
+(execute Cash.Move), mint (execute Cash.Issue) and burn (execute
+Cash.Exit) tokens only through ICS-20, in both chains. (trust in the
+bank nodes)</p></li>
+</ul>
+</div>
+<div class="section" id="procedure">
+<h3>Procedure<a class="headerlink" href="#procedure" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Src: The sender of Cash sends a packet over IBC/TAO and at the same
+time executes “Cash.Move” to transfer his Cash state to the bank user
+on the source chain.</p></li>
+<li><p>Dst: The bank user on the destination chain receives the packet over
+IBC/TAO and at the same time executes “Cash.Issue” and “Cash.Move” to
+mint a new Cash state to a recipient.</p></li>
+<li><p>Dst: The minted Cash state can be transfered arbitrarily on the
+destination chain.</p></li>
+<li><p>Dst: The sender of a Cash state on the destination chain sends a packet over
+IBC/TAO and at the same time executes “Cash.Move” and “Cash.Exit” to
+burn his Cash state.</p></li>
+<li><p>Src: The bank user on the source chain receives the packet over
+IBC/TAO and at the same time executes “Cash.Move” to transfer a Cash
+state to a recipient on the source chain.</p></li>
+</ol>
+</div>
+<div class="section" id="detailed-specification">
+<h3>Detailed specification<a class="headerlink" href="#detailed-specification" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="states">
+<h4>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h4>
+<p>No additional state class</p>
+</div>
+<div class="section" id="commands">
+<h4>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleTransfer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgTransfer</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command executing token transfer specified in ICS-20</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel</p></li>
+<li><p>[Multiple] Cash(owner = senderUser)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(packets += Pair(sequence, packet), nextSequenceSend
++= 1)</p></li>
+<li><p>[Multiple] Cash(owner = bankUser)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId.</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>The contents of the packet must be consistent with Cash owner,
+denomination and amount.</p></li>
+<li><p>Requirements for createOutgoingPacket specified in ICS-20 must
+be satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandlePacketRecv</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgRecvPacket</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command receiving a token, specified in ICS-20</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel</p></li>
+<li><p>[Multiple] Cash(owner = bankUser)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel</p></li>
+<li><p>[Multiple] Cash(owner = receiverUser)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId.</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>The contents of the packet must be consistent with Cash owner,
+denomination and amount.</p></li>
+<li><p>Requirements for onRecvPacket specified in ICS-20 and
+recvPacket specified in ICS-4 must be satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandlePacketAcknowledgement</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgAcknowledgement</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command receiving ack to a token, specified in ICS-20</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel</p></li>
+<li><p>[Multiple] Cash(owner = bankUser)</p>
+<ul>
+<li><p>Cash is needed only in the case of refund.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(packets -= sequence, nextSequenceAck +=1)</p>
+<ul>
+<li><p>nextSequenceAck is incremented only when the channel is type
+of ORDERED.</p></li>
+</ul>
+</li>
+<li><p>[Multiple] Cash(owner = senderUser)</p>
+<ul>
+<li><p>Cash is needed only in the case of refund.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId.</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>The contents of the packet must be consistent with Cash owner,
+denomination and amount.</p></li>
+<li><p>Requirements for onAcknowledgePacket specified in ICS-20 and
+acknowledgePacket specified in ICS-4 must be satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="design-of-ics-20-for-corda-when-defining-new-asset-type-for-ics-20">
+<h2>Design of ICS-20 for Corda (when defining new asset type for ICS-20)<a class="headerlink" href="#design-of-ics-20-for-corda-when-defining-new-asset-type-for-ics-20" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Key point<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Defining new asset type enables token lock, unlock, mint and burn in
+conjunction with IBC/TAO, without trusting in a particular node.</p></li>
+<li><p>Hereinafter, this asset is referred to as ICS20Cash state.</p></li>
+<li><p>The state responsible for locking, unlocking, minting and burning
+ICS20Cash is referred to as Bank state.</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h3>Security assumption<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>It is assumed that an issuer of ICS20Cash tokens issues them properly
+in the source chain. (trust in the issuer)</p></li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h3>Procedure<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Src: The sender sends a packet over IBC/TAO and at the same time
+locks his ICS20Cash state in the Bank state.</p>
+<ul class="simple">
+<li><p>TX inputs</p>
+<ul>
+<li><p>Bank: The lock balance of ICS20Cash is N.</p></li>
+<li><p>ICS20Cash: quantity is M, owner is the sender.</p></li>
+</ul>
+</li>
+<li><p>TX outputs</p>
+<ul>
+<li><p>Bank: The lock balance of ICS20Cash becomes N + M.</p></li>
+<li><p>ICS20Cash: None(not included in outputs)</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Dst: The IBC module receives the packet over IBC/TAO and at the same
+time mints a new ICS20Cash state to a recipient on the destination chain.</p>
+<ul class="simple">
+<li><p>TX inputs</p>
+<ul>
+<li><p>Bank: The mint balance of ICS20Cash is N.</p></li>
+</ul>
+</li>
+<li><p>TX outputs</p>
+<ul>
+<li><p>Bank: The mint balance of ICS20Cash becomes N + M.</p></li>
+<li><p>ICS20Cash: Quantity is M and owner is the receiver on the
+destination chain.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Dst: The minted ICS20Cash can be arbitrarily transfered on the
+destination chain.</p></li>
+<li><p>Dst: The sender sends a packet over IBC/TAO and at the same time
+burns his ICS20Cash state.</p>
+<ul class="simple">
+<li><p>TX inputs</p>
+<ul>
+<li><p>Bank: The mint balance of ICS20Cash is N + M.</p></li>
+<li><p>ICS20Cash: quantity is M and owner is the sender on the
+destination chain.</p></li>
+</ul>
+</li>
+<li><p>TX outputs</p>
+<ul>
+<li><p>Bank: The mint balance of ICS20Cash is N</p></li>
+<li><p>ICS20Cash: None (not included in outputs)</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Src: The IBC module receives the packet over IBC/TAO and at the same
+time unlocks a ICS20Cash state to a recipient on the source chain.</p>
+<ul class="simple">
+<li><p>TX inputs</p>
+<ul>
+<li><p>Bank: The lock balance of ICS20Cash is N + M’.</p></li>
+</ul>
+</li>
+<li><p>TX outputs</p>
+<ul>
+<li><p>Bank: The lock balance of ICS20Cash becomes N.</p></li>
+<li><p>ICS20Cash: quantity is M’ and owner is the recipient on the
+source chain.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section" id="id4">
+<h3>Detailed specification<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h4>States<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">ICS20Cash</span></code></dt>
+<dd><p>The state class of token dedicated for ICS-20</p>
+<dl class="py attribute">
+<dt id="ICS20Cash.amount">
+<code class="sig-name descname"><span class="pre">amount</span></code><em class="property"><span class="pre">:</span> <span class="pre">Amount&lt;Issued&lt;Currency&gt;&gt;</span></em><a class="headerlink" href="#ICS20Cash.amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of tokens. It also holds the issuer and units
+information as data types.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ICS20Cash.owner">
+<code class="sig-name descname"><span class="pre">owner</span></code><em class="property"><span class="pre">:</span> <span class="pre">AbstractParty</span></em><a class="headerlink" href="#ICS20Cash.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Owner of the token state</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ICS20Cash.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#ICS20Cash.participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Participants in the token state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Bank</span></code></dt>
+<dd><p>The state class responsible for locking, unlocking, minting and
+burning ICS20Cash</p>
+<dl class="py attribute">
+<dt id="Bank.participants">
+<code class="sig-name descname"><span class="pre">participants</span></code><em class="property"><span class="pre">:</span> <span class="pre">List&lt;AbstractParty&gt;</span></em><a class="headerlink" href="#Bank.participants" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="Bank.baseId">
+<code class="sig-name descname"><span class="pre">baseId</span></code><em class="property"><span class="pre">:</span> <span class="pre">StateRef</span></em><a class="headerlink" href="#Bank.baseId" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="Bank.locked">
+<code class="sig-name descname"><span class="pre">locked</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Denom,</span> <span class="pre">Amount&gt;</span></em><a class="headerlink" href="#Bank.locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locked amount for each denomination</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Bank.minted">
+<code class="sig-name descname"><span class="pre">minted</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Denom,</span> <span class="pre">Amount&gt;</span></em><a class="headerlink" href="#Bank.minted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minted amount for each denomination</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="Bank.denoms">
+<code class="sig-name descname"><span class="pre">denoms</span></code><em class="property"><span class="pre">:</span> <span class="pre">Map&lt;Denom,</span> <span class="pre">Denom&gt;</span></em><a class="headerlink" href="#Bank.denoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associative array used to support “IBC denom” specified in ADR-001
+of Cosmos.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h4>Commands<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandleTransfer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgTransfer</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command class transfering ICS20Cash</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel</p></li>
+<li><p>Bank</p></li>
+<li><p>[Multiple] ICS20Cash(owner = senderUser)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(packets += Pair(sequence, packet), nextSequenceSend
++= 1)</p></li>
+<li><p>Bank(locked + = Pair (denom, amount) or mined - = Pair (denom,
+amount))</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId.</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>The contents of the packet must be consistent with ICS20Cash
+owner, denomination and amount.</p></li>
+<li><p>Requirements for createOutgoingPacket specified in ICS-20 must
+be satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandlePacketRecv</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgRecvPacket</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command class receiving ICS20Cash</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel</p></li>
+<li><p>Bank</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel</p></li>
+<li><p>Bank(mined + = Pair(denom, amount) or locked -= Pair (denom,
+amount))</p></li>
+<li><p>ICS20Cash(owner = receiverUser)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>The contents of the packet must be consistent with the
+ICS20Cash owner, denomination and amount</p></li>
+<li><p>Requirements for onRecvPacket specified in ICS-20 and
+recvPacket specified in ICS-4 must be satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">HandlePacketAcknowledgement</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">MsgAcknowledgement</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>A command class receiving acknowledgement for token transfer
+specified in ICS-20</p>
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Input</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>[readonly] Host</p></li>
+<li><p>[readonly] ClientState</p></li>
+<li><p>[readonly] IbcConnection</p></li>
+<li><p>IbcChannel</p></li>
+<li><p>Bank</p>
+<ul>
+<li><p>The Bank state is needed used only in the case of refund.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Output</span> <span class="pre">states</span></code></dt>
+<dd><ul class="simple">
+<li><p>IbcChannel(packets -= sequence, nextSequenceAck +=1)</p>
+<ul>
+<li><p>nextSequenceAck is incremented only when the channel is type
+of ORDERED.</p></li>
+</ul>
+</li>
+<li><p>Bank(locked -= Pair (denom, amount) or minted += Pair (denom,
+amount))</p></li>
+<li><p>ICS20Cash(owner = senderUser)</p>
+<ul>
+<li><p>The ICS20Cash state is needed used only in the case of
+refund.</p></li>
+</ul>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname"><span class="pre">Contract</span> <span class="pre">rules</span></code></dt>
+<dd><ul class="simple">
+<li><p>All input and output states must have the same baseId.</p></li>
+<li><p>All input states (except readonly input called “reference
+state”) must also be included in transaction output (because
+states of IBC are never deleted once created).</p></li>
+<li><p>The contents of the packet must be consistent with the
+ICS20Cash owner, denomination and amount</p></li>
+<li><p>Requirements for onAcknowledgePacket specified in ICS-20 and
+acknowledgePacket specified in ICS-4 must be satisfied.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="corda-ibc.html" class="btn btn-neutral float-left" title="IBC/TAO for Corda" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Datachain, Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
