@@ -27,5 +27,5 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
 done
 
 # move proto files to the right places
-cp -r github.com/datachainlab/corda-ibc/go/* ./
+cp -r github.com/hyperledger-labs/yui-corda-ibc/go/* ./
 rm -rf github.com
