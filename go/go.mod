@@ -1,4 +1,4 @@
-module github.com/datachainlab/corda-ibc/go
+module github.com/hyperledger-labs/yui-corda-ibc/go
 
 go 1.16
 

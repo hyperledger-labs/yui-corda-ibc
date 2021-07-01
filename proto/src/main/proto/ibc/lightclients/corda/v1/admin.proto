@@ -1,7 +1,7 @@
 syntax = "proto3";
 package ibc.lightclients.corda.v1;
 
-option go_package = "github.com/datachainlab/corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types";
 option java_multiple_files = true;
 option java_outer_classname = "AdminProto";
 
