@@ -7,3 +7,6 @@
 [submodule "external/fabric-ibc-lightclientd"]
 	path = external/fabric-ibc-lightclientd
 	url = https://github.com/datachainlab/fabric-ibc-lightclientd.git
+[submodule "external/ibc-go"]
+	path = external/ibc-go
+	url = git@github.com:cosmos/ibc-go.git
