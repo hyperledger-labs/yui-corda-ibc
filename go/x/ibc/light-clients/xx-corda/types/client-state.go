@@ -54,7 +54,7 @@ func connectLightclientd() lightClient {
 }
 
 func makeState(clientState *ClientState, cdc codec.BinaryCodec, store sdk.KVStore) *State {
-	bz := store.Get(host.KeyConsensusState(cordaHeight))
+	bz := store.Get(host.ConsensusStateKey(cordaHeight))
 	consensusState := clienttypes.MustUnmarshalConsensusState(cdc, bz)
 	return &State{
 		ClientState:    clientState,
@@ -92,6 +92,18 @@ func (*ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	panic("not implemented")
 }
 
+func (*ClientState) Initialize(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.ConsensusState) error {
+	return nil
+}
+
+func (*ClientState) Status(ctx sdk.Context, clientStore sdk.KVStore, cdc codec.BinaryCodec) exported.Status {
+	return exported.Active
+}
+
+func (*ClientState) ExportMetadata(sdk.KVStore) []exported.GenesisMetadata {
+	panic("not implemented")
+}
+
 func (*ClientState) CheckHeaderAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
 	panic("not implemented")
 }
@@ -100,18 +112,19 @@ func (*ClientState) CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryCod
 	panic("not implemented")
 }
 
-func (*ClientState) CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
+func (*ClientState) CheckSubstituteAndUpdateState(ctx sdk.Context, cdc codec.BinaryCodec, subjectClientStore, substituteClientStore sdk.KVStore, substituteClient exported.ClientState) (exported.ClientState, error) {
 	panic("not implemented")
 }
 
-func (*ClientState) VerifyUpgrade(
+func (*ClientState) VerifyUpgradeAndUpdateState(
 	ctx sdk.Context,
 	cdc codec.BinaryCodec,
 	store sdk.KVStore,
 	newClient exported.ClientState,
-	upgradeHeight exported.Height,
-	proofUpgrade []byte,
-) error {
+	newConsState exported.ConsensusState,
+	proofUpgradeClient,
+	proofUpgradeConsState []byte,
+) (exported.ClientState, exported.ConsensusState, error) {
 	panic("not implemented")
 }
 
@@ -255,9 +268,12 @@ func (cs *ClientState) VerifyChannelState(
 }
 
 func (cs *ClientState) VerifyPacketCommitment(
+	ctx sdk.Context,
 	store sdk.KVStore,
 	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -289,9 +305,12 @@ func (cs *ClientState) VerifyPacketCommitment(
 }
 
 func (cs *ClientState) VerifyPacketAcknowledgement(
+	ctx sdk.Context,
 	store sdk.KVStore,
 	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -323,9 +342,12 @@ func (cs *ClientState) VerifyPacketAcknowledgement(
 }
 
 func (cs *ClientState) VerifyPacketReceiptAbsence(
+	ctx sdk.Context,
 	store sdk.KVStore,
 	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -355,9 +377,12 @@ func (cs *ClientState) VerifyPacketReceiptAbsence(
 }
 
 func (cs *ClientState) VerifyNextSequenceRecv(
+	ctx sdk.Context,
 	store sdk.KVStore,
 	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
