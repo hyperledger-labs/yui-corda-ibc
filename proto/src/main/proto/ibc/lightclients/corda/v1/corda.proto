@@ -13,3 +13,5 @@ message ConsensusState {
   StateRef base_id = 1;
   PublicKey notary_key = 2;
 }
+
+message Header {}
