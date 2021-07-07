@@ -8,12 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/modules/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/ibc-go/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/modules/core/24-host"
+	"github.com/cosmos/ibc-go/modules/core/exported"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -53,7 +53,7 @@ func connectLightclientd() lightClient {
 	}
 }
 
-func makeState(clientState *ClientState, cdc codec.BinaryMarshaler, store sdk.KVStore) *State {
+func makeState(clientState *ClientState, cdc codec.BinaryCodec, store sdk.KVStore) *State {
 	bz := store.Get(host.KeyConsensusState(cordaHeight))
 	consensusState := clienttypes.MustUnmarshalConsensusState(cdc, bz)
 	return &State{
@@ -92,21 +92,21 @@ func (*ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	panic("not implemented")
 }
 
-func (*ClientState) CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
+func (*ClientState) CheckHeaderAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
 	panic("not implemented")
 }
 
-func (*ClientState) CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, exported.Misbehaviour) (exported.ClientState, error) {
+func (*ClientState) CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Misbehaviour) (exported.ClientState, error) {
 	panic("not implemented")
 }
 
-func (*ClientState) CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
+func (*ClientState) CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
 	panic("not implemented")
 }
 
 func (*ClientState) VerifyUpgrade(
 	ctx sdk.Context,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	store sdk.KVStore,
 	newClient exported.ClientState,
 	upgradeHeight exported.Height,
@@ -121,7 +121,7 @@ func (*ClientState) ZeroCustomFields() exported.ClientState {
 
 func (cs *ClientState) VerifyClientState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
@@ -155,7 +155,7 @@ func (cs *ClientState) VerifyClientState(
 
 func (cs *ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	counterpartyClientIdentifier string,
 	consensusHeight exported.Height,
@@ -192,7 +192,7 @@ func (cs *ClientState) VerifyClientConsensusState(
 
 func (cs *ClientState) VerifyConnectionState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -223,7 +223,7 @@ func (cs *ClientState) VerifyConnectionState(
 
 func (cs *ClientState) VerifyChannelState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -256,7 +256,7 @@ func (cs *ClientState) VerifyChannelState(
 
 func (cs *ClientState) VerifyPacketCommitment(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -290,7 +290,7 @@ func (cs *ClientState) VerifyPacketCommitment(
 
 func (cs *ClientState) VerifyPacketAcknowledgement(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -324,7 +324,7 @@ func (cs *ClientState) VerifyPacketAcknowledgement(
 
 func (cs *ClientState) VerifyPacketReceiptAbsence(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -356,7 +356,7 @@ func (cs *ClientState) VerifyPacketReceiptAbsence(
 
 func (cs *ClientState) VerifyNextSequenceRecv(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
