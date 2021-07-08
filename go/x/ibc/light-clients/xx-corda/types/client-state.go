@@ -8,12 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/types"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/modules/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/ibc-go/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/modules/core/24-host"
+	"github.com/cosmos/ibc-go/modules/core/exported"
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -53,8 +53,8 @@ func connectLightclientd() lightClient {
 	}
 }
 
-func makeState(clientState *ClientState, cdc codec.BinaryMarshaler, store sdk.KVStore) *State {
-	bz := store.Get(host.KeyConsensusState(cordaHeight))
+func makeState(clientState *ClientState, cdc codec.BinaryCodec, store sdk.KVStore) *State {
+	bz := store.Get(host.ConsensusStateKey(cordaHeight))
 	consensusState := clienttypes.MustUnmarshalConsensusState(cdc, bz)
 	return &State{
 		ClientState:    clientState,
@@ -92,26 +92,39 @@ func (*ClientState) GetProofSpecs() []*ics23.ProofSpec {
 	panic("not implemented")
 }
 
-func (*ClientState) CheckHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
+func (*ClientState) Initialize(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.ConsensusState) error {
+	return nil
+}
+
+func (*ClientState) Status(ctx sdk.Context, clientStore sdk.KVStore, cdc codec.BinaryCodec) exported.Status {
+	return exported.Active
+}
+
+func (*ClientState) ExportMetadata(sdk.KVStore) []exported.GenesisMetadata {
 	panic("not implemented")
 }
 
-func (*ClientState) CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, exported.Misbehaviour) (exported.ClientState, error) {
+func (*ClientState) CheckHeaderAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
 	panic("not implemented")
 }
 
-func (*ClientState) CheckProposedHeaderAndUpdateState(sdk.Context, codec.BinaryMarshaler, sdk.KVStore, exported.Header) (exported.ClientState, exported.ConsensusState, error) {
+func (*ClientState) CheckMisbehaviourAndUpdateState(sdk.Context, codec.BinaryCodec, sdk.KVStore, exported.Misbehaviour) (exported.ClientState, error) {
 	panic("not implemented")
 }
 
-func (*ClientState) VerifyUpgrade(
+func (*ClientState) CheckSubstituteAndUpdateState(ctx sdk.Context, cdc codec.BinaryCodec, subjectClientStore, substituteClientStore sdk.KVStore, substituteClient exported.ClientState) (exported.ClientState, error) {
+	panic("not implemented")
+}
+
+func (*ClientState) VerifyUpgradeAndUpdateState(
 	ctx sdk.Context,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	store sdk.KVStore,
 	newClient exported.ClientState,
-	upgradeHeight exported.Height,
-	proofUpgrade []byte,
-) error {
+	newConsState exported.ConsensusState,
+	proofUpgradeClient,
+	proofUpgradeConsState []byte,
+) (exported.ClientState, exported.ConsensusState, error) {
 	panic("not implemented")
 }
 
@@ -121,7 +134,7 @@ func (*ClientState) ZeroCustomFields() exported.ClientState {
 
 func (cs *ClientState) VerifyClientState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	counterpartyClientIdentifier string,
@@ -155,7 +168,7 @@ func (cs *ClientState) VerifyClientState(
 
 func (cs *ClientState) VerifyClientConsensusState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	counterpartyClientIdentifier string,
 	consensusHeight exported.Height,
@@ -192,7 +205,7 @@ func (cs *ClientState) VerifyClientConsensusState(
 
 func (cs *ClientState) VerifyConnectionState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -223,7 +236,7 @@ func (cs *ClientState) VerifyConnectionState(
 
 func (cs *ClientState) VerifyChannelState(
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
 	prefix exported.Prefix,
 	proof []byte,
@@ -255,9 +268,12 @@ func (cs *ClientState) VerifyChannelState(
 }
 
 func (cs *ClientState) VerifyPacketCommitment(
+	ctx sdk.Context,
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -289,9 +305,12 @@ func (cs *ClientState) VerifyPacketCommitment(
 }
 
 func (cs *ClientState) VerifyPacketAcknowledgement(
+	ctx sdk.Context,
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -323,9 +342,12 @@ func (cs *ClientState) VerifyPacketAcknowledgement(
 }
 
 func (cs *ClientState) VerifyPacketReceiptAbsence(
+	ctx sdk.Context,
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,
@@ -355,9 +377,12 @@ func (cs *ClientState) VerifyPacketReceiptAbsence(
 }
 
 func (cs *ClientState) VerifyNextSequenceRecv(
+	ctx sdk.Context,
 	store sdk.KVStore,
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	height exported.Height,
+	delayTimePeriod uint64,
+	delayBlockPeriod uint64,
 	prefix exported.Prefix,
 	proof []byte,
 	portID,

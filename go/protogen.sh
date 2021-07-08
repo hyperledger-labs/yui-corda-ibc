@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-cosmos_root='../external/cosmos-sdk'
+cosmos_root='../external/ibc-go'
 
 proto_root='../proto/src/main/proto'
 proto_dirs="$proto_root/ibc/lightclients/corda/v1"

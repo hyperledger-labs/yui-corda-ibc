@@ -1,6 +1,6 @@
 package types
 
-import "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+import "github.com/cosmos/ibc-go/modules/core/exported"
 
 var _ exported.ConsensusState = (*ConsensusState)(nil)
 
