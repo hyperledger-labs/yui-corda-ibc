@@ -41,5 +41,4 @@ message Bank {
   BalanceMap locked = 4;
   BalanceMap minted = 5;
   IbcDenomMap denoms = 6;
-  string id = 7;
 }

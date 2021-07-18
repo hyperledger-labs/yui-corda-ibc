@@ -7,6 +7,7 @@ import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.PREFIX
 import jp.datachain.corda.ibc.clients.corda.VERSION
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Timestamp
 import net.corda.core.contracts.BelongsToContract
@@ -20,9 +21,9 @@ data class Host constructor (
         override val participants: List<AbstractParty>,
         override val baseId: StateRef,
         val notary: Party,
-        val clientIds: List<Identifier>,
-        val connIds: List<Identifier>,
-        val portChanIds: List<Pair<Identifier, Identifier>>,
+        val nextClientSequence: Long,
+        val nextConnectionSequence: Long,
+        val nextChannelSequence: Long,
         val bankIds: List<Identifier>
 ) : IbcState {
     override val id = Identifier("host")
@@ -31,9 +32,9 @@ data class Host constructor (
             genesisAndRef.state.data.participants,
             genesisAndRef.ref,
             genesisAndRef.state.notary,
-            emptyList(),
-            emptyList(),
-            emptyList(),
+            0,
+            0,
+            0,
             emptyList()
     )
 
@@ -49,23 +50,33 @@ data class Host constructor (
     fun currentTimestamp() = Timestamp(0)
 
     fun getCompatibleVersions(): List<Connection.Version> = listOf(VERSION)
-    fun pickVersion(versions: Collection<Connection.Version>) = versions.single()
-
-    fun addClient(id: Identifier) : Host {
-        require(!clientIds.contains(id))
-        return copy(clientIds = clientIds + id)
+    fun pickVersion(supportedVersions: Collection<Connection.Version>, counterpartyVersions: Collection<Connection.Version>): Connection.Version {
+        return supportedVersions.intersect(counterpartyVersions).first()
     }
 
-    fun addConnection(id: Identifier) : Host {
-        require(!connIds.contains(id))
-        return copy(connIds = connIds + id)
+    fun generateClientIdentifier(clientType: ClientType) = Pair(
+            copy(nextClientSequence = nextClientSequence + 1),
+            Identifier("$clientType-$nextClientSequence")
+    )
+
+    fun parseClientIdentifier(id: Identifier): Pair<ClientType, Long> {
+        val lastIndex = id.id.lastIndexOf('-')
+        val clientTypePart = id.id.substring(0, lastIndex)
+        val sequencePart = id.id.substring(lastIndex + 1)
+        val clientType = ClientType.fromString(clientTypePart)
+        val sequence = sequencePart.toLong()
+        return Pair(clientType, sequence)
     }
 
-    fun addPortChannel(portId: Identifier, chanId: Identifier) : Host {
-        val portChanId = Pair(portId, chanId)
-        require(!portChanIds.contains(portChanId))
-        return copy(portChanIds = portChanIds + portChanId)
-    }
+    fun generateConnectionIdentifier() = Pair(
+            copy(nextConnectionSequence = nextConnectionSequence + 1),
+            Identifier("connection-$nextConnectionSequence")
+    )
+
+    fun generateChannelIdentifier() = Pair(
+            copy(nextChannelSequence = nextChannelSequence + 1),
+            Identifier("channel-$nextChannelSequence")
+    )
 
     fun addBank(id: Identifier) : Host {
         require(!bankIds.contains(id))

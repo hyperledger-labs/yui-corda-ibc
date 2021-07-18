@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.Empty
 import cosmos.base.query.v1beta1.Pagination
 import ibc.applications.transfer.v1.Tx
+import ibc.core.client.v1.Tx.*
 import ibc.core.client.v1.Client.*
 import ibc.core.client.v1.QueryOuterClass.*
 import ibc.core.connection.v1.Tx.*
@@ -99,14 +100,14 @@ object Client {
                 .build())
     }
 
-    private const val CLIENT_A = "CLIENT_A"
-    private const val CLIENT_B = "CLIENT_B"
-    private const val CONNECTION_A = "CONNECTION_A"
-    private const val CONNECTION_B = "CONNECTION_B"
+    private const val CLIENT_A = "corda-0"
+    private const val CLIENT_B = "corda-0"
+    private const val CONNECTION_A = "connection-0"
+    private const val CONNECTION_B = "connection-0"
     private const val PORT_A = "transfer"
     private const val PORT_B = "transfer"
-    private const val CHANNEL_A = "CHANNEL_A"
-    private const val CHANNEL_B = "CHANNEL_B"
+    private const val CHANNEL_A = "channel-0"
+    private const val CHANNEL_B = "channel-0"
     private const val CHANNEL_VERSION_A = "CHANNEL_VERSION_A"
     private const val CHANNEL_VERSION_B = "CHANNEL_VERSION_B"
 
@@ -145,13 +146,11 @@ object Client {
 
         // createClient @ A
         clientTxServiceA.createClient(MsgCreateClient.newBuilder()
-                .setClientId(CLIENT_A)
                 .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_A).build(), ""))
                 .setConsensusState(consensusStateB.consensusState)
                 .build())
         // createClient @ B
         clientTxServiceB.createClient(MsgCreateClient.newBuilder()
-                .setClientId(CLIENT_B)
                 .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_B).build(), ""))
                 .setConsensusState(consensusStateA.consensusState)
                 .build())
@@ -160,11 +159,11 @@ object Client {
         val versionA = hostA.getCompatibleVersions().single()
         connectionTxServiceA.connectionOpenInit(MsgConnectionOpenInit.newBuilder().apply {
             clientId = CLIENT_A
-            connectionId = CONNECTION_A
             counterpartyBuilder.clientId = CLIENT_B
             counterpartyBuilder.connectionId = ""
             counterpartyBuilder.prefix = hostB.getCommitmentPrefix()
             version = versionA
+            delayPeriod = 0
         }.build())
 
         // connOpenTry @ B
@@ -182,12 +181,11 @@ object Client {
         assert(connInit.proofHeight == consensusInit.proofHeight)
         connectionTxServiceB.connectionOpenTry(MsgConnectionOpenTry.newBuilder().apply {
             clientId = CLIENT_B
-            desiredConnectionId = CONNECTION_B
-            counterpartyChosenConnectionId = ""
             clientState = clientInit.clientState
             counterpartyBuilder.clientId = CLIENT_A
             counterpartyBuilder.connectionId = CONNECTION_A
             counterpartyBuilder.prefix = hostA.getCommitmentPrefix()
+            delayPeriod = 0
             addAllCounterpartyVersions(hostA.getCompatibleVersions())
             proofHeight = connInit.proofHeight
             proofInit = connInit.proof
@@ -234,7 +232,6 @@ object Client {
         // chanOpenInit @ A
         channelTxServiceA.channelOpenInit(MsgChannelOpenInit.newBuilder().apply{
             portId = PORT_A
-            channelId = CHANNEL_A
             channelBuilder.ordering = Order.ORDER_ORDERED
             channelBuilder.counterpartyBuilder.portId = PORT_B
             channelBuilder.counterpartyBuilder.channelId = ""
@@ -249,8 +246,6 @@ object Client {
                 .build())
         channelTxServiceB.channelOpenTry(MsgChannelOpenTry.newBuilder().apply{
             portId = PORT_B
-            desiredChannelId = CHANNEL_B
-            counterpartyChosenChannelId = ""
             channelBuilder.ordering = Order.ORDER_ORDERED
             channelBuilder.counterpartyBuilder.portId = PORT_A
             channelBuilder.counterpartyBuilder.channelId = CHANNEL_A
@@ -351,7 +346,7 @@ object Client {
             }.build())
             channelTxServiceB.recvPacket(MsgRecvPacket.newBuilder().apply {
                 packet = Packet.parseFrom(packetCommitment.commitment)
-                proof = packetCommitment.proof
+                proofCommitment = packetCommitment.proof
                 proofHeight = packetCommitment.proofHeight
             }.build())
         }
@@ -391,7 +386,7 @@ object Client {
             channelTxServiceA.acknowledgement(MsgAcknowledgement.newBuilder().apply {
                 packet = Packet.parseFrom(packetCommitment.commitment)
                 acknowledgement = packetAcknowledgement.acknowledgement
-                proof = packetAcknowledgement.proof
+                proofAcked = packetAcknowledgement.proof
                 proofHeight = packetAcknowledgement.proofHeight
             }.build())
         }
@@ -451,7 +446,7 @@ object Client {
             }.build())
             channelTxServiceBankA.recvPacket(MsgRecvPacket.newBuilder().apply {
                 packet = Packet.parseFrom(packetCommitment.commitment)
-                proof = packetCommitment.proof
+                proofCommitment = packetCommitment.proof
                 proofHeight = packetCommitment.proofHeight
             }.build())
 
@@ -464,7 +459,7 @@ object Client {
             channelTxServiceB.acknowledgement(MsgAcknowledgement.newBuilder().apply {
                 packet = Packet.parseFrom(packetCommitment.commitment)
                 acknowledgement = packetAcknowledgement.acknowledgement
-                proof = packetAcknowledgement.proof
+                proofAcked = packetAcknowledgement.proof
                 proofHeight = packetAcknowledgement.proofHeight
             }.build())
         }

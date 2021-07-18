@@ -39,7 +39,7 @@ class IbcChanOpenTryFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
 
         // (optional) channel from vault
-        val chanOrNull = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.desiredChannelId))
+        val chanOrNull = serviceHub.vaultService.queryIbcState<IbcChannel>(baseId, Identifier(msg.previousChannelId))
 
         // create command and outputs
         val command = HandleChanOpenTry(msg)

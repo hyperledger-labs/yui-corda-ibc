@@ -11,8 +11,8 @@ data class FabricHeader(val fabricHeader: Fabric.Header): Header {
 
     override fun clientType() = ClientType.FabricClient
     override fun getHeight() = Client.Height.newBuilder()
-        .setVersionNumber(0)
-        .setVersionHeight(fabricHeader.chaincodeHeader.sequence.value)
+        .setRevisionNumber(0)
+        .setRevisionHeight(fabricHeader.chaincodeHeader.sequence.value)
         .build()!!
     override fun validateBasic() {
         throw NotImplementedError()
