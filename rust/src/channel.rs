@@ -38,7 +38,7 @@ pub async fn handshake(
                 ordering: v1channel::Order::Ordered as i32,
                 counterparty: Some(v1channel::Counterparty {
                     port_id: port_id_b.clone(),
-                    channel_id: channel_id_b.clone(),
+                    channel_id: "".to_owned(),
                 }),
                 connection_hops: vec![connection_id_a],
                 version: CHANNEL_VERSION.to_owned(),

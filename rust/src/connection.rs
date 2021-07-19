@@ -34,7 +34,7 @@ pub async fn handshake(
             client_id: client_id_a.clone(),
             counterparty: Some(v1connection::Counterparty {
                 client_id: client_id_b.clone(),
-                connection_id: connection_id_b.clone(),
+                connection_id: "".to_owned(),
                 prefix: Some(PREFIX.clone()),
             }),
             version: Some(VERSION.clone()),
