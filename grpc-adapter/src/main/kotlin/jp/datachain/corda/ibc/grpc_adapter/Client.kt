@@ -100,8 +100,8 @@ object Client {
                 .build())
     }
 
-    private const val CLIENT_A = "corda-0"
-    private const val CLIENT_B = "corda-0"
+    private const val CLIENT_A = "corda-ibc-0"
+    private const val CLIENT_B = "corda-ibc-0"
     private const val CONNECTION_A = "connection-0"
     private const val CONNECTION_B = "connection-0"
     private const val PORT_A = "transfer"

@@ -69,11 +69,11 @@ executeOldTest:
 
 executeTest:
 	$(CLIENT) client create-clients \
-		--client-id-a corda-0 \
-		--client-id-b corda-0
+		--client-id-a corda-ibc-0 \
+		--client-id-b corda-ibc-0
 	$(CLIENT) connection handshake \
-		--client-id-a corda-0 \
-		--client-id-b corda-0 \
+		--client-id-a corda-ibc-0 \
+		--client-id-b corda-ibc-0 \
 		--connection-id-a connection-0 \
 		--connection-id-b connection-0
 	$(CLIENT) channel handshake \

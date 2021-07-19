@@ -4,8 +4,8 @@ import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
 enum class ClientType(private val string: String) {
-    CordaClient("corda"),
-    FabricClient("fabric"),
+    CordaClient("corda-ibc"),
+    FabricClient("hyperledgerfabric"),
     SoloMachineClient("06-solomachine"),
     TendermintClient("07-tendermint"),
     LocalhostClient("09-localhost");
