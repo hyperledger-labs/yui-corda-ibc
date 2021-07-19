@@ -1,5 +1,5 @@
 use super::client;
-use super::constants::{HEIGHT, PREFIX, VERSION};
+use super::constants::{DELAY_PERIOD, HEIGHT, PREFIX, VERSION};
 use super::generated::ibc;
 use super::Result;
 use ibc::core::connection::v1 as v1connection;
@@ -32,13 +32,13 @@ pub async fn handshake(
     client_a
         .connection_open_init(v1connection::MsgConnectionOpenInit {
             client_id: client_id_a.clone(),
-            connection_id: connection_id_a.clone(),
             counterparty: Some(v1connection::Counterparty {
                 client_id: client_id_b.clone(),
                 connection_id: connection_id_b.clone(),
                 prefix: Some(PREFIX.clone()),
             }),
             version: Some(VERSION.clone()),
+            delay_period: DELAY_PERIOD,
             signer: Default::default(),
         })
         .await?;
@@ -49,8 +49,8 @@ pub async fn handshake(
         let counterparty_consensus_state = client::query_consensus_state(
             endpoint_a.clone(),
             client_id_a.clone(),
-            HEIGHT.version_number,
-            HEIGHT.version_height,
+            HEIGHT.revision_number,
+            HEIGHT.revision_height,
             false,
         )
         .await?;
@@ -60,8 +60,7 @@ pub async fn handshake(
         client_b
             .connection_open_try(v1connection::MsgConnectionOpenTry {
                 client_id: client_id_b.clone(),
-                desired_connection_id: connection_id_b.clone(),
-                counterparty_chosen_connection_id: connection_id_b.clone(),
+                previous_connection_id: "".to_owned(),
                 client_state: counterparty_client_state.client_state,
                 counterparty: Some(v1connection::Counterparty {
                     client_id: client_id_a,
@@ -74,6 +73,7 @@ pub async fn handshake(
                 proof_client: counterparty_client_state.proof,
                 proof_consensus: counterparty_consensus_state.proof,
                 consensus_height: Some(HEIGHT.clone()),
+                delay_period: DELAY_PERIOD,
                 signer: Default::default(),
             })
             .await?;
@@ -85,8 +85,8 @@ pub async fn handshake(
         let counterparty_consensus_state = client::query_consensus_state(
             endpoint_b.clone(),
             client_id_b,
-            HEIGHT.version_number,
-            HEIGHT.version_height,
+            HEIGHT.revision_number,
+            HEIGHT.revision_height,
             false,
         )
         .await?;

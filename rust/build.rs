@@ -20,8 +20,8 @@ fn find_protos(root: impl AsRef<Path>) -> io::Result<Vec<PathBuf>> {
 fn main() -> io::Result<()> {
     let include_paths = [
         "../proto/src/main/proto",
-        "../external/cosmos-sdk/proto",
-        "../external/cosmos-sdk/third_party/proto",
+        "../external/ibc-go/proto",
+        "../external/ibc-go/third_party/proto",
     ];
     include_paths.iter().for_each(|path| {
         println!("cargo:rerun-if-changed={}", path);

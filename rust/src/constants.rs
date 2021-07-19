@@ -4,8 +4,8 @@ use ibc::core::commitment::v1 as v1commitment;
 use ibc::core::connection::v1 as v1connection;
 
 pub static HEIGHT: v1client::Height = v1client::Height {
-    version_number: 0,
-    version_height: 1,
+    revision_number: 0,
+    revision_height: 1,
 };
 
 lazy_static! {
@@ -17,6 +17,8 @@ lazy_static! {
         key_prefix: b"ibc".to_vec(),
     };
 }
+
+pub const DELAY_PERIOD: u64 = 0;
 
 pub static CHANNEL_VERSION: &str = "ics20-1";
 
