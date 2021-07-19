@@ -6,8 +6,8 @@ import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 
 val HEIGHT: Client.Height = Client.Height.newBuilder()
-        .setVersionNumber(0)
-        .setVersionHeight(1)
+        .setRevisionNumber(0)
+        .setRevisionHeight(1)
         .build()
 
 val VERSION: Connection.Version = Connection.Version.newBuilder()

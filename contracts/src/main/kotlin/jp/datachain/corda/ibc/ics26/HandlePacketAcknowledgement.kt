@@ -16,7 +16,7 @@ data class HandlePacketAcknowledgement(val msg: Tx.MsgAcknowledgement): Datagram
                 ctx,
                 msg.packet,
                 ack,
-                CommitmentProof(msg.proof),
+                CommitmentProof(msg.proofAcked),
                 msg.proofHeight)
     }
 }

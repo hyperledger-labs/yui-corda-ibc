@@ -24,16 +24,11 @@ pub async fn create_clients(
     client_id_a: String,
     client_id_b: String,
 ) -> Result<()> {
-    let (client_id_a, client_state_a) = {
-        let tmp = v1corda::ClientState { id: client_id_a };
-        let packed = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &tmp)?;
-        (tmp.id, packed)
-    };
-    let (client_id_b, client_state_b) = {
-        let tmp = v1corda::ClientState { id: client_id_b };
-        let packed = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &tmp)?;
-        (tmp.id, packed)
-    };
+    let client_state_a = v1corda::ClientState { id: client_id_a };
+    let client_state_a = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &client_state_a)?;
+
+    let client_state_b = v1corda::ClientState { id: client_id_b };
+    let client_state_b = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &client_state_b)?;
 
     let host_a = host::query_host(endpoint_a.clone()).await?;
     let host_b = host::query_host(endpoint_b.clone()).await?;
@@ -58,7 +53,6 @@ pub async fn create_clients(
 
     client_a
         .create_client(v1client::MsgCreateClient {
-            client_id: client_id_a,
             client_state: Some(client_state_a),
             consensus_state: Some(consensus_state_a),
             signer: Default::default(),
@@ -66,7 +60,6 @@ pub async fn create_clients(
         .await?;
     client_b
         .create_client(v1client::MsgCreateClient {
-            client_id: client_id_b,
             client_state: Some(client_state_b),
             consensus_state: Some(consensus_state_b),
             signer: Default::default(),
@@ -90,16 +83,16 @@ pub async fn query_client_state(
 pub async fn query_consensus_state(
     endpoint: String,
     client_id: String,
-    version_number: u64,
-    version_height: u64,
+    revision_number: u64,
+    revision_height: u64,
     latest_height: bool,
 ) -> Result<v1client::QueryConsensusStateResponse> {
     let mut client = query_client(endpoint).await?;
     let response = client
         .consensus_state(v1client::QueryConsensusStateRequest {
             client_id,
-            version_number,
-            version_height,
+            revision_number,
+            revision_height,
             latest_height,
         })
         .await?;

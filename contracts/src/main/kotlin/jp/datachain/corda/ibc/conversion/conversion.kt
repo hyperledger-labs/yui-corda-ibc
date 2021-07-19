@@ -56,29 +56,22 @@ fun Party.into(): CordaTypes.Party = CordaTypes.Party.newBuilder()
         .build()
 fun CordaTypes.Party.into() = Party(name.into(), owningKey.into())
 
-fun Pair<Identifier, Identifier>.into(): HostProto.Host.PortChannelIdentifier = HostProto.Host.PortChannelIdentifier.newBuilder()
-        .setPortId(first.id)
-        .setChannelId(second.id)
-        .build()
-fun HostProto.Host.PortChannelIdentifier.into() = Pair(Identifier(portId), Identifier(channelId))
-
 fun Host.into(): HostProto.Host = HostProto.Host.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setNotary(notary.into())
-        .addAllClientIds(clientIds.map{it.id})
-        .addAllConnIds(connIds.map{it.id})
-        .addAllPortChanIds(portChanIds.map{it.into()})
+        .setNextClientSequence(nextClientSequence)
+        .setNextConnectionSequence(nextConnectionSequence)
+        .setNextChannelSequence(nextChannelSequence)
         .addAllBankIds(bankIds.map{it.id})
-        .setId(id.id)
         .build()
 fun HostProto.Host.into() = Host(
         participants = participantsList.map{it.into()},
         baseId = baseId.into(),
         notary = notary.into(),
-        clientIds = clientIdsList.map(::Identifier),
-        connIds = connIdsList.map(::Identifier),
-        portChanIds = portChanIdsList.map{it.into()},
+        nextClientSequence = nextClientSequence,
+        nextConnectionSequence = nextConnectionSequence,
+        nextChannelSequence = nextChannelSequence,
         bankIds = bankIdsList.map(::Identifier)
 )
 
@@ -118,7 +111,6 @@ fun Bank.into(): BankProto.Bank = BankProto.Bank.newBuilder()
         .setLocked(locked.into())
         .setMinted(minted.into())
         .setDenoms(denoms.into())
-        .setId(id.id)
         .build()
 fun BankProto.Bank.into() = Bank(
         participants = participantsList.map{it.into()},
@@ -128,7 +120,7 @@ fun BankProto.Bank.into() = Bank(
         minted = minted.into(),
         denoms = denoms.into())
 
-fun Map<Denom, Amount>.into() = CashBankProto.CashBank.SupplyMap.newBuilder()
+fun Map<Denom, Amount>.into(): CashBankProto.CashBank.SupplyMap = CashBankProto.CashBank.SupplyMap.newBuilder()
         .putAllDenomToAmount(this
                 .mapKeys{it.key.toString()}
                 .mapValues{it.value.toString()})
@@ -146,11 +138,10 @@ fun CashBankProto.CashBank.IbcDenomMap.into(): Map<String, Denom> = ibcDenomToDe
         .mapValues{Denom.fromString(it.value)}
         .toMap()
 
-fun CashBank.into() = CashBankProto.CashBank.newBuilder()
+fun CashBank.into(): CashBankProto.CashBank = CashBankProto.CashBank.newBuilder()
         .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
         .setBaseId(baseId.into())
         .setOwner(owner.into())
         .setSupply(supply.into())
         .setDenoms(denoms.into())
-        .setId(id.id)
         .build()

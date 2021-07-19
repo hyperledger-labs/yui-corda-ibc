@@ -37,6 +37,10 @@ pub mod ibc {
     }
 }
 
+pub mod ics23 {
+    tonic::include_proto!("ics23");
+}
+
 pub mod cosmos {
     pub mod base {
         pub mod v1beta1 {
@@ -46,6 +50,11 @@ pub mod cosmos {
             pub mod v1beta1 {
                 tonic::include_proto!("cosmos.base.query.v1beta1");
             }
+        }
+    }
+    pub mod upgrade {
+        pub mod v1beta1 {
+            tonic::include_proto!("cosmos.upgrade.v1beta1");
         }
     }
 }

@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.flows.ics2
 
 import co.paralleluniverse.fibers.Suspendable
-import ibc.core.client.v1.Client
+import ibc.core.client.v1.Tx
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleClientCreate
@@ -15,7 +15,7 @@ import net.corda.core.transactions.TransactionBuilder
 @InitiatingFlow
 class IbcClientCreateFlow(
         private val baseId: StateRef,
-        private val msg: Client.MsgCreateClient
+        private val msg: Tx.MsgCreateClient
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {

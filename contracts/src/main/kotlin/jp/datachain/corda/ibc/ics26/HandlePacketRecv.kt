@@ -13,7 +13,7 @@ data class HandlePacketRecv(val msg: Tx.MsgRecvPacket): DatagramHandler {
         Handler.recvPacket(
                 ctx,
                 msg.packet,
-                CommitmentProof(msg.proof),
+                CommitmentProof(msg.proofCommitment),
                 msg.proofHeight,
                 acknowledgement)
     }

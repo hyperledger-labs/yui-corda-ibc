@@ -69,18 +69,18 @@ executeOldTest:
 
 executeTest:
 	$(CLIENT) client create-clients \
-		--client-id-a aliceclient \
-		--client-id-b bobclient
+		--client-id-a corda-ibc-0 \
+		--client-id-b corda-ibc-0
 	$(CLIENT) connection handshake \
-		--client-id-a aliceclient \
-		--client-id-b bobclient \
-		--connection-id-a aliceconnection \
-		--connection-id-b bobconnection
+		--client-id-a corda-ibc-0 \
+		--client-id-b corda-ibc-0 \
+		--connection-id-a connection-0 \
+		--connection-id-b connection-0
 	$(CLIENT) channel handshake \
-		--connection-id-a aliceconnection \
-		--connection-id-b bobconnection \
-		--channel-id-a alicechannel \
-		--channel-id-b bobchannel
+		--connection-id-a connection-0 \
+		--connection-id-b connection-0 \
+		--channel-id-a channel-0 \
+		--channel-id-b channel-0
 
 shutdownServerA:
 	$(CLIENT) admin shutdown -e http://localhost:9999

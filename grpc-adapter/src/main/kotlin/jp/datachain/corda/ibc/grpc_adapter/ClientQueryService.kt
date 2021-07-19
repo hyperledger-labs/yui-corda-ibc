@@ -40,8 +40,8 @@ class ClientQueryService(host: String, port: Int, username: String, password: St
                     clientState.getLatestHeight()
                 else
                     Client.Height.newBuilder()
-                            .setVersionNumber(request.versionNumber)
-                            .setVersionHeight(request.versionHeight)
+                            .setRevisionNumber(request.revisionNumber)
+                            .setRevisionHeight(request.revisionHeight)
                             .build()
         val reply = QueryOuterClass.QueryConsensusStateResponse.newBuilder()
                 .setConsensusState(clientState.consensusStates[height]!!.consensusState)

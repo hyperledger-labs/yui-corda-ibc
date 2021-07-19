@@ -40,5 +40,4 @@ message CashBank {
   Party owner = 3;
   SupplyMap supply = 4;
   IbcDenomMap denoms = 5;
-  string id = 6;
 }

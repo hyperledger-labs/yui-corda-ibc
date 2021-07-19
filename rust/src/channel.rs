@@ -33,13 +33,12 @@ pub async fn handshake(
     client_a
         .channel_open_init(v1channel::MsgChannelOpenInit {
             port_id: port_id_a.clone(),
-            channel_id: channel_id_a.clone(),
             channel: Some(v1channel::Channel {
                 state: v1channel::State::UninitializedUnspecified as i32,
                 ordering: v1channel::Order::Ordered as i32,
                 counterparty: Some(v1channel::Counterparty {
                     port_id: port_id_b.clone(),
-                    channel_id: channel_id_b.clone(),
+                    channel_id: "".to_owned(),
                 }),
                 connection_hops: vec![connection_id_a],
                 version: CHANNEL_VERSION.to_owned(),
@@ -55,8 +54,7 @@ pub async fn handshake(
         client_b
             .channel_open_try(v1channel::MsgChannelOpenTry {
                 port_id: port_id_b.clone(),
-                desired_channel_id: channel_id_b.clone(),
-                counterparty_chosen_channel_id: channel_id_b.clone(),
+                previous_channel_id: "".to_owned(),
                 channel: Some(v1channel::Channel {
                     state: v1channel::State::Tryopen as i32,
                     ordering: v1channel::Order::Ordered as i32,

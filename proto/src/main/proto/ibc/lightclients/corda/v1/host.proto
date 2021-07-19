@@ -16,16 +16,11 @@ service HostService {
 }
 
 message Host {
-  message PortChannelIdentifier {
-    string portId = 1;
-    string channelId = 2;
-  }
   repeated Party participants = 1;
   StateRef base_id = 2;
   Party notary = 3;
-  repeated string client_ids = 4;
-  repeated string conn_ids = 5;
-  repeated PortChannelIdentifier port_chan_ids = 6;
+  uint64 nextClientSequence = 4;
+  uint64 nextConnectionSequence = 5;
+  uint64 nextChannelSequence = 6;
   repeated string bank_ids = 7;
-  string id = 8;
 }

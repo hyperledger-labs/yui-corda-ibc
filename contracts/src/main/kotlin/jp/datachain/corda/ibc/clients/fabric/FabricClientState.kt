@@ -32,8 +32,8 @@ data class FabricClientState constructor(
     override val consensusStates get() = fabricConsensusStates
         .mapKeys { e ->
             Client.Height.newBuilder()
-                .setVersionNumber(0)
-                .setVersionHeight(e.key)
+                .setRevisionNumber(0)
+                .setRevisionHeight(e.key)
                 .build()
         }
         .mapValues { e ->
@@ -66,7 +66,7 @@ data class FabricClientState constructor(
         .setClientState(fabricClientState)
         .also { builder ->
             consensusStates.forEach{ (height, consensusState) ->
-                builder.putConsensusStates(height.versionHeight, consensusState.fabricConsensusState)
+                builder.putConsensusStates(height.revisionHeight, consensusState.fabricConsensusState)
             }
         }
         .build()

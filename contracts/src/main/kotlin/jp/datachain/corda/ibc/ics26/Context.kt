@@ -3,7 +3,6 @@ package jp.datachain.corda.ibc.ics26
 import jp.datachain.corda.ibc.states.IbcFungibleState
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.hash
 
 class Context(val inStates: Collection<ContractState>, val refStates: Collection<ContractState>) {
     val outStates = mutableSetOf<ContractState>()
@@ -16,7 +15,6 @@ class Context(val inStates: Collection<ContractState>, val refStates: Collection
         return inStates.filterIsInstance<T>()
     }
     inline fun <reified T: ContractState> getInput() = getInputs<T>().single()
-    inline fun <reified T: ContractState> getInputOrNull() = getInputs<T>().singleOrNull()
 
     inline fun <reified T: ContractState> getReferences(): List<T> {
         return refStates.filterIsInstance<T>()

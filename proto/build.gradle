@@ -29,8 +29,8 @@ protobuf {
 sourceSets {
     main {
         proto {
-            srcDir rootProject.file('external/cosmos-sdk/proto')
-            srcDir rootProject.file('external/cosmos-sdk/third_party/proto')
+            srcDir rootProject.file('external/ibc-go/proto')
+            srcDir rootProject.file('external/ibc-go/third_party/proto')
             srcDir rootProject.file('external/fabric-ibc/proto')
             srcDir rootProject.file('external/fabric-ibc-lightclientd/proto')
         }
