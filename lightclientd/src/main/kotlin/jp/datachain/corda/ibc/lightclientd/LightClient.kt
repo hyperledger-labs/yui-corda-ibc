@@ -102,6 +102,8 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     ) = withClientState(request.state) {
         it.verifyPacketCommitment(
             request.height,
+            request.delayTimePeriod,
+            request.delayBlockPeriod,
             request.prefix,
             CommitmentProof(request.proof),
             Identifier(request.portId),
@@ -119,6 +121,8 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     ) = withClientState(request.state) {
         it.verifyPacketAcknowledgement(
             request.height,
+            request.delayTimePeriod,
+            request.delayBlockPeriod,
             request.prefix,
             CommitmentProof(request.proof),
             Identifier(request.portId),
@@ -136,6 +140,8 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     ) = withClientState(request.state) {
         it.verifyPacketReceiptAbsence(
             request.height,
+            request.delayTimePeriod,
+            request.delayBlockPeriod,
             request.prefix,
             CommitmentProof(request.proof),
             Identifier(request.portId),
@@ -152,6 +158,8 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     ) = withClientState(request.state) {
         it.verifyNextSequenceRecv(
             request.height,
+            request.delayTimePeriod,
+            request.delayBlockPeriod,
             request.prefix,
             CommitmentProof(request.proof),
             Identifier(request.portId),
