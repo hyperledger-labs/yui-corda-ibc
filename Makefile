@@ -1,21 +1,50 @@
-.PHONY: build
+.PHONY: build clean buildClient
+.PHONY: buildImage buildClientImage buildLightclientdImage
 .PHONY: deployNodes upNodes downNodes
 .PHONY: prepareHostA startServerA shutdownServerA startServerBankA shutdownServerBankA
 .PHONY: prepareHostB startServerB shutdownServerB
 .PHONY: executeTest executeOldTest
 .PHONY: test oldTest
 
-CLIENT ?= ./rust/target/release/corda-ibc-client
+NAME			:= yui-corda-ibc
+CLIENT_NAME		:= yui-corda-ibc-client
+LIGHTCLIENTD_NAME	:= yui-corda-ibc-lightclientd
+
+CLIENT		?= ./rust/target/release/$(CLIENT_NAME)
+
+DOCKER_REG	?= ""
+DOCKER_REPO	?= ""
+DOCKER_TAG	?= :latest
 
 build:
-	./gradlew -x test clean build
+	./gradlew -x test build
+
+clean:
+	./gradlew clean
+
+buildClient:
+	cd rust && cargo clean && cargo build --release
+
+buildImage:
+	docker build -f ./Dockerfiles/$(NAME)/Dockerfile -t $(DOCKER_REG)$(DOCKER_REPO)$(NAME)$(DOCKER_TAG) \
+		--build-arg CLIENT_NAME=$(CLIENT_NAME) \
+		--build-arg DOCKER_REG=$(DOCKER_REG) \
+		--build-arg DOCKER_REPO=$(DOCKER_REPO) \
+		--build-arg DOCKER_TAG=$(DOCKER_TAG) \
+		.
+
+buildClientImage:
+	docker build -f ./Dockerfiles/$(CLIENT_NAME)/Dockerfile -t $(DOCKER_REG)$(DOCKER_REPO)$(CLIENT_NAME)$(DOCKER_TAG) .
+
+buildLightclientdImage:
+	docker build -f ./Dockerfiles/$(LIGHTCLIENTD_NAME)/Dockerfile -t $(DOCKER_REG)$(DOCKER_REPO)$(LIGHTCLIENTD_NAME)$(DOCKER_TAG) .
 
 deployNodes:
 	./gradlew deployNodes
 
 upNodes:
 	./build/nodes/runnodes --headless
-	sleep 60
+	sleep 70
 
 downNodes:
 	-sshpass -p test ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown

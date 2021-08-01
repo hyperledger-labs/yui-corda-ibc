@@ -1,5 +1,5 @@
 [package]
-name = "corda-ibc-client"
+name = "yui-corda-ibc-client"
 version = "0.1.0"
 authors = ["YOSHIDA Masanori <masanori.yoshida@gmail.com>"]
 edition = "2018"
