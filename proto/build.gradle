@@ -31,7 +31,7 @@ sourceSets {
         proto {
             srcDir rootProject.file('external/ibc-go/proto')
             srcDir rootProject.file('external/ibc-go/third_party/proto')
-            srcDir rootProject.file('external/fabric-ibc/proto')
+            srcDir rootProject.file('external/yui-fabric-ibc/proto')
             srcDir rootProject.file('external/fabric-ibc-lightclientd/proto')
         }
         java {
