@@ -44,7 +44,8 @@ deployNodes:
 
 upNodes:
 	./build/nodes/runnodes --headless
-	sleep 70
+	for p in `seq  2222 1  2225`; do while ! nc -z localhost $$p; do sleep 1; done; done
+	for p in `seq 10003 3 10012`; do while ! nc -z localhost $$p; do sleep 1; done; done
 
 downNodes:
 	-sshpass -p test ssh -p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no user1@localhost run gracefulShutdown
