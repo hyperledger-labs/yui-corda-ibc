@@ -58,11 +58,11 @@ killNodes:
 
 prepareHostA:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10012 user1 test 9999' &
-	sleep 20
+	while ! nc -z localhost 9999; do sleep 1; done
 	$(CLIENT) genesis create-genesis -e http://localhost:9999 -p PartyA,Bank,Notary > base-hash-a.txt
 	$(CLIENT) admin shutdown         -e http://localhost:9999
 	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 9999 `cat base-hash-a.txt`" &
-	sleep 20
+	while ! nc -z localhost 9999; do sleep 1; done
 	$(CLIENT) host create-host           -e http://localhost:9999
 	$(CLIENT) cash-bank create-cash-bank -e http://localhost:9999 -b `$(CLIENT) node address-from-name -e http://localhost:9999 -n Bank`
 	$(CLIENT) cash-bank allocate-cash    -e http://localhost:9999 -o `$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA` -c USD -a 100
@@ -70,11 +70,11 @@ prepareHostA:
 
 prepareHostB:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10012 user1 test 19999' &
-	sleep 20
+	while ! nc -z localhost 19999; do sleep 1; done
 	$(CLIENT) genesis create-genesis -e http://localhost:19999 -p PartyB,Bank,Notary > base-hash-b.txt
 	$(CLIENT) admin shutdown         -e http://localhost:19999
 	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 19999 `cat base-hash-b.txt`" &
-	sleep 20
+	while ! nc -z localhost 19999; do sleep 1; done
 	$(CLIENT) host create-host           -e http://localhost:19999
 	$(CLIENT) cash-bank create-cash-bank -e http://localhost:19999 -b `$(CLIENT) node address-from-name -e http://localhost:19999 -n Bank`
 	$(CLIENT) admin shutdown             -e http://localhost:19999
@@ -84,15 +84,15 @@ runServerA:
 
 startServerA:
 	./gradlew :grpc-adapter:runServer --args "localhost 10006 user1 test 9999 `cat base-hash-a.txt`" &
-	sleep 10
+	while ! nc -z localhost 9999; do sleep 1; done
 
 startServerB:
 	./gradlew :grpc-adapter:runServer --args "localhost 10009 user1 test 19999 `cat base-hash-b.txt`" &
-	sleep 10
+	while ! nc -z localhost 19999; do sleep 1; done
 
 startServerBankA:
 	./gradlew :grpc-adapter:runServer --args "localhost 10012 user1 test 29999 `cat base-hash-a.txt`" &
-	sleep 10
+	while ! nc -z localhost 29999; do sleep 1; done
 
 executeOldTest:
 	./gradlew :grpc-adapter:runClient --args "executeTest localhost:9999 localhost:19999 localhost:29999 `$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA` `$(CLIENT) node address-from-name -e http://localhost:19999 -n PartyB`"
