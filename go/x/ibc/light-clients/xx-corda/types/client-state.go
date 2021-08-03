@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const cordaClientType = "corda"
+const cordaClientType = "corda-ibc"
 
 var cordaHeight = clienttypes.NewHeight(0, 1)
 
