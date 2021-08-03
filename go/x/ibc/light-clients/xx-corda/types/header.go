@@ -5,7 +5,7 @@ import "github.com/cosmos/ibc-go/modules/core/exported"
 var _ exported.Header = (*Header)(nil)
 
 func (*Header) ClientType() string {
-	return cordaClientType
+	return CordaClientType
 }
 
 func (*Header) GetHeight() exported.Height {

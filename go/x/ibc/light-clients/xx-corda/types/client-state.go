@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const cordaClientType = "corda-ibc"
+const CordaClientType = "corda-ibc"
 
 var cordaHeight = clienttypes.NewHeight(0, 1)
 
@@ -69,7 +69,7 @@ func makeStateWithoutConsensusState(clientState *ClientState) *State {
 }
 
 func (*ClientState) ClientType() string {
-	return cordaClientType
+	return CordaClientType
 }
 
 func (*ClientState) GetLatestHeight() exported.Height {
