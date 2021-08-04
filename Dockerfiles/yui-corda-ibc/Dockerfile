@@ -22,4 +22,5 @@ RUN apt-get update && apt-get install -y libc6 make openssh-client sshpass netca
 RUN make CLIENT=/usr/local/bin/$CLIENT_NAME clean build deployNodes upNodes prepareHostA downNodes
 
 EXPOSE 9999/tcp
-CMD fabric-ibc-lightclientd -port 60001 & make upNodes runServerA
+EXPOSE 29999/tcp
+CMD fabric-ibc-lightclientd -port 60001 & make upNodes startServerBankA runServerA
