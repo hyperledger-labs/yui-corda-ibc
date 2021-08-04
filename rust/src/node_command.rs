@@ -11,6 +11,13 @@ pub enum Opt {
         #[structopt(short, long)]
         name: String,
     },
+    PubkeyFromName {
+        #[structopt(short, long, default_value = "http://localhost:9999")]
+        endpoint: String,
+
+        #[structopt(short, long)]
+        name: String,
+    },
     AddressFromName {
         #[structopt(short, long, default_value = "http://localhost:9999")]
         endpoint: String,
@@ -25,6 +32,10 @@ pub async fn execute(opt: Opt) -> Result<()> {
         Opt::PartyFromName { endpoint, name } => {
             let party = node::party_from_name(endpoint, name).await?;
             println!("{:?}", party);
+        }
+        Opt::PubkeyFromName { endpoint, name } => {
+            let pubkey = node::pubkey_from_name(endpoint, name).await?;
+            println!("{}", pubkey);
         }
         Opt::AddressFromName { endpoint, name } => {
             let address = node::address_from_name(endpoint, name).await?;
