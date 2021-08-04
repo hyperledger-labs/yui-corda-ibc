@@ -444,14 +444,16 @@ func (m *VerifyChannelStateRequest) GetChannel() *types4.Channel {
 
 // rpc VerifyPacketCommitment
 type VerifyPacketCommitmentRequest struct {
-	State           *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
-	Height          *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
-	Prefix          *types1.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	Proof           []byte               `protobuf:"bytes,4,opt,name=proof,proto3" json:"proof,omitempty"`
-	PortId          string               `protobuf:"bytes,5,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId       string               `protobuf:"bytes,6,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	Sequence        uint64               `protobuf:"varint,7,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	CommitmentBytes []byte               `protobuf:"bytes,8,opt,name=commitment_bytes,json=commitmentBytes,proto3" json:"commitment_bytes,omitempty"`
+	State            *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	Height           *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
+	DelayTimePeriod  uint64               `protobuf:"varint,3,opt,name=delay_time_period,json=delayTimePeriod,proto3" json:"delay_time_period,omitempty"`
+	DelayBlockPeriod uint64               `protobuf:"varint,4,opt,name=delay_block_period,json=delayBlockPeriod,proto3" json:"delay_block_period,omitempty"`
+	Prefix           *types1.MerklePrefix `protobuf:"bytes,5,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Proof            []byte               `protobuf:"bytes,6,opt,name=proof,proto3" json:"proof,omitempty"`
+	PortId           string               `protobuf:"bytes,7,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ChannelId        string               `protobuf:"bytes,8,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	Sequence         uint64               `protobuf:"varint,9,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	CommitmentBytes  []byte               `protobuf:"bytes,10,opt,name=commitment_bytes,json=commitmentBytes,proto3" json:"commitment_bytes,omitempty"`
 }
 
 func (m *VerifyPacketCommitmentRequest) Reset()         { *m = VerifyPacketCommitmentRequest{} }
@@ -501,6 +503,20 @@ func (m *VerifyPacketCommitmentRequest) GetHeight() *types.Height {
 	return nil
 }
 
+func (m *VerifyPacketCommitmentRequest) GetDelayTimePeriod() uint64 {
+	if m != nil {
+		return m.DelayTimePeriod
+	}
+	return 0
+}
+
+func (m *VerifyPacketCommitmentRequest) GetDelayBlockPeriod() uint64 {
+	if m != nil {
+		return m.DelayBlockPeriod
+	}
+	return 0
+}
+
 func (m *VerifyPacketCommitmentRequest) GetPrefix() *types1.MerklePrefix {
 	if m != nil {
 		return m.Prefix
@@ -545,14 +561,16 @@ func (m *VerifyPacketCommitmentRequest) GetCommitmentBytes() []byte {
 
 // rpc VerifyPacketAcknowledgement
 type VerifyPacketAcknowledgementRequest struct {
-	State           *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
-	Height          *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
-	Prefix          *types1.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	Proof           []byte               `protobuf:"bytes,4,opt,name=proof,proto3" json:"proof,omitempty"`
-	PortId          string               `protobuf:"bytes,5,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId       string               `protobuf:"bytes,6,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	Sequence        uint64               `protobuf:"varint,7,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	Acknowledgement []byte               `protobuf:"bytes,8,opt,name=acknowledgement,proto3" json:"acknowledgement,omitempty"`
+	State            *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	Height           *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
+	DelayTimePeriod  uint64               `protobuf:"varint,3,opt,name=delay_time_period,json=delayTimePeriod,proto3" json:"delay_time_period,omitempty"`
+	DelayBlockPeriod uint64               `protobuf:"varint,4,opt,name=delay_block_period,json=delayBlockPeriod,proto3" json:"delay_block_period,omitempty"`
+	Prefix           *types1.MerklePrefix `protobuf:"bytes,5,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Proof            []byte               `protobuf:"bytes,6,opt,name=proof,proto3" json:"proof,omitempty"`
+	PortId           string               `protobuf:"bytes,7,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ChannelId        string               `protobuf:"bytes,8,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	Sequence         uint64               `protobuf:"varint,9,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	Acknowledgement  []byte               `protobuf:"bytes,10,opt,name=acknowledgement,proto3" json:"acknowledgement,omitempty"`
 }
 
 func (m *VerifyPacketAcknowledgementRequest) Reset()         { *m = VerifyPacketAcknowledgementRequest{} }
@@ -602,6 +620,20 @@ func (m *VerifyPacketAcknowledgementRequest) GetHeight() *types.Height {
 	return nil
 }
 
+func (m *VerifyPacketAcknowledgementRequest) GetDelayTimePeriod() uint64 {
+	if m != nil {
+		return m.DelayTimePeriod
+	}
+	return 0
+}
+
+func (m *VerifyPacketAcknowledgementRequest) GetDelayBlockPeriod() uint64 {
+	if m != nil {
+		return m.DelayBlockPeriod
+	}
+	return 0
+}
+
 func (m *VerifyPacketAcknowledgementRequest) GetPrefix() *types1.MerklePrefix {
 	if m != nil {
 		return m.Prefix
@@ -646,13 +678,15 @@ func (m *VerifyPacketAcknowledgementRequest) GetAcknowledgement() []byte {
 
 // rpc VerifyPacketReceiptAbsence
 type VerifyPacketReceiptAbsenceRequest struct {
-	State     *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
-	Height    *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
-	Prefix    *types1.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	Proof     []byte               `protobuf:"bytes,4,opt,name=proof,proto3" json:"proof,omitempty"`
-	PortId    string               `protobuf:"bytes,5,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId string               `protobuf:"bytes,6,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	Sequence  uint64               `protobuf:"varint,7,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	State            *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	Height           *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
+	DelayTimePeriod  uint64               `protobuf:"varint,3,opt,name=delay_time_period,json=delayTimePeriod,proto3" json:"delay_time_period,omitempty"`
+	DelayBlockPeriod uint64               `protobuf:"varint,4,opt,name=delay_block_period,json=delayBlockPeriod,proto3" json:"delay_block_period,omitempty"`
+	Prefix           *types1.MerklePrefix `protobuf:"bytes,5,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Proof            []byte               `protobuf:"bytes,6,opt,name=proof,proto3" json:"proof,omitempty"`
+	PortId           string               `protobuf:"bytes,7,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ChannelId        string               `protobuf:"bytes,8,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	Sequence         uint64               `protobuf:"varint,9,opt,name=sequence,proto3" json:"sequence,omitempty"`
 }
 
 func (m *VerifyPacketReceiptAbsenceRequest) Reset()         { *m = VerifyPacketReceiptAbsenceRequest{} }
@@ -702,6 +736,20 @@ func (m *VerifyPacketReceiptAbsenceRequest) GetHeight() *types.Height {
 	return nil
 }
 
+func (m *VerifyPacketReceiptAbsenceRequest) GetDelayTimePeriod() uint64 {
+	if m != nil {
+		return m.DelayTimePeriod
+	}
+	return 0
+}
+
+func (m *VerifyPacketReceiptAbsenceRequest) GetDelayBlockPeriod() uint64 {
+	if m != nil {
+		return m.DelayBlockPeriod
+	}
+	return 0
+}
+
 func (m *VerifyPacketReceiptAbsenceRequest) GetPrefix() *types1.MerklePrefix {
 	if m != nil {
 		return m.Prefix
@@ -741,11 +789,13 @@ func (m *VerifyPacketReceiptAbsenceRequest) GetSequence() uint64 {
 type VerifyNextSequenceRecvRequest struct {
 	State            *State               `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
 	Height           *types.Height        `protobuf:"bytes,2,opt,name=height,proto3" json:"height,omitempty"`
-	Prefix           *types1.MerklePrefix `protobuf:"bytes,3,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	Proof            []byte               `protobuf:"bytes,4,opt,name=proof,proto3" json:"proof,omitempty"`
-	PortId           string               `protobuf:"bytes,5,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
-	ChannelId        string               `protobuf:"bytes,6,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
-	NextSequenceRecv uint64               `protobuf:"varint,7,opt,name=next_sequence_recv,json=nextSequenceRecv,proto3" json:"next_sequence_recv,omitempty"`
+	DelayTimePeriod  uint64               `protobuf:"varint,3,opt,name=delay_time_period,json=delayTimePeriod,proto3" json:"delay_time_period,omitempty"`
+	DelayBlockPeriod uint64               `protobuf:"varint,4,opt,name=delay_block_period,json=delayBlockPeriod,proto3" json:"delay_block_period,omitempty"`
+	Prefix           *types1.MerklePrefix `protobuf:"bytes,5,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Proof            []byte               `protobuf:"bytes,6,opt,name=proof,proto3" json:"proof,omitempty"`
+	PortId           string               `protobuf:"bytes,7,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty"`
+	ChannelId        string               `protobuf:"bytes,8,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	NextSequenceRecv uint64               `protobuf:"varint,9,opt,name=next_sequence_recv,json=nextSequenceRecv,proto3" json:"next_sequence_recv,omitempty"`
 }
 
 func (m *VerifyNextSequenceRecvRequest) Reset()         { *m = VerifyNextSequenceRecvRequest{} }
@@ -793,6 +843,20 @@ func (m *VerifyNextSequenceRecvRequest) GetHeight() *types.Height {
 		return m.Height
 	}
 	return nil
+}
+
+func (m *VerifyNextSequenceRecvRequest) GetDelayTimePeriod() uint64 {
+	if m != nil {
+		return m.DelayTimePeriod
+	}
+	return 0
+}
+
+func (m *VerifyNextSequenceRecvRequest) GetDelayBlockPeriod() uint64 {
+	if m != nil {
+		return m.DelayBlockPeriod
+	}
+	return 0
 }
 
 func (m *VerifyNextSequenceRecvRequest) GetPrefix() *types1.MerklePrefix {
@@ -847,67 +911,71 @@ func init() {
 }
 
 var fileDescriptor_2128740ff854a452 = []byte{
-	// 950 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x4f, 0x8f, 0xdb, 0x44,
-	0x14, 0x5f, 0x67, 0x37, 0xde, 0xee, 0xdb, 0xa5, 0x5b, 0x46, 0xa5, 0x64, 0xd3, 0x6d, 0xd8, 0x1a,
-	0x0a, 0x5b, 0x89, 0xb5, 0xb5, 0x5b, 0xd4, 0x72, 0x68, 0x0f, 0xdb, 0xb2, 0x52, 0x23, 0x15, 0xa8,
-	0x5c, 0x89, 0x03, 0x97, 0x60, 0x8f, 0x27, 0xc9, 0xb0, 0xd9, 0xb1, 0xb1, 0x27, 0x21, 0xfe, 0x16,
-	0x7c, 0x0a, 0xae, 0x1c, 0xf9, 0x04, 0x48, 0x48, 0x5c, 0xca, 0x0d, 0x2e, 0x08, 0x65, 0x3f, 0x02,
-	0x5f, 0x00, 0x79, 0x66, 0xfc, 0x27, 0x4e, 0x9c, 0x44, 0x5c, 0x10, 0xb4, 0x37, 0xbf, 0x99, 0xdf,
-	0xcc, 0xef, 0xf9, 0xf7, 0x66, 0xde, 0x7b, 0x36, 0x9c, 0x50, 0x17, 0x5b, 0x03, 0xda, 0xeb, 0x73,
-	0x3c, 0xa0, 0x84, 0x71, 0xcf, 0xc2, 0x7e, 0xe8, 0x39, 0xd6, 0xe8, 0x58, 0x3e, 0x1c, 0x15, 0xe7,
-	0xcc, 0x20, 0xf4, 0xb9, 0x8f, 0xf6, 0xa8, 0x8b, 0xcd, 0xa9, 0x71, 0x01, 0x35, 0x47, 0xc7, 0xcd,
-	0x77, 0x92, 0xed, 0xb0, 0x1f, 0x12, 0x4b, 0x4e, 0x89, 0x7d, 0xc4, 0x93, 0x5c, 0xdb, 0xfc, 0x20,
-	0x07, 0xf8, 0x8c, 0x11, 0xcc, 0xa9, 0xcf, 0x24, 0x59, 0x6a, 0x29, 0xe0, 0xed, 0x1c, 0xd8, 0x77,
-	0x18, 0x23, 0x03, 0x81, 0x92, 0x8f, 0x73, 0xf6, 0xba, 0xb8, 0xa0, 0xfc, 0x22, 0x25, 0xcc, 0x2c,
-	0x05, 0xbc, 0x53, 0x7a, 0xc9, 0xa8, 0xf4, 0x92, 0x0a, 0x76, 0xb3, 0xe7, 0xfb, 0xbd, 0x01, 0xb1,
-	0x84, 0xe5, 0x0e, 0xbb, 0x16, 0xb9, 0x08, 0x78, 0xac, 0x26, 0xf7, 0xca, 0x93, 0x0e, 0x53, 0x53,
-	0xc6, 0xf7, 0x1a, 0xd4, 0x5f, 0x70, 0x87, 0x13, 0xd4, 0x86, 0x1d, 0xc9, 0xd0, 0x89, 0x12, 0xbb,
-	0xa1, 0x1d, 0x68, 0x87, 0xdb, 0x27, 0xef, 0x9b, 0x25, 0xc1, 0xa2, 0x4c, 0x30, 0xf3, 0x89, 0x18,
-	0x10, 0xab, 0xed, 0x6d, 0x9c, 0x1b, 0xc8, 0x86, 0x5d, 0xec, 0xb3, 0x88, 0xb0, 0x68, 0x18, 0xa9,
-	0xdd, 0x6a, 0x62, 0xb7, 0xbb, 0x8b, 0x76, 0x4b, 0x57, 0xc8, 0x0d, 0xaf, 0xe2, 0x29, 0xdb, 0xf8,
-	0xbd, 0x06, 0x8d, 0x2f, 0x48, 0x48, 0xbb, 0x71, 0x91, 0x96, 0x7c, 0x33, 0x24, 0x11, 0x47, 0xf7,
-	0xa1, 0x5e, 0x74, 0xfa, 0xc0, 0xac, 0x8c, 0xb2, 0x29, 0xd7, 0x49, 0x38, 0x3a, 0x01, 0xbd, 0x4f,
-	0x12, 0x98, 0xf2, 0xaf, 0x29, 0x16, 0x26, 0x61, 0x31, 0x55, 0xe4, 0x47, 0xc7, 0xe6, 0x53, 0x81,
-	0xb0, 0x15, 0x12, 0x3d, 0x04, 0x3d, 0x08, 0x49, 0x97, 0x8e, 0x1b, 0xeb, 0x62, 0xcd, 0x7b, 0x85,
-	0x35, 0x79, 0xf0, 0x46, 0xc7, 0xe6, 0xa7, 0x24, 0x3c, 0x1f, 0x90, 0xe7, 0x02, 0x6b, 0xab, 0x35,
-	0xe8, 0x13, 0x68, 0x61, 0x7f, 0xc8, 0x38, 0x09, 0x03, 0x27, 0xe4, 0x71, 0x47, 0x49, 0x4e, 0x3d,
-	0xc2, 0x38, 0xed, 0x52, 0x12, 0x36, 0x36, 0x0e, 0xb4, 0xc3, 0x2d, 0x7b, 0xbf, 0x88, 0x92, 0x6f,
-	0xdc, 0xce, 0x30, 0xe8, 0x3a, 0xd4, 0x83, 0xd0, 0xf7, 0xbb, 0x8d, 0xfa, 0x81, 0x76, 0xb8, 0x63,
-	0x4b, 0x03, 0x3d, 0x28, 0x45, 0x50, 0x17, 0xfe, 0x5d, 0x37, 0x65, 0xf4, 0xcd, 0x34, 0xfa, 0xe6,
-	0x29, 0x8b, 0xa7, 0xe2, 0x65, 0xfc, 0xb0, 0x0e, 0xb7, 0x8b, 0xda, 0x96, 0x42, 0xf1, 0x2f, 0x88,
-	0xbc, 0x5c, 0xa6, 0xf5, 0x15, 0x64, 0x3a, 0x83, 0x6b, 0xf9, 0x39, 0x54, 0x3e, 0x6c, 0x2c, 0xf5,
-	0x21, 0x3f, 0xbb, 0x4f, 0xcb, 0x11, 0xaf, 0xff, 0x83, 0x88, 0x67, 0xb1, 0xd2, 0x8b, 0xb1, 0x7a,
-	0x34, 0x7b, 0x45, 0x36, 0x17, 0x84, 0xab, 0x7c, 0x1b, 0x7e, 0xad, 0xc1, 0xbe, 0x8a, 0x58, 0x96,
-	0x7c, 0xfe, 0xa3, 0x37, 0x22, 0xd3, 0x67, 0xa3, 0xa8, 0xcf, 0xbb, 0xf0, 0x46, 0x9e, 0x56, 0x3b,
-	0xd4, 0x13, 0xd2, 0x6f, 0xd9, 0x3b, 0xf9, 0x60, 0xdb, 0x43, 0xcf, 0xe0, 0x6a, 0x01, 0x44, 0x98,
-	0xa7, 0x8e, 0xfc, 0x9d, 0xa2, 0x03, 0x59, 0x6e, 0x96, 0x39, 0x46, 0x59, 0x67, 0xcc, 0xb3, 0x0b,
-	0x0c, 0x67, 0xcc, 0x33, 0x7e, 0xa9, 0xc1, 0x9e, 0xd2, 0x54, 0xa6, 0xea, 0xff, 0x95, 0xa0, 0x6f,
-	0xc3, 0x66, 0xe0, 0x87, 0x3c, 0x97, 0x52, 0x4f, 0xcc, 0xb6, 0x87, 0x6e, 0x01, 0xa8, 0xd2, 0x94,
-	0xcc, 0xe9, 0x62, 0x6e, 0x4b, 0x8d, 0xb4, 0x3d, 0x74, 0x1f, 0x36, 0x95, 0xa1, 0x0e, 0xe8, 0x7e,
-	0xc1, 0x19, 0x55, 0xd2, 0x12, 0x65, 0xe5, 0xa3, 0x9d, 0x82, 0x8d, 0x3f, 0x6a, 0x70, 0x4b, 0xaa,
-	0xf9, 0xdc, 0xc1, 0xe7, 0x84, 0x3f, 0xc9, 0x1c, 0x7f, 0xd5, 0x15, 0x6d, 0xc2, 0x95, 0x28, 0x91,
-	0x80, 0x61, 0x79, 0xe7, 0x37, 0xec, 0xcc, 0x46, 0x77, 0x93, 0x8c, 0x95, 0xfa, 0xd3, 0x71, 0x63,
-	0x4e, 0xa2, 0xc6, 0x15, 0x41, 0xba, 0x9b, 0x8f, 0x3f, 0x4e, 0x86, 0x8d, 0x49, 0x0d, 0x8c, 0xa2,
-	0xc0, 0xa7, 0xf8, 0x9c, 0xf9, 0xdf, 0x0e, 0x88, 0xd7, 0x23, 0xaf, 0x55, 0x5e, 0xac, 0xf2, 0x21,
-	0xec, 0x3a, 0xd3, 0x6a, 0xa5, 0x22, 0x97, 0x86, 0x8d, 0x1f, 0x6b, 0x69, 0x65, 0x94, 0x22, 0xdb,
-	0x04, 0x13, 0x1a, 0xf0, 0x53, 0x37, 0x4a, 0x36, 0x7a, 0xad, 0x71, 0xa5, 0xc6, 0xc6, 0x4f, 0xd9,
-	0xfd, 0xff, 0x8c, 0x8c, 0xf9, 0x0b, 0x35, 0x6c, 0x13, 0x3c, 0x7a, 0xd5, 0x55, 0xfb, 0x10, 0x10,
-	0x23, 0x63, 0xde, 0x49, 0xa5, 0xea, 0x84, 0x04, 0x8f, 0x94, 0x7e, 0xd7, 0x58, 0x49, 0xac, 0x93,
-	0xbf, 0x74, 0xd8, 0x7e, 0x96, 0xbc, 0x83, 0xec, 0x6e, 0xd0, 0x57, 0xf0, 0xe6, 0x4c, 0x1b, 0x8c,
-	0xee, 0x2d, 0xd0, 0xae, 0xaa, 0x69, 0x6e, 0xde, 0x98, 0xe9, 0x34, 0xce, 0x92, 0x6f, 0x06, 0x14,
-	0x42, 0xb3, 0xba, 0x19, 0x44, 0x0f, 0x57, 0xa4, 0x9a, 0xdb, 0x43, 0x56, 0x72, 0xf6, 0xe1, 0xad,
-	0xb9, 0xed, 0x0c, 0x7a, 0xb0, 0x9c, 0x6e, 0x6e, 0x03, 0x54, 0xc9, 0xe4, 0x02, 0x9a, 0x2d, 0xf2,
-	0xe8, 0xa3, 0xe5, 0x34, 0xb3, 0x3d, 0x41, 0x25, 0xc7, 0xd7, 0x70, 0x63, 0x7e, 0xe9, 0x43, 0x1f,
-	0x2f, 0xe5, 0xa9, 0xa8, 0x96, 0x95, 0x5c, 0x1c, 0x6e, 0x2e, 0xa8, 0x02, 0xe8, 0xd1, 0x8a, 0x84,
-	0xf3, 0xab, 0xc7, 0xf2, 0x33, 0x32, 0x2f, 0x2d, 0xae, 0x70, 0x46, 0x16, 0x64, 0xd3, 0xe5, 0xaa,
-	0x96, 0x13, 0xca, 0x0a, 0xaa, 0x56, 0xe4, 0xa0, 0x2a, 0xae, 0xc7, 0xf4, 0xe7, 0x49, 0x4b, 0x7b,
-	0x39, 0x69, 0x69, 0x7f, 0x4e, 0x5a, 0xda, 0x77, 0x97, 0xad, 0xb5, 0x97, 0x97, 0xad, 0xb5, 0xdf,
-	0x2e, 0x5b, 0x6b, 0x5f, 0x7e, 0xde, 0xa3, 0xbc, 0x3f, 0x74, 0x93, 0xb4, 0x61, 0xf5, 0xe3, 0x80,
-	0x84, 0x42, 0xb3, 0xf0, 0x68, 0xe0, 0xb8, 0x91, 0x15, 0x0f, 0xe9, 0x91, 0xfc, 0xf5, 0x90, 0x7c,
-	0xb5, 0xf7, 0x7c, 0x6b, 0x6c, 0x65, 0x9f, 0xef, 0x47, 0xe9, 0xf7, 0xfb, 0x78, 0x2c, 0x31, 0x16,
-	0x8f, 0x03, 0x12, 0xb9, 0xba, 0xa0, 0xbe, 0xf7, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0xba, 0x12,
-	0x61, 0x6c, 0xce, 0x10, 0x00, 0x00,
+	// 1013 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0x4f, 0x73, 0xdb, 0x44,
+	0x14, 0x8f, 0xe3, 0x3f, 0x69, 0x36, 0xa1, 0x49, 0x77, 0x4a, 0x71, 0xdc, 0xd4, 0xa4, 0x86, 0x42,
+	0xca, 0x34, 0xd2, 0x24, 0x65, 0x5a, 0x0e, 0xed, 0x21, 0x29, 0x99, 0xa9, 0x67, 0x0a, 0x64, 0x54,
+	0x86, 0x03, 0x17, 0x23, 0xad, 0x9e, 0xed, 0x25, 0xf2, 0x4a, 0x48, 0x6b, 0x63, 0x7d, 0x0b, 0xf8,
+	0x04, 0xdc, 0xb8, 0x72, 0xe5, 0xc0, 0x07, 0x60, 0x86, 0x4b, 0xb9, 0xc1, 0x8d, 0x49, 0x3e, 0x02,
+	0x5f, 0x80, 0xd1, 0xee, 0xea, 0x4f, 0x64, 0xcb, 0xf6, 0x30, 0xd3, 0xc9, 0xc0, 0xe4, 0xb6, 0x6f,
+	0xdf, 0x6f, 0xf7, 0x3d, 0xfd, 0x7e, 0xab, 0xb7, 0x4f, 0x42, 0x07, 0xd4, 0x22, 0xba, 0x43, 0x7b,
+	0x7d, 0x4e, 0x1c, 0x0a, 0x8c, 0xdb, 0x3a, 0x71, 0x7d, 0xdb, 0xd4, 0x47, 0xfb, 0x72, 0xb0, 0x97,
+	0xf5, 0x69, 0x9e, 0xef, 0x72, 0x17, 0x6f, 0x51, 0x8b, 0x68, 0x17, 0xe6, 0x05, 0x54, 0x1b, 0xed,
+	0x37, 0xde, 0x8e, 0xb6, 0x23, 0xae, 0x0f, 0xba, 0x74, 0x89, 0x7d, 0xc4, 0x48, 0xae, 0x6d, 0xbc,
+	0x9f, 0x02, 0x5c, 0xc6, 0x80, 0x70, 0xea, 0x32, 0x19, 0x2c, 0xb6, 0x14, 0xf0, 0x6e, 0x0a, 0xec,
+	0x9b, 0x8c, 0x81, 0x23, 0x50, 0x72, 0x38, 0x65, 0xaf, 0xc1, 0x80, 0xf2, 0x41, 0x1c, 0x30, 0xb1,
+	0x14, 0xf0, 0x5e, 0xee, 0x21, 0x83, 0xdc, 0x43, 0x2a, 0xd8, 0xed, 0x9e, 0xeb, 0xf6, 0x1c, 0xd0,
+	0x85, 0x65, 0x0d, 0xbb, 0x3a, 0x0c, 0x3c, 0x1e, 0x2a, 0xe7, 0x56, 0xde, 0x69, 0x32, 0xe5, 0x6a,
+	0xfd, 0x58, 0x42, 0xd5, 0x97, 0xdc, 0xe4, 0x80, 0xdb, 0x68, 0x5d, 0x46, 0xe8, 0x04, 0x91, 0x5d,
+	0x2f, 0xed, 0x94, 0x76, 0xd7, 0x0e, 0xde, 0xd3, 0x72, 0x84, 0x05, 0x09, 0x61, 0xda, 0x33, 0x31,
+	0x21, 0x56, 0x1b, 0x6b, 0x24, 0x35, 0xb0, 0x81, 0x36, 0x88, 0xcb, 0x02, 0x60, 0xc1, 0x30, 0x50,
+	0xbb, 0x2d, 0x8b, 0xdd, 0xee, 0xcf, 0xda, 0x2d, 0x5e, 0x21, 0x37, 0xbc, 0x4e, 0x2e, 0xd8, 0xad,
+	0x3f, 0x97, 0x51, 0xfd, 0x0b, 0xf0, 0x69, 0x37, 0xcc, 0x86, 0x85, 0x6f, 0x86, 0x10, 0x70, 0xfc,
+	0x08, 0x55, 0xb3, 0x49, 0xef, 0x68, 0x85, 0x2a, 0x6b, 0x72, 0x9d, 0x84, 0xe3, 0x03, 0x54, 0xeb,
+	0x43, 0x04, 0x53, 0xf9, 0x35, 0xc4, 0xc2, 0x48, 0x16, 0x4d, 0x29, 0x3f, 0xda, 0xd7, 0x9e, 0x0b,
+	0x84, 0xa1, 0x90, 0xf8, 0x09, 0xaa, 0x79, 0x3e, 0x74, 0xe9, 0xb8, 0x5e, 0x16, 0x6b, 0xde, 0xcd,
+	0xac, 0x49, 0xc5, 0x1b, 0xed, 0x6b, 0x9f, 0x80, 0x7f, 0xea, 0xc0, 0x89, 0xc0, 0x1a, 0x6a, 0x0d,
+	0xfe, 0x18, 0x35, 0x89, 0x3b, 0x64, 0x1c, 0x7c, 0xcf, 0xf4, 0x79, 0xd8, 0x51, 0x94, 0x53, 0x1b,
+	0x18, 0xa7, 0x5d, 0x0a, 0x7e, 0xbd, 0xb2, 0x53, 0xda, 0x5d, 0x35, 0xb6, 0xb3, 0x28, 0xf9, 0xc4,
+	0xed, 0x04, 0x83, 0x6f, 0xa2, 0xaa, 0xe7, 0xbb, 0x6e, 0xb7, 0x5e, 0xdd, 0x29, 0xed, 0xae, 0x1b,
+	0xd2, 0xc0, 0x8f, 0x73, 0x0a, 0xd6, 0x44, 0x7e, 0x37, 0x35, 0xa9, 0xbe, 0x16, 0xab, 0xaf, 0x1d,
+	0xb2, 0xf0, 0x82, 0x5e, 0xad, 0x9f, 0xca, 0xe8, 0x6e, 0x96, 0xdb, 0x9c, 0x14, 0x97, 0x40, 0xf2,
+	0x7c, 0x9a, 0xca, 0x0b, 0xd0, 0x74, 0x8c, 0x36, 0xd3, 0x73, 0xa8, 0x72, 0xa8, 0xcc, 0xcd, 0x21,
+	0x3d, 0xbb, 0xcf, 0xf3, 0x8a, 0x57, 0xff, 0x85, 0xe2, 0x89, 0x56, 0xb5, 0xac, 0x56, 0x4f, 0x27,
+	0x5f, 0x91, 0x95, 0x19, 0x72, 0xe5, 0xdf, 0x86, 0xdf, 0x97, 0xd1, 0xb6, 0x52, 0x2c, 0x29, 0x3e,
+	0xff, 0xd1, 0x37, 0x22, 0xe1, 0xa7, 0x92, 0xe5, 0xe7, 0x1d, 0xf4, 0x46, 0x5a, 0x56, 0x3b, 0xd4,
+	0x16, 0xd4, 0xaf, 0x1a, 0xeb, 0xe9, 0x64, 0xdb, 0xc6, 0x2f, 0xd0, 0xf5, 0x0c, 0x08, 0x98, 0xad,
+	0x8e, 0xfc, 0xbd, 0x6c, 0x02, 0x49, 0x6d, 0x96, 0x35, 0x46, 0x59, 0xc7, 0xcc, 0x36, 0x32, 0x11,
+	0x8e, 0x99, 0xdd, 0xfa, 0x6d, 0x19, 0x6d, 0x29, 0x4e, 0x65, 0xa9, 0xfe, 0x5f, 0x11, 0xfa, 0x16,
+	0x5a, 0xf1, 0x5c, 0x9f, 0xa7, 0x54, 0xd6, 0x22, 0xb3, 0x6d, 0xe3, 0x3b, 0x08, 0xa9, 0xab, 0x29,
+	0xf2, 0xd5, 0x84, 0x6f, 0x55, 0xcd, 0xb4, 0x6d, 0xfc, 0x08, 0xad, 0x28, 0x43, 0x1d, 0xd0, 0xed,
+	0x4c, 0x32, 0xea, 0x4a, 0x8b, 0x98, 0x95, 0x43, 0x23, 0x06, 0xb7, 0x7e, 0x2e, 0xa3, 0x3b, 0x92,
+	0xcd, 0x13, 0x93, 0x9c, 0x02, 0x7f, 0x96, 0x24, 0x7e, 0x19, 0x8c, 0x7e, 0x80, 0x6e, 0xd8, 0xe0,
+	0x98, 0x61, 0x87, 0xd3, 0x01, 0x74, 0x3c, 0xf0, 0xa9, 0x6b, 0x0b, 0x72, 0x2b, 0xc6, 0x86, 0x70,
+	0x7c, 0x4e, 0x07, 0x70, 0x22, 0xa6, 0xf1, 0x03, 0x84, 0x25, 0xd6, 0x72, 0x5c, 0x72, 0x1a, 0x83,
+	0x2b, 0x02, 0xbc, 0x29, 0x3c, 0x47, 0x91, 0x43, 0xa1, 0x5f, 0x47, 0x71, 0xc8, 0x68, 0xb5, 0x32,
+	0x43, 0xab, 0x6b, 0x79, 0xad, 0x1a, 0xe8, 0x5a, 0x10, 0x91, 0xcb, 0x08, 0xd4, 0x57, 0x45, 0xbe,
+	0x89, 0x8d, 0xef, 0x47, 0xb5, 0x30, 0xce, 0xa7, 0x63, 0x85, 0x1c, 0x82, 0x3a, 0x12, 0x41, 0x37,
+	0xd2, 0xf9, 0xa3, 0x68, 0xba, 0xf5, 0x4b, 0x19, 0xb5, 0xb2, 0xd2, 0x1d, 0x92, 0x53, 0xe6, 0x7e,
+	0xeb, 0x80, 0xdd, 0x83, 0x2b, 0xfd, 0x2e, 0x4b, 0xbf, 0x5d, 0xb4, 0x61, 0x5e, 0xd4, 0x21, 0x96,
+	0x2f, 0x37, 0xdd, 0xfa, 0x3e, 0xb9, 0xcd, 0xa5, 0x7c, 0x06, 0x10, 0xa0, 0x1e, 0x3f, 0xb4, 0x82,
+	0x68, 0xa3, 0x2b, 0xf5, 0x2e, 0x41, 0xbd, 0xd6, 0x0f, 0x49, 0x35, 0xfc, 0x14, 0xc6, 0xfc, 0xa5,
+	0x9a, 0x36, 0x80, 0x8c, 0xae, 0xf4, 0x78, 0x5d, 0x7a, 0x3c, 0x40, 0x98, 0xc1, 0x98, 0x77, 0x62,
+	0x11, 0x3a, 0x3e, 0x90, 0x91, 0x52, 0x66, 0x93, 0xe5, 0x64, 0x38, 0xf8, 0xbb, 0x86, 0xd6, 0x5e,
+	0x44, 0xec, 0xc8, 0x2e, 0x12, 0x7f, 0x85, 0x6e, 0x4c, 0x7c, 0x6e, 0xe0, 0x87, 0x33, 0x54, 0x29,
+	0xfa, 0x38, 0x69, 0xdc, 0x9a, 0xe8, 0xe8, 0x8e, 0xa3, 0x6f, 0x33, 0xec, 0xa3, 0x46, 0x71, 0xd3,
+	0x8d, 0x9f, 0x2c, 0x18, 0x6a, 0x6a, 0xaf, 0x5e, 0x18, 0xb3, 0x8f, 0xde, 0x9c, 0xda, 0x36, 0xe2,
+	0xc7, 0xf3, 0xc3, 0x4d, 0x6d, 0x34, 0x0b, 0x23, 0x59, 0x08, 0x4f, 0x36, 0x53, 0xf8, 0xc3, 0xf9,
+	0x61, 0x26, 0x7b, 0xaf, 0xc2, 0x18, 0x5f, 0xa3, 0x5b, 0xd3, 0x5b, 0x0c, 0xfc, 0xd1, 0xdc, 0x38,
+	0x05, 0x5d, 0x49, 0x61, 0x2c, 0x8e, 0x6e, 0xcf, 0xb8, 0x13, 0xf1, 0xd3, 0x05, 0x03, 0x4e, 0xbf,
+	0x4b, 0xe7, 0x9f, 0x91, 0x69, 0xa5, 0x7c, 0x81, 0x33, 0x32, 0xe3, 0x06, 0x98, 0xcf, 0x6a, 0xbe,
+	0x54, 0x2d, 0xc0, 0x6a, 0x41, 0x75, 0x2b, 0x8a, 0x75, 0x44, 0x7f, 0x3d, 0x6b, 0x96, 0x5e, 0x9d,
+	0x35, 0x4b, 0x7f, 0x9d, 0x35, 0x4b, 0xdf, 0x9d, 0x37, 0x97, 0x5e, 0x9d, 0x37, 0x97, 0xfe, 0x38,
+	0x6f, 0x2e, 0x7d, 0xf9, 0x59, 0x8f, 0xf2, 0xfe, 0xd0, 0x8a, 0xca, 0x86, 0xde, 0x0f, 0x3d, 0xf0,
+	0x05, 0x67, 0xfe, 0x9e, 0x63, 0x5a, 0x81, 0x1e, 0x0e, 0xe9, 0x9e, 0xfc, 0xc5, 0x43, 0x2d, 0xa2,
+	0xf7, 0x5c, 0x7d, 0xac, 0x27, 0xbf, 0x49, 0xf6, 0xe2, 0xff, 0x24, 0xe3, 0xb1, 0xc4, 0xe8, 0x3c,
+	0xf4, 0x20, 0xb0, 0x6a, 0x22, 0xf4, 0xc3, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xa8, 0xf8, 0x84,
+	0x90, 0x36, 0x12, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -922,17 +990,6 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type LightClientClient interface {
-	//rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
-	//rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
-	//rpc IsFrozen(IsFrozenRequest) returns (IsFrozenResponse);
-	//rpc GetFrozenHeight(GetFrozenHeightRequest) returns (GetFrozenHeightResponse);
-	//rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
-	//rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
-	//rpc CheckHeaderAndUpdateState(CheckHeaderAndUpdateStateRequest) returns (CheckHeaderAndUpdateStateResponse);
-	//rpc CheckMisbehaviourAndUpdateState(CheckMisbehaviourAndUpdateStateRequest) returns (CheckMisbehaviourAndUpdateStateResponse);
-	//rpc CheckProposedHeaderAndUpdateState(CheckProposedHeaderAndUpdateStateRequest) returns (CheckProposedHeaderAndUpdateStateResponse);
-	//rpc VerifyUpgrade(VerifyUpgradeRequest) returns (google.protobuf.Empty);
-	//rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
 	VerifyClientState(ctx context.Context, in *VerifyClientStateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	VerifyClientConsensusState(ctx context.Context, in *VerifyClientConsensusStateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	VerifyConnectionState(ctx context.Context, in *VerifyConnectionStateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -1025,17 +1082,6 @@ func (c *lightClientClient) VerifyNextSequenceRecv(ctx context.Context, in *Veri
 
 // LightClientServer is the server API for LightClient service.
 type LightClientServer interface {
-	//rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
-	//rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
-	//rpc IsFrozen(IsFrozenRequest) returns (IsFrozenResponse);
-	//rpc GetFrozenHeight(GetFrozenHeightRequest) returns (GetFrozenHeightResponse);
-	//rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
-	//rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
-	//rpc CheckHeaderAndUpdateState(CheckHeaderAndUpdateStateRequest) returns (CheckHeaderAndUpdateStateResponse);
-	//rpc CheckMisbehaviourAndUpdateState(CheckMisbehaviourAndUpdateStateRequest) returns (CheckMisbehaviourAndUpdateStateResponse);
-	//rpc CheckProposedHeaderAndUpdateState(CheckProposedHeaderAndUpdateStateRequest) returns (CheckProposedHeaderAndUpdateStateResponse);
-	//rpc VerifyUpgrade(VerifyUpgradeRequest) returns (google.protobuf.Empty);
-	//rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
 	VerifyClientState(context.Context, *VerifyClientStateRequest) (*emptypb.Empty, error)
 	VerifyClientConsensusState(context.Context, *VerifyClientConsensusStateRequest) (*emptypb.Empty, error)
 	VerifyConnectionState(context.Context, *VerifyConnectionStateRequest) (*emptypb.Empty, error)
@@ -1695,33 +1741,33 @@ func (m *VerifyPacketCommitmentRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 		copy(dAtA[i:], m.CommitmentBytes)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.CommitmentBytes)))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x52
 	}
 	if m.Sequence != 0 {
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.Sequence))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x48
 	}
 	if len(m.ChannelId) > 0 {
 		i -= len(m.ChannelId)
 		copy(dAtA[i:], m.ChannelId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.ChannelId)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x42
 	}
 	if len(m.PortId) > 0 {
 		i -= len(m.PortId)
 		copy(dAtA[i:], m.PortId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.PortId)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x3a
 	}
 	if len(m.Proof) > 0 {
 		i -= len(m.Proof)
 		copy(dAtA[i:], m.Proof)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.Proof)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x32
 	}
 	if m.Prefix != nil {
 		{
@@ -1733,7 +1779,17 @@ func (m *VerifyPacketCommitmentRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 			i = encodeVarintCordaLightclientd(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x2a
+	}
+	if m.DelayBlockPeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayBlockPeriod))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.DelayTimePeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayTimePeriod))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Height != nil {
 		{
@@ -1787,33 +1843,33 @@ func (m *VerifyPacketAcknowledgementRequest) MarshalToSizedBuffer(dAtA []byte) (
 		copy(dAtA[i:], m.Acknowledgement)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.Acknowledgement)))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x52
 	}
 	if m.Sequence != 0 {
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.Sequence))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x48
 	}
 	if len(m.ChannelId) > 0 {
 		i -= len(m.ChannelId)
 		copy(dAtA[i:], m.ChannelId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.ChannelId)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x42
 	}
 	if len(m.PortId) > 0 {
 		i -= len(m.PortId)
 		copy(dAtA[i:], m.PortId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.PortId)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x3a
 	}
 	if len(m.Proof) > 0 {
 		i -= len(m.Proof)
 		copy(dAtA[i:], m.Proof)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.Proof)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x32
 	}
 	if m.Prefix != nil {
 		{
@@ -1825,7 +1881,17 @@ func (m *VerifyPacketAcknowledgementRequest) MarshalToSizedBuffer(dAtA []byte) (
 			i = encodeVarintCordaLightclientd(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x2a
+	}
+	if m.DelayBlockPeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayBlockPeriod))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.DelayTimePeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayTimePeriod))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Height != nil {
 		{
@@ -1877,28 +1943,28 @@ func (m *VerifyPacketReceiptAbsenceRequest) MarshalToSizedBuffer(dAtA []byte) (i
 	if m.Sequence != 0 {
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.Sequence))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x48
 	}
 	if len(m.ChannelId) > 0 {
 		i -= len(m.ChannelId)
 		copy(dAtA[i:], m.ChannelId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.ChannelId)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x42
 	}
 	if len(m.PortId) > 0 {
 		i -= len(m.PortId)
 		copy(dAtA[i:], m.PortId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.PortId)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x3a
 	}
 	if len(m.Proof) > 0 {
 		i -= len(m.Proof)
 		copy(dAtA[i:], m.Proof)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.Proof)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x32
 	}
 	if m.Prefix != nil {
 		{
@@ -1910,7 +1976,17 @@ func (m *VerifyPacketReceiptAbsenceRequest) MarshalToSizedBuffer(dAtA []byte) (i
 			i = encodeVarintCordaLightclientd(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x2a
+	}
+	if m.DelayBlockPeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayBlockPeriod))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.DelayTimePeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayTimePeriod))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Height != nil {
 		{
@@ -1962,28 +2038,28 @@ func (m *VerifyNextSequenceRecvRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	if m.NextSequenceRecv != 0 {
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.NextSequenceRecv))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x48
 	}
 	if len(m.ChannelId) > 0 {
 		i -= len(m.ChannelId)
 		copy(dAtA[i:], m.ChannelId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.ChannelId)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x42
 	}
 	if len(m.PortId) > 0 {
 		i -= len(m.PortId)
 		copy(dAtA[i:], m.PortId)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.PortId)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x3a
 	}
 	if len(m.Proof) > 0 {
 		i -= len(m.Proof)
 		copy(dAtA[i:], m.Proof)
 		i = encodeVarintCordaLightclientd(dAtA, i, uint64(len(m.Proof)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x32
 	}
 	if m.Prefix != nil {
 		{
@@ -1995,7 +2071,17 @@ func (m *VerifyNextSequenceRecvRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 			i = encodeVarintCordaLightclientd(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x2a
+	}
+	if m.DelayBlockPeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayBlockPeriod))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.DelayTimePeriod != 0 {
+		i = encodeVarintCordaLightclientd(dAtA, i, uint64(m.DelayTimePeriod))
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Height != nil {
 		{
@@ -2206,6 +2292,12 @@ func (m *VerifyPacketCommitmentRequest) Size() (n int) {
 		l = m.Height.Size()
 		n += 1 + l + sovCordaLightclientd(uint64(l))
 	}
+	if m.DelayTimePeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayTimePeriod))
+	}
+	if m.DelayBlockPeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayBlockPeriod))
+	}
 	if m.Prefix != nil {
 		l = m.Prefix.Size()
 		n += 1 + l + sovCordaLightclientd(uint64(l))
@@ -2245,6 +2337,12 @@ func (m *VerifyPacketAcknowledgementRequest) Size() (n int) {
 	if m.Height != nil {
 		l = m.Height.Size()
 		n += 1 + l + sovCordaLightclientd(uint64(l))
+	}
+	if m.DelayTimePeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayTimePeriod))
+	}
+	if m.DelayBlockPeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayBlockPeriod))
 	}
 	if m.Prefix != nil {
 		l = m.Prefix.Size()
@@ -2286,6 +2384,12 @@ func (m *VerifyPacketReceiptAbsenceRequest) Size() (n int) {
 		l = m.Height.Size()
 		n += 1 + l + sovCordaLightclientd(uint64(l))
 	}
+	if m.DelayTimePeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayTimePeriod))
+	}
+	if m.DelayBlockPeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayBlockPeriod))
+	}
 	if m.Prefix != nil {
 		l = m.Prefix.Size()
 		n += 1 + l + sovCordaLightclientd(uint64(l))
@@ -2321,6 +2425,12 @@ func (m *VerifyNextSequenceRecvRequest) Size() (n int) {
 	if m.Height != nil {
 		l = m.Height.Size()
 		n += 1 + l + sovCordaLightclientd(uint64(l))
+	}
+	if m.DelayTimePeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayTimePeriod))
+	}
+	if m.DelayBlockPeriod != 0 {
+		n += 1 + sovCordaLightclientd(uint64(m.DelayBlockPeriod))
 	}
 	if m.Prefix != nil {
 		l = m.Prefix.Size()
@@ -3697,6 +3807,44 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayTimePeriod", wireType)
+			}
+			m.DelayTimePeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayTimePeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayBlockPeriod", wireType)
+			}
+			m.DelayBlockPeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayBlockPeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Prefix", wireType)
 			}
@@ -3732,7 +3880,7 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
 			}
@@ -3766,7 +3914,7 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 				m.Proof = []byte{}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
 			}
@@ -3798,7 +3946,7 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.PortId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChannelId", wireType)
 			}
@@ -3830,7 +3978,7 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ChannelId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
@@ -3849,7 +3997,7 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CommitmentBytes", wireType)
 			}
@@ -4009,6 +4157,44 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayTimePeriod", wireType)
+			}
+			m.DelayTimePeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayTimePeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayBlockPeriod", wireType)
+			}
+			m.DelayBlockPeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayBlockPeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Prefix", wireType)
 			}
@@ -4044,7 +4230,7 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
 			}
@@ -4078,7 +4264,7 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 				m.Proof = []byte{}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
 			}
@@ -4110,7 +4296,7 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.PortId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChannelId", wireType)
 			}
@@ -4142,7 +4328,7 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ChannelId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
@@ -4161,7 +4347,7 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Acknowledgement", wireType)
 			}
@@ -4321,6 +4507,44 @@ func (m *VerifyPacketReceiptAbsenceRequest) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayTimePeriod", wireType)
+			}
+			m.DelayTimePeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayTimePeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayBlockPeriod", wireType)
+			}
+			m.DelayBlockPeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayBlockPeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Prefix", wireType)
 			}
@@ -4356,7 +4580,7 @@ func (m *VerifyPacketReceiptAbsenceRequest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
 			}
@@ -4390,7 +4614,7 @@ func (m *VerifyPacketReceiptAbsenceRequest) Unmarshal(dAtA []byte) error {
 				m.Proof = []byte{}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
 			}
@@ -4422,7 +4646,7 @@ func (m *VerifyPacketReceiptAbsenceRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.PortId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChannelId", wireType)
 			}
@@ -4454,7 +4678,7 @@ func (m *VerifyPacketReceiptAbsenceRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ChannelId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
@@ -4599,6 +4823,44 @@ func (m *VerifyNextSequenceRecvRequest) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayTimePeriod", wireType)
+			}
+			m.DelayTimePeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayTimePeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelayBlockPeriod", wireType)
+			}
+			m.DelayBlockPeriod = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCordaLightclientd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelayBlockPeriod |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Prefix", wireType)
 			}
@@ -4634,7 +4896,7 @@ func (m *VerifyNextSequenceRecvRequest) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
 			}
@@ -4668,7 +4930,7 @@ func (m *VerifyNextSequenceRecvRequest) Unmarshal(dAtA []byte) error {
 				m.Proof = []byte{}
 			}
 			iNdEx = postIndex
-		case 5:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
 			}
@@ -4700,7 +4962,7 @@ func (m *VerifyNextSequenceRecvRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.PortId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ChannelId", wireType)
 			}
@@ -4732,7 +4994,7 @@ func (m *VerifyNextSequenceRecvRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.ChannelId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NextSequenceRecv", wireType)
 			}
