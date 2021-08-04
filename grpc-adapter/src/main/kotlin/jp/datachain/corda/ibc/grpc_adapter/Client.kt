@@ -282,7 +282,7 @@ object Client {
             proofHeight = chanAck.proofHeight
         }.build())
 
-        val baseDenom = "${cashBankServiceA.queryCashBank(Empty.getDefaultInstance()).owner.into().owningKey.encoded.toHex()}:USD"
+        val baseDenom = "${cashBankServiceA.queryCashBank(Empty.getDefaultInstance()).owner.into().owningKey.encoded.toHex()}USD"
 
         val pageReq = Pagination.PageRequest.newBuilder().apply{
             key = ByteString.copyFrom("", Charsets.US_ASCII)

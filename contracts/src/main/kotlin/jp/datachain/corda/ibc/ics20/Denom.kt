@@ -14,17 +14,18 @@ import java.util.*
 data class Denom(val denomTrace: Transfer.DenomTrace) {
 
     companion object {
+        // INFO: denomination string must be alphanumerical and start from an alphabetical character
         private fun encodeIssuedCurrency(issuerKey: PublicKey, currency: Currency) : String {
             val issuerKeyString = issuerKey.encoded.toHex()
             val currencyString = currency.currencyCode
-            return "$issuerKeyString:$currencyString"
+            return "$issuerKeyString$currencyString"
         }
 
         private fun decodeIssuedCurrency(issuedCurrency: String) : Pair<PublicKey, Currency> {
-            val words = issuedCurrency.split(':')
-            require(words.size == 2)
-            val issuerKey = Crypto.decodePublicKey(words[0].hexToByteArray())
-            val currency = Currency.getInstance(words[1])!!
+            val issuerKeyPart = issuedCurrency.slice(0 until issuedCurrency.length - 3)
+            val currencyPart = issuedCurrency.slice(issuedCurrency.length - 3 until issuedCurrency.length)
+            val issuerKey = Crypto.decodePublicKey(issuerKeyPart.hexToByteArray())
+            val currency = Currency.getInstance(currencyPart)!!
             return Pair(issuerKey, currency)
         }
 
