@@ -30,7 +30,7 @@ fun ChannelOuterClass.Packet.toCommitment(): ByteArray {
         .putLong(timeoutTimestamp)
         .putLong(timeoutHeight.revisionNumber)
         .putLong(timeoutHeight.revisionHeight)
-        .put(data.toByteArray())
+        .put(SecureHash.sha256(data.toByteArray()).bytes)
     val arr = ByteArray(buf.position())
     buf.flip()
     buf.get(arr)
