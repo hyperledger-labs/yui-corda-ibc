@@ -18,12 +18,12 @@ data class Denom(val denomTrace: Transfer.DenomTrace) {
         private fun encodeIssuedCurrency(issuerKey: PublicKey, currency: Currency) : String {
             val issuerKeyString = issuerKey.encoded.toHex()
             val currencyString = currency.currencyCode
-            return "$issuerKeyString$currencyString"
+            return "$currencyString$issuerKeyString"
         }
 
         private fun decodeIssuedCurrency(issuedCurrency: String) : Pair<PublicKey, Currency> {
-            val issuerKeyPart = issuedCurrency.slice(0 until issuedCurrency.length - 3)
-            val currencyPart = issuedCurrency.slice(issuedCurrency.length - 3 until issuedCurrency.length)
+            val currencyPart = issuedCurrency.slice(0 until 3)
+            val issuerKeyPart = issuedCurrency.slice(3 until issuedCurrency.length)
             val issuerKey = Crypto.decodePublicKey(issuerKeyPart.hexToByteArray())
             val currency = Currency.getInstance(currencyPart)!!
             return Pair(issuerKey, currency)
