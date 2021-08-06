@@ -1,7 +1,7 @@
 package jp.datachain.corda.ibc.lightclientd
 
 import com.google.protobuf.Empty
-import ibc.lightclientd.corda.v1.CordaLightclientd
+import ibc.lightclientd.corda.v1.Lightclientd
 import ibc.lightclientd.corda.v1.LightClientGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
@@ -31,13 +31,13 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
         }
     }
 
-    private fun withClientState(state: CordaLightclientd.State, f: (cs: CordaClientState) -> Unit) {
+    private fun withClientState(state: Lightclientd.State, f: (cs: CordaClientState) -> Unit) {
         val cs = CordaClientState(emptyList(), StateRef(SecureHash.zeroHash, 0), state.clientState, state.consensusState)
         f(cs)
     }
 
     override fun verifyClientState(
-        request: CordaLightclientd.VerifyClientStateRequest,
+        request: Lightclientd.VerifyClientStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyClientState(
@@ -51,7 +51,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyClientConsensusState(
-        request: CordaLightclientd.VerifyClientConsensusStateRequest,
+        request: Lightclientd.VerifyClientConsensusStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyClientConsensusState(
@@ -66,7 +66,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyConnectionState(
-        request: CordaLightclientd.VerifyConnectionStateRequest,
+        request: Lightclientd.VerifyConnectionStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyConnectionState(
@@ -81,7 +81,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyChannelState(
-        request: CordaLightclientd.VerifyChannelStateRequest,
+        request: Lightclientd.VerifyChannelStateRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyChannelState(
@@ -97,7 +97,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyPacketCommitment(
-        request: CordaLightclientd.VerifyPacketCommitmentRequest,
+        request: Lightclientd.VerifyPacketCommitmentRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyPacketCommitment(
@@ -116,7 +116,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyPacketAcknowledgement(
-        request: CordaLightclientd.VerifyPacketAcknowledgementRequest,
+        request: Lightclientd.VerifyPacketAcknowledgementRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyPacketAcknowledgement(
@@ -135,7 +135,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyPacketReceiptAbsence(
-        request: CordaLightclientd.VerifyPacketReceiptAbsenceRequest,
+        request: Lightclientd.VerifyPacketReceiptAbsenceRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyPacketReceiptAbsence(
@@ -153,7 +153,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     override fun verifyNextSequenceRecv(
-        request: CordaLightclientd.VerifyNextSequenceRecvRequest,
+        request: Lightclientd.VerifyNextSequenceRecvRequest,
         responseObserver: StreamObserver<Empty>
     ) = withClientState(request.state) {
         it.verifyNextSequenceRecv(

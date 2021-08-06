@@ -8,6 +8,7 @@ import ibc.core.client.v1.Genesis
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclientd.fabric.v1.LightClientGrpc
+import ibc.lightclientd.fabric.v1.Lightclientd
 import ibc.lightclients.fabric.v1.Fabric
 import ics23.Proofs
 import io.grpc.ManagedChannelBuilder
@@ -62,7 +63,7 @@ data class FabricClientState constructor(
             channel.shutdown()
         }
     }
-    private fun makeState() = ibc.lightclientd.fabric.v1.Fabric.State.newBuilder()
+    private fun makeState() = Lightclientd.State.newBuilder()
         .setId(id.id)
         .setClientState(fabricClientState)
         .also { builder ->
@@ -73,7 +74,7 @@ data class FabricClientState constructor(
         .build()
 
     override fun clientType() = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.ClientTypeRequest
+        val req = Lightclientd.ClientTypeRequest
             .newBuilder()
             .setState(makeState())
             .build()
@@ -82,7 +83,7 @@ data class FabricClientState constructor(
         ClientType.FabricClient
     }
     override fun getLatestHeight(): Client.Height = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.GetLatestHeightRequest
+        val req = Lightclientd.GetLatestHeightRequest
             .newBuilder()
             .setState(makeState())
             .build()
@@ -90,7 +91,7 @@ data class FabricClientState constructor(
         res.height
     }
     override fun validate() = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.ValidateRequest
+        val req = Lightclientd.ValidateRequest
             .newBuilder()
             .setState(makeState())
             .build()
@@ -98,7 +99,7 @@ data class FabricClientState constructor(
         Unit
     }
     override fun getProofSpecs(): List<Proofs.ProofSpec> = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.GetProofSpecsRequest
+        val req = Lightclientd.GetProofSpecsRequest
             .newBuilder()
             .setState(makeState())
             .build()
@@ -107,7 +108,7 @@ data class FabricClientState constructor(
     }
 
     override fun initialize(consState: ConsensusState) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.InitializeRequest
+        val req = Lightclientd.InitializeRequest
                 .newBuilder()
                 .setState(makeState())
                 .setConsensusState((consState as FabricConsensusState).fabricConsensusState)
@@ -117,7 +118,7 @@ data class FabricClientState constructor(
     }
 
     override fun status() = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.StatusRequest
+        val req = Lightclientd.StatusRequest
                 .newBuilder()
                 .setState(makeState())
                 .build()
@@ -126,7 +127,7 @@ data class FabricClientState constructor(
     }
 
     override fun exportMetadata(): List<Genesis.GenesisMetadata> = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.ExportMetadataRequest
+        val req = Lightclientd.ExportMetadataRequest
                 .newBuilder()
                 .setState(makeState())
                 .build()
@@ -136,7 +137,7 @@ data class FabricClientState constructor(
 
     override fun checkHeaderAndUpdateState(header: Header): Pair<ClientState, ConsensusState> {
         return withLightClientStub {
-            val req = ibc.lightclientd.fabric.v1.Fabric.CheckHeaderAndUpdateStateRequest
+            val req = Lightclientd.CheckHeaderAndUpdateStateRequest
                 .newBuilder()
                 .setState(makeState())
                 .setHeader((header as FabricHeader).fabricHeader)
@@ -154,7 +155,7 @@ data class FabricClientState constructor(
     override fun checkSubstituteAndUpdateState(substituteClient: ClientState) = throw NotImplementedError()
 
     override fun verifyUpgradeAndUpdateState(newClient: ClientState, newConsState: ConsensusState, proofUpgradeClient: CommitmentProof, proofUpgradeConsState: CommitmentProof): Pair<ClientState, ConsensusState> = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyUpgradeAndUpdateStateRequest
+        val req = Lightclientd.VerifyUpgradeAndUpdateStateRequest
                 .newBuilder()
                 .setState(makeState())
                 .setNewClient((newClient as FabricClientState).fabricClientState)
@@ -182,7 +183,7 @@ data class FabricClientState constructor(
             proof: CommitmentProof,
             clientState: Any
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyClientStateRequest
+        val req = Lightclientd.VerifyClientStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -203,7 +204,7 @@ data class FabricClientState constructor(
             proof: CommitmentProof,
             consensusState: Any
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyClientConsensusStateRequest
+        val req = Lightclientd.VerifyClientConsensusStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -224,7 +225,7 @@ data class FabricClientState constructor(
             connectionID: Identifier,
             connectionEnd: Connection.ConnectionEnd
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyConnectionStateRequest
+        val req = Lightclientd.VerifyConnectionStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -245,7 +246,7 @@ data class FabricClientState constructor(
             channelID: Identifier,
             channel: ChannelOuterClass.Channel
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyChannelStateRequest
+        val req = Lightclientd.VerifyChannelStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -270,7 +271,7 @@ data class FabricClientState constructor(
             sequence: Long,
             commitmentBytes: ByteArray
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyPacketCommitmentRequest
+        val req = Lightclientd.VerifyPacketCommitmentRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -298,7 +299,7 @@ data class FabricClientState constructor(
             sequence: Long,
             acknowledgement: ChannelOuterClass.Acknowledgement
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyPacketAcknowledgementRequest
+        val req = Lightclientd.VerifyPacketAcknowledgementRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -325,7 +326,7 @@ data class FabricClientState constructor(
             channelID: Identifier,
             sequence: Long
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyPacketReceiptAbsenceRequest
+        val req = Lightclientd.VerifyPacketReceiptAbsenceRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -351,7 +352,7 @@ data class FabricClientState constructor(
             channelID: Identifier,
             nextSequenceRecv: Long
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyNextSequenceRecvRequest
+        val req = Lightclientd.VerifyNextSequenceRecvRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
