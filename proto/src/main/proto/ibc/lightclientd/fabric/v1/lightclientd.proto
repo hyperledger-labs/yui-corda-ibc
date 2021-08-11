@@ -1,0 +1,249 @@
+syntax = "proto3";
+package ibc.lightclientd.fabric.v1;
+
+option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-fabric/types";
+
+import "ibc/core/client/v1/client.proto";
+import "ibc/core/client/v1/genesis.proto";
+import "ibc/core/connection/v1/connection.proto";
+import "ibc/core/channel/v1/channel.proto";
+import "ibc/core/commitment/v1/commitment.proto";
+import "ibc/lightclients/fabric/v1/fabric.proto";
+import "confio/proofs.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+
+// State
+message State {
+  string id = 1;
+  ibc.lightclients.fabric.v1.ClientState client_state = 2;
+  map<uint64, ibc.lightclients.fabric.v1.ConsensusState> consensus_states = 3;
+}
+
+service LightClient {
+  rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
+  rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
+  rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
+  rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
+
+  // Initialization function
+  // Clients must validate the initial consensus state, and may store any client-specific metadata
+  // necessary for correct light client operation
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+
+  // Status function
+  // Clients must return their status. Only Active clients are allowed to process packets.
+  rpc Status(StatusRequest) returns (StatusResponse);
+
+  // Genesis function
+  rpc ExportMetadata(ExportMetadataRequest) returns (ExportMetadataResponse);
+
+  // Update and Misbehaviour functions
+
+  rpc CheckHeaderAndUpdateState(CheckHeaderAndUpdateStateRequest) returns (CheckHeaderAndUpdateStateResponse);
+  // INFO: The following two functions are not supported by fabric-ibc
+  //rpc CheckMisbehaviourAndUpdateState(CheckMisbehaviourAndUpdateStateRequest) returns (CheckMisbehaviourAndUpdateStateResponse);
+  //rpc CheckSubstituteAndUpdateState(CheckSubstituteAndUpdateStateRequest) returns (CheckSubstituteAndUpdateStateResponse);
+
+  // Upgrade functions
+  // NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
+  // height committed by the current revision. Clients are responsible for ensuring that the planned last
+  // height of the current revision is somehow encoded in the proof verification process.
+  // This is to ensure that no premature upgrades occur, since upgrade plans committed to by the counterparty
+  // may be cancelled or modified before the last planned height.
+  rpc VerifyUpgradeAndUpdateState(VerifyUpgradeAndUpdateStateRequest) returns (VerifyUpgradeAndUpdateStateResponse);
+  // Utility function that zeroes out any client customizable fields in client state
+  // Ledger enforced fields are maintained while all custom fields are zero values
+  // Used to verify upgrades
+  rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
+
+  // State verification functions
+
+  rpc VerifyClientState(VerifyClientStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyClientConsensusState(VerifyClientConsensusStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyConnectionState(VerifyConnectionStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyChannelState(VerifyChannelStateRequest) returns (google.protobuf.Empty);
+  rpc VerifyPacketCommitment(VerifyPacketCommitmentRequest) returns (google.protobuf.Empty);
+  rpc VerifyPacketAcknowledgement(VerifyPacketAcknowledgementRequest) returns (google.protobuf.Empty);
+  rpc VerifyPacketReceiptAbsence(VerifyPacketReceiptAbsenceRequest) returns (google.protobuf.Empty);
+  rpc VerifyNextSequenceRecv(VerifyNextSequenceRecvRequest) returns (google.protobuf.Empty);
+}
+
+// rpc ClientType
+message ClientTypeRequest {
+  State state = 1;
+}
+message ClientTypeResponse {
+  string client_type = 1;
+}
+
+// rpc GetLatestHeight
+message GetLatestHeightRequest {
+  State state = 1;
+}
+message GetLatestHeightResponse {
+  ibc.core.client.v1.Height height = 1;
+}
+
+// rpc Validate
+message ValidateRequest {
+  State state = 1;
+}
+
+// rpc GetProofSpecs
+message GetProofSpecsRequest {
+  State state = 1;
+}
+message GetProofSpecsResponse {
+  repeated ics23.ProofSpec proof_specs = 1;
+}
+
+// rpc Initialize
+message InitializeRequest {
+  State state = 1;
+  ibc.lightclients.fabric.v1.ConsensusState consensus_state = 2;
+}
+message InitializeResponse {
+  State state = 1;
+}
+
+// rpc Status
+message StatusRequest {
+  State state = 1;
+}
+message StatusResponse {
+  string status = 1;
+}
+
+// rpc ExportMetadata
+message ExportMetadataRequest {
+  State state = 1;
+}
+message ExportMetadataResponse {
+  repeated ibc.core.client.v1.GenesisMetadata genesis_metadatas = 1;
+}
+
+// rpc CheckHeaderAndUpdateState
+message CheckHeaderAndUpdateStateRequest {
+  State state = 1;
+  ibc.lightclients.fabric.v1.Header header = 2;
+}
+message CheckHeaderAndUpdateStateResponse {
+  State state = 1;
+}
+
+// rpc VerifyUpgradeAndUpdateState
+message VerifyUpgradeAndUpdateStateRequest {
+  State state = 1;
+  ibc.lightclients.fabric.v1.ClientState new_client = 2;
+  ibc.lightclients.fabric.v1.ConsensusState new_cons_state = 3;
+  bytes proof_upgrade_client = 4;
+  bytes proof_upgrade_cons_state = 5;
+}
+message VerifyUpgradeAndUpdateStateResponse {
+  State state = 1;
+}
+
+// rpc ZeroCustomFields
+message ZeroCustomFieldsRequest {
+  State state = 1;
+}
+message ZeroCustomFieldsResponse {
+  ibc.lightclients.fabric.v1.ClientState client_state = 1;
+}
+
+// rpc VerifyClientState
+message VerifyClientStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  string counterparty_client_identifier = 4;
+  bytes proof = 5;
+  google.protobuf.Any client_state = 6;
+}
+
+// rpc VerifyClientConsensusState
+message VerifyClientConsensusStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  string counterparty_client_identifier = 3;
+  ibc.core.client.v1.Height consensus_height = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  google.protobuf.Any consensus_state = 7;
+}
+
+// rpc VerifyConnectionState
+message VerifyConnectionStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string connection_id = 5;
+  ibc.core.connection.v1.ConnectionEnd connection_end = 6;
+}
+
+// rpc VerifyChannelState
+message VerifyChannelStateRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  ibc.core.commitment.v1.MerklePrefix prefix = 3;
+  bytes proof = 4;
+  string port_id = 5;
+  string channel_id = 6;
+  ibc.core.channel.v1.Channel channel = 7;
+}
+
+// rpc VerifyPacketCommitment
+message VerifyPacketCommitmentRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 sequence = 9;
+  bytes commitment_bytes = 10;
+}
+
+// rpc VerifyPacketAcknowledgement
+message VerifyPacketAcknowledgementRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 sequence = 9;
+  bytes acknowledgement = 10;
+}
+
+// rpc VerifyPacketReceiptAbsence
+message VerifyPacketReceiptAbsenceRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 sequence = 9;
+}
+
+// rpc VerifyNextSequenceRecv
+message VerifyNextSequenceRecvRequest {
+  State state = 1;
+  ibc.core.client.v1.Height height = 2;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 next_sequence_recv = 9;
+}

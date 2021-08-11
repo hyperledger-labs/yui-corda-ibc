@@ -679,6 +679,8 @@ object Handler {
 
         client.verifyPacketCommitment(
                 proofHeight,
+                conn.end.delayPeriod,
+                0,
                 conn.end.counterparty.prefix,
                 proof,
                 Identifier(packet.sourcePort),
@@ -757,6 +759,8 @@ object Handler {
 
         client.verifyPacketAcknowledgement(
                 proofHeight,
+                conn.end.delayPeriod,
+                0,
                 conn.end.counterparty.prefix,
                 proof,
                 Identifier(packet.destinationPort),

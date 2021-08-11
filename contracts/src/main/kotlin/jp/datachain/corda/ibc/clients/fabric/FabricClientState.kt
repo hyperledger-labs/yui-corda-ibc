@@ -4,9 +4,11 @@ import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.client.v1.Client
+import ibc.core.client.v1.Genesis
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclientd.fabric.v1.LightClientGrpc
+import ibc.lightclientd.fabric.v1.Lightclientd
 import ibc.lightclients.fabric.v1.Fabric
 import ics23.Proofs
 import io.grpc.ManagedChannelBuilder
@@ -61,7 +63,7 @@ data class FabricClientState constructor(
             channel.shutdown()
         }
     }
-    private fun makeState() = ibc.lightclientd.fabric.v1.Fabric.State.newBuilder()
+    private fun makeState() = Lightclientd.State.newBuilder()
         .setId(id.id)
         .setClientState(fabricClientState)
         .also { builder ->
@@ -72,7 +74,7 @@ data class FabricClientState constructor(
         .build()
 
     override fun clientType() = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.ClientTypeRequest
+        val req = Lightclientd.ClientTypeRequest
             .newBuilder()
             .setState(makeState())
             .build()
@@ -81,28 +83,15 @@ data class FabricClientState constructor(
         ClientType.FabricClient
     }
     override fun getLatestHeight(): Client.Height = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.GetLatestHeightRequest
+        val req = Lightclientd.GetLatestHeightRequest
             .newBuilder()
             .setState(makeState())
             .build()
-        it.getLatestHeight(req).height
-    }
-    override fun isFrozen() = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.IsFrozenRequest
-            .newBuilder()
-            .setState(makeState())
-            .build()
-        it.isFrozen(req).isFrozen
-    }
-    override fun getFrozenHeight(): Client.Height = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.GetFrozenHeightRequest
-            .newBuilder()
-            .setState(makeState())
-            .build()
-        it.getFrozenHeight(req).height
+        val res = it.getLatestHeight(req)
+        res.height
     }
     override fun validate() = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.ValidateRequest
+        val req = Lightclientd.ValidateRequest
             .newBuilder()
             .setState(makeState())
             .build()
@@ -110,42 +99,81 @@ data class FabricClientState constructor(
         Unit
     }
     override fun getProofSpecs(): List<Proofs.ProofSpec> = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.GetProofSpecsRequest
+        val req = Lightclientd.GetProofSpecsRequest
             .newBuilder()
             .setState(makeState())
             .build()
-        it.getProofSpecs(req).proofSpecsList
+        val res = it.getProofSpecs(req)
+        res.proofSpecsList
+    }
+
+    override fun initialize(consState: ConsensusState) = withLightClientStub {
+        val req = Lightclientd.InitializeRequest
+                .newBuilder()
+                .setState(makeState())
+                .setConsensusState((consState as FabricConsensusState).fabricConsensusState)
+                .build()
+        it.initialize(req)
+        Unit
+    }
+
+    override fun status() = withLightClientStub {
+        val req = Lightclientd.StatusRequest
+                .newBuilder()
+                .setState(makeState())
+                .build()
+        val res = it.status(req)
+        Status.valueOf(res.status)
+    }
+
+    override fun exportMetadata(): List<Genesis.GenesisMetadata> = withLightClientStub {
+        val req = Lightclientd.ExportMetadataRequest
+                .newBuilder()
+                .setState(makeState())
+                .build()
+        val res = it.exportMetadata(req)
+        res.genesisMetadatasList
     }
 
     override fun checkHeaderAndUpdateState(header: Header): Pair<ClientState, ConsensusState> {
         return withLightClientStub {
-            val req = ibc.lightclientd.fabric.v1.Fabric.CheckHeaderAndUpdateStateRequest
+            val req = Lightclientd.CheckHeaderAndUpdateStateRequest
                 .newBuilder()
                 .setState(makeState())
                 .setHeader((header as FabricHeader).fabricHeader)
                 .build()
-            val state = it.checkHeaderAndUpdateState(req).state
+            val res = it.checkHeaderAndUpdateState(req)
             val newClientState = this.copy(
-                fabricClientState = state.clientState,
-                fabricConsensusStates = state.consensusStatesMap
+                fabricClientState = res.state.clientState,
+                fabricConsensusStates = res.state.consensusStatesMap
             )
             val newConsensusState = newClientState.consensusStates[newClientState.getLatestHeight()]!!
             Pair(newClientState, newConsensusState)
         }
     }
-    override fun checkMisbehaviourAndUpdateState(misbehaviour: Misbehaviour): ClientState {
-        throw NotImplementedError()
-    }
-    override fun checkProposedHeaderAndUpdateState(header: Header): Pair<ClientState, ConsensusState> {
-        throw NotImplementedError()
+    override fun checkMisbehaviourAndUpdateState(misbehaviour: Misbehaviour) = throw NotImplementedError()
+    override fun checkSubstituteAndUpdateState(substituteClient: ClientState) = throw NotImplementedError()
+
+    override fun verifyUpgradeAndUpdateState(newClient: ClientState, newConsState: ConsensusState, proofUpgradeClient: CommitmentProof, proofUpgradeConsState: CommitmentProof): Pair<ClientState, ConsensusState> = withLightClientStub {
+        val req = Lightclientd.VerifyUpgradeAndUpdateStateRequest
+                .newBuilder()
+                .setState(makeState())
+                .setNewClient((newClient as FabricClientState).fabricClientState)
+                .setNewConsState((newConsState as FabricConsensusState).fabricConsensusState)
+                .setProofUpgradeClient(ByteString.copyFrom(proofUpgradeClient.bytes))
+                .setProofUpgradeConsState(ByteString.copyFrom(proofUpgradeConsState.bytes))
+                .build()
+        val res = it.verifyUpgradeAndUpdateState(req)
+        val newClientState = this.copy(
+                fabricClientState = res.state.clientState,
+                fabricConsensusStates = res.state.consensusStatesMap
+        )
+        val newConsensusState = newClientState.consensusStates[newClientState.getLatestHeight()]!!
+        Pair(newClientState, newConsensusState)
     }
 
-    override fun verifyUpgrade(newClient: ClientState, upgradeHeight: Client.Height, proofUpgrade: ByteArray) {
-        throw NotImplementedError()
-    }
-
-    override fun zeroCustomFields(): ClientState {
-        throw NotImplementedError()
+    override fun zeroCustomFields(): ClientState = withLightClientStub {
+        TODO("This can't implemented until ClientState is divided into a part independent of Corda and a Corda state")
     }
 
     override fun verifyClientState(
@@ -155,7 +183,7 @@ data class FabricClientState constructor(
             proof: CommitmentProof,
             clientState: Any
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyClientStateRequest
+        val req = Lightclientd.VerifyClientStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -176,7 +204,7 @@ data class FabricClientState constructor(
             proof: CommitmentProof,
             consensusState: Any
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyClientConsensusStateRequest
+        val req = Lightclientd.VerifyClientConsensusStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -197,7 +225,7 @@ data class FabricClientState constructor(
             connectionID: Identifier,
             connectionEnd: Connection.ConnectionEnd
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyConnectionStateRequest
+        val req = Lightclientd.VerifyConnectionStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -218,7 +246,7 @@ data class FabricClientState constructor(
             channelID: Identifier,
             channel: ChannelOuterClass.Channel
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyChannelStateRequest
+        val req = Lightclientd.VerifyChannelStateRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
@@ -234,6 +262,8 @@ data class FabricClientState constructor(
 
     override fun verifyPacketCommitment(
             height: Client.Height,
+            delayTimePeriod: Long,
+            delayBlockPeriod: Long,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portID: Identifier,
@@ -241,10 +271,12 @@ data class FabricClientState constructor(
             sequence: Long,
             commitmentBytes: ByteArray
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyPacketCommitmentRequest
+        val req = Lightclientd.VerifyPacketCommitmentRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
+            .setDelayTimePeriod(delayTimePeriod)
+            .setDelayBlockPeriod(delayBlockPeriod)
             .setPrefix(prefix)
             .setProof(proof.toByteString())
             .setPortId(portID.id)
@@ -258,6 +290,8 @@ data class FabricClientState constructor(
 
     override fun verifyPacketAcknowledgement(
             height: Client.Height,
+            delayTimePeriod: Long,
+            delayBlockPeriod: Long,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portID: Identifier,
@@ -265,10 +299,12 @@ data class FabricClientState constructor(
             sequence: Long,
             acknowledgement: ChannelOuterClass.Acknowledgement
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyPacketAcknowledgementRequest
+        val req = Lightclientd.VerifyPacketAcknowledgementRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
+            .setDelayTimePeriod(delayTimePeriod)
+            .setDelayBlockPeriod(delayBlockPeriod)
             .setPrefix(prefix)
             .setProof(proof.toByteString())
             .setPortId(portID.id)
@@ -282,16 +318,20 @@ data class FabricClientState constructor(
 
     override fun verifyPacketReceiptAbsence(
             height: Client.Height,
+            delayTimePeriod: Long,
+            delayBlockPeriod: Long,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portID: Identifier,
             channelID: Identifier,
             sequence: Long
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyPacketReceiptAbsenceRequest
+        val req = Lightclientd.VerifyPacketReceiptAbsenceRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
+            .setDelayTimePeriod(delayTimePeriod)
+            .setDelayBlockPeriod(delayBlockPeriod)
             .setPrefix(prefix)
             .setProof(proof.toByteString())
             .setPortId(portID.id)
@@ -304,16 +344,20 @@ data class FabricClientState constructor(
 
     override fun verifyNextSequenceRecv(
             height: Client.Height,
+            delayTimePeriod: Long,
+            delayBlockPeriod: Long,
             prefix: Commitment.MerklePrefix,
             proof: CommitmentProof,
             portID: Identifier,
             channelID: Identifier,
             nextSequenceRecv: Long
     ) = withLightClientStub {
-        val req = ibc.lightclientd.fabric.v1.Fabric.VerifyNextSequenceRecvRequest
+        val req = Lightclientd.VerifyNextSequenceRecvRequest
             .newBuilder()
             .setState(makeState())
             .setHeight(height)
+            .setDelayTimePeriod(delayTimePeriod)
+            .setDelayBlockPeriod(delayBlockPeriod)
             .setPrefix(prefix)
             .setProof(proof.toByteString())
             .setPortId(portID.id)

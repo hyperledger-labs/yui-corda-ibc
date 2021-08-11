@@ -22,6 +22,7 @@ fn main() -> io::Result<()> {
         "../proto/src/main/proto",
         "../external/ibc-go/proto",
         "../external/ibc-go/third_party/proto",
+        "../external/yui-fabric-ibc/proto",
     ];
     include_paths.iter().for_each(|path| {
         println!("cargo:rerun-if-changed={}", path);

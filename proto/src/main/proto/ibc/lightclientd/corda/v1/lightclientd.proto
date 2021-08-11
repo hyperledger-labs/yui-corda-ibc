@@ -20,15 +20,17 @@ message State {
 service LightClient {
   //rpc ClientType(ClientTypeRequest) returns (ClientTypeResponse);
   //rpc GetLatestHeight(GetLatestHeightRequest) returns (GetLatestHeightResponse);
-  //rpc IsFrozen(IsFrozenRequest) returns (IsFrozenResponse);
-  //rpc GetFrozenHeight(GetFrozenHeightRequest) returns (GetFrozenHeightResponse);
   //rpc Validate(ValidateRequest) returns (google.protobuf.Empty);
   //rpc GetProofSpecs(GetProofSpecsRequest) returns (GetProofSpecsResponse);
+  //rpc Initialize(InitializeRequest) returns (InitializeResponse);
+  //rpc Status(StatusRequest) returns (StatusResponse);
+  //rpc ExportMetadata(ExportMetadataRequest) returns (ExportMetadataResponse);
   //rpc CheckHeaderAndUpdateState(CheckHeaderAndUpdateStateRequest) returns (CheckHeaderAndUpdateStateResponse);
   //rpc CheckMisbehaviourAndUpdateState(CheckMisbehaviourAndUpdateStateRequest) returns (CheckMisbehaviourAndUpdateStateResponse);
-  //rpc CheckProposedHeaderAndUpdateState(CheckProposedHeaderAndUpdateStateRequest) returns (CheckProposedHeaderAndUpdateStateResponse);
-  //rpc VerifyUpgrade(VerifyUpgradeRequest) returns (google.protobuf.Empty);
+  //rpc CheckSubstituteAndUpdateState(CheckSubstituteAndUpdateStateRequest) returns (CheckSubstituteAndUpdateStateResponse);
+  //rpc VerifyUpgradeAndUpdateState(VerifyUpgradeAndUpdateStateRequest) returns (VerifyUpgradeAndUpdateStateResponse);
   //rpc ZeroCustomFields(ZeroCustomFieldsRequest) returns (ZeroCustomFieldsResponse);
+
   rpc VerifyClientState(VerifyClientStateRequest) returns (google.protobuf.Empty);
   rpc VerifyClientConsensusState(VerifyClientConsensusStateRequest) returns (google.protobuf.Empty);
   rpc VerifyConnectionState(VerifyConnectionStateRequest) returns (google.protobuf.Empty);
@@ -85,44 +87,52 @@ message VerifyChannelStateRequest {
 message VerifyPacketCommitmentRequest {
   State state = 1;
   ibc.core.client.v1.Height height = 2;
-  ibc.core.commitment.v1.MerklePrefix prefix = 3;
-  bytes proof = 4;
-  string port_id = 5;
-  string channel_id = 6;
-  uint64 sequence = 7;
-  bytes commitment_bytes = 8;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 sequence = 9;
+  bytes commitment_bytes = 10;
 }
 
 // rpc VerifyPacketAcknowledgement
 message VerifyPacketAcknowledgementRequest {
   State state = 1;
   ibc.core.client.v1.Height height = 2;
-  ibc.core.commitment.v1.MerklePrefix prefix = 3;
-  bytes proof = 4;
-  string port_id = 5;
-  string channel_id = 6;
-  uint64 sequence = 7;
-  bytes acknowledgement = 8;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 sequence = 9;
+  bytes acknowledgement = 10;
 }
 
 // rpc VerifyPacketReceiptAbsence
 message VerifyPacketReceiptAbsenceRequest {
   State state = 1;
   ibc.core.client.v1.Height height = 2;
-  ibc.core.commitment.v1.MerklePrefix prefix = 3;
-  bytes proof = 4;
-  string port_id = 5;
-  string channel_id = 6;
-  uint64 sequence = 7;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 sequence = 9;
 }
 
 // rpc VerifyNextSequenceRecv
 message VerifyNextSequenceRecvRequest {
   State state = 1;
   ibc.core.client.v1.Height height = 2;
-  ibc.core.commitment.v1.MerklePrefix prefix = 3;
-  bytes proof = 4;
-  string port_id = 5;
-  string channel_id = 6;
-  uint64 next_sequence_recv = 7;
+  uint64 delay_time_period = 3;
+  uint64 delay_block_period = 4;
+  ibc.core.commitment.v1.MerklePrefix prefix = 5;
+  bytes proof = 6;
+  string port_id = 7;
+  string channel_id = 8;
+  uint64 next_sequence_recv = 9;
 }

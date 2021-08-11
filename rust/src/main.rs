@@ -28,7 +28,7 @@ use structopt::StructOpt;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "corda-ibc-client")]
+#[structopt(name = "yui-corda-ibc-client")]
 enum Opt {
     Admin(admin_command::Opt),
     Genesis(genesis_command::Opt),

@@ -5,7 +5,7 @@ import "github.com/cosmos/ibc-go/modules/core/exported"
 var _ exported.ConsensusState = (*ConsensusState)(nil)
 
 func (*ConsensusState) ClientType() string {
-	return "corda"
+	return CordaClientType
 }
 
 // which is used for key-value pair verification.
