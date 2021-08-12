@@ -20,8 +20,8 @@ COPY . .
 COPY --from=client /usr/local/bin/$CLIENT_NAME /usr/local/bin
 COPY --from=lightclientd /usr/src/app/go/fabric-ibc-lightclientd /usr/local/bin
 RUN apt-get update && apt-get install -y libc6 make openssh-client sshpass netcat
-RUN make CLIENT=/usr/local/bin/$CLIENT_NAME clean build deployNodes upNodes prepareHostA downNodes
+RUN make CLIENT=/usr/local/bin/$CLIENT_NAME clean build deployNodes upNodes prepareHost downNodes
 
 EXPOSE 9999/tcp
 EXPOSE 29999/tcp
-CMD fabric-ibc-lightclientd -port 60001 & make upNodes startServerBankA runServerA
+CMD fabric-ibc-lightclientd -port 60001 & make upNodes startServerBank runServer
