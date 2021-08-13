@@ -8,7 +8,7 @@ pub enum Opt {
         #[structopt(long, default_value = "http://localhost:9999")]
         endpoint_a: String,
 
-        #[structopt(long, default_value = "http://localhost:19999")]
+        #[structopt(long, default_value = "http://localhost:9998")]
         endpoint_b: String,
 
         #[structopt(long)]
