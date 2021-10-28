@@ -15,5 +15,5 @@ jobs:
         run: make buildImage
       - name: Test handshake
         run: make test
-      - name: Test handshake + token transfer
-        run: make oldTest
+      #- name: Test handshake + token transfer
+      #  run: make oldTest
