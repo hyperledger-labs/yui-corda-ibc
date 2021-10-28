@@ -2,7 +2,7 @@ NAME			:= yui-corda-ibc
 CLIENT_NAME		:= yui-corda-ibc-client
 LIGHTCLIENTD_NAME	:= yui-corda-ibc-lightclientd
 
-CLIENT		?= ./rust/target/release/$(CLIENT_NAME)
+CLIENT		?= ./rust/target/debug/$(CLIENT_NAME)
 
 DOCKER_REG	?= ""
 DOCKER_REPO	?= ""
@@ -18,7 +18,7 @@ clean:
 
 .PHONY: buildClient
 buildClient:
-	cd rust && cargo clean && cargo build --release
+	cd rust && cargo clean && cargo build
 
 .PHONY: buildImage
 buildImage:
