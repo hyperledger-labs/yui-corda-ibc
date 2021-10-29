@@ -6,10 +6,10 @@ For now this implementation supports communication between Corda-IBC and Corda-I
 It is planned to support communication with Tendermint-IBC (Cosmos SDK).
 
 # Try it!
-```
+```bash
 $ make buildClientImage
 $ make buildClient
 $ make buildImage
-$ make test
-$ make oldTest
+$ make test      # Note that it uses a large amount of memory.
+$ make oldTest   # This one uses more.
 ```
