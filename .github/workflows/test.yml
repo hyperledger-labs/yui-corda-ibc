@@ -1,0 +1,19 @@
+name: Corda-IBC Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Build the client written in Rust
+        run: make buildClient
+      - name: Build the Docker image of the client
+        run: make buildClientImage
+      - name: Build the Docker image of the Corda network (notary and participant nodes)
+        run: make buildImage
+      - name: Test handshake
+        run: make test
+      #- name: Test handshake + token transfer
+      #  run: make oldTest

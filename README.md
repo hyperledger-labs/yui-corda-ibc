@@ -4,3 +4,12 @@ The Inter-Blockchain Communication protocol (IBC) verifiably bridges two blockch
 Therefore in this implementation, a group of fixed members (Corda nodes) is regarded as "chain", in other words, one end point of IBC communication.
 For now this implementation supports communication between Corda-IBC and Corda-IBC and between Corda-IBC and Fabric-IBC.
 It is planned to support communication with Tendermint-IBC (Cosmos SDK).
+
+# Try it!
+```bash
+$ make buildClientImage
+$ make buildClient
+$ make buildImage
+$ make test      # Note that it uses a large amount of memory.
+$ make oldTest   # This one uses more.
+```

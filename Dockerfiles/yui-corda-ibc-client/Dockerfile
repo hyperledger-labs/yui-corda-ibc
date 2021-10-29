@@ -9,6 +9,6 @@ RUN make buildClient
 
 FROM debian:buster-slim
 ARG CLIENT_NAME
-COPY --from=builder /usr/src/app/rust/target/release/$CLIENT_NAME /usr/local/bin
+COPY --from=builder /usr/src/app/rust/target/debug/$CLIENT_NAME /usr/local/bin
 ENV CLIENT_NAME $CLIENT_NAME
 CMD $CLIENT_NAME
