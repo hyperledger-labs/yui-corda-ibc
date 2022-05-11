@@ -33,7 +33,11 @@ class IbcConnOpenTryFlow(
         val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(msg.clientId))!!
 
         // query conn state
-        val connOrNull = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, Identifier(msg.previousConnectionId))
+        val connOrNull = if (msg.previousConnectionId.isNotEmpty()) {
+            serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, Identifier(msg.previousConnectionId))
+        } else {
+            null
+        }
 
         val command = HandleConnOpenTry(msg)
         val inStates =

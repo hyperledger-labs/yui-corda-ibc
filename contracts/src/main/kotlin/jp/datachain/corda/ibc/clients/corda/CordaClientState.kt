@@ -96,6 +96,8 @@ data class CordaClientState constructor(
                 "FabricConsensusStateSerializer",
                 "HeightSerializer",
                 "MsgAcknowledgementSerializer",
+                "MsgChannelCloseInitSerializer",
+                "MsgChannelCloseConfirmSerializer",
                 "MsgChannelOpenAckSerializer",
                 "MsgChannelOpenConfirmSerializer",
                 "MsgChannelOpenInitSerializer",
@@ -111,7 +113,7 @@ data class CordaClientState constructor(
         ).map{
             val className = "jp.datachain.corda.ibc.serialization.$it"
             val clazz = attachmentsClassLoader.loadClass(className)
-            clazz.newInstance() as SerializationCustomSerializer<*,*>
+            clazz.getDeclaredConstructor().newInstance() as SerializationCustomSerializer<*,*>
         }.toSet()
         val context = SerializationFactory.defaultFactory.defaultContext
                 .withClassLoader(attachmentsClassLoader)
