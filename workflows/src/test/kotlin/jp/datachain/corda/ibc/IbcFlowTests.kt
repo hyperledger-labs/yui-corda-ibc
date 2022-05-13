@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc
 
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString
+import ibc.applications.transfer.v1.Tx.*
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.channel.v1.Tx.*
 import ibc.core.client.v1.Client.Height
@@ -9,23 +10,14 @@ import ibc.core.client.v1.Tx.*
 import ibc.core.connection.v1.Tx.*
 import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.clients.corda.HEIGHT
-import jp.datachain.corda.ibc.flows.*
-import jp.datachain.corda.ibc.flows.ics2.IbcClientCreateResponderFlow
-import jp.datachain.corda.ibc.flows.ics20.*
-import jp.datachain.corda.ibc.flows.ics24.*
-import jp.datachain.corda.ibc.flows.ics3.*
-import jp.datachain.corda.ibc.flows.ics4.*
-import jp.datachain.corda.ibc.ics2.ClientType
+import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toJson
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.types.Timestamp
-import net.corda.core.identity.CordaX500Name
-import net.corda.testing.node.MockNetwork
-import net.corda.testing.node.MockNetworkNotarySpec
-import net.corda.testing.node.MockNetworkParameters
-import net.corda.testing.node.TestCordapp
+import net.corda.core.identity.Party
+import net.corda.testing.core.DUMMY_NOTARY_NAME
+import net.corda.testing.node.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -33,81 +25,51 @@ import java.util.concurrent.ExecutionException
 import kotlin.test.assertFailsWith
 
 class IbcFlowTests {
-    private val networkParam = MockNetworkParameters(
-            cordappsForAllNodes = listOf(
-                    TestCordapp.findCordapp("jp.datachain.corda.ibc.contracts"),
-                    TestCordapp.findCordapp("jp.datachain.corda.ibc.flows")
-            ),
-            notarySpecs = listOf(
-                    MockNetworkNotarySpec(CordaX500Name("My Mock Notary Service", "Kawasaki", "JP"), validating = true)
-            )
-    )
-    private val network = MockNetwork(networkParam.withNetworkParameters(networkParam.networkParameters.copy(minimumPlatformVersion = 4)))
-    private val a = network.createNode()
-    private val b = network.createNode()
-    private val c = network.createNode()
-    private val x = network.createNode()
-    private val y = network.createNode()
-    private val z = network.createNode()
+    private var maybeNetwork: MockNetwork? = null
+    private val network get() = maybeNetwork!!
 
-    init {
-        listOf(a, b, c, x, y, z).forEach {
-            // Host management
-            it.registerInitiatedFlow(IbcGenesisCreateResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcHostCreateResponderFlow::class.java)
+    private val StartedMockNode.party : Party get() = info.legalIdentities.single()
+    private val StartedMockNode.addr : Address get() = Address.fromPublicKey(party.owningKey)
 
-            // Client management
-            it.registerInitiatedFlow(IbcClientCreateResponderFlow::class.java)
-
-            // Connection handshake
-            it.registerInitiatedFlow(IbcConnOpenInitResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcConnOpenTryResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcConnOpenAckResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcConnOpenConfirmResponderFlow::class.java)
-
-            // Channel handshake
-            it.registerInitiatedFlow(IbcChanOpenInitResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcChanOpenTryResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcChanOpenAckResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcChanOpenConfirmResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcChanCloseInitResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcChanCloseConfirmResponderFlow::class.java)
-
-            // Packet transportation
-            it.registerInitiatedFlow(IbcSendPacketResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcRecvPacketResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcAcknowledgePacketResponderFlow::class.java)
-
-            // ics20
-            it.registerInitiatedFlow(IbcBankCreateResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcFundAllocateResponderFlow::class.java)
-            it.registerInitiatedFlow(IbcSendTransferResponderFlow::class.java)
-        }
-    }
+    private val JPY = Denom.fromString("JPY")
+    private val USD = Denom.fromString("USD")
 
     @Before
-    fun setup() = network.runNetwork()
+    fun setup() {
+        val networkParam = MockNetworkParameters(
+                cordappsForAllNodes = listOf(
+                        TestCordapp.findCordapp("jp.datachain.corda.ibc.contracts"),
+                        TestCordapp.findCordapp("jp.datachain.corda.ibc.flows")
+                ),
+                notarySpecs = listOf(
+                        MockNetworkNotarySpec(DUMMY_NOTARY_NAME, validating = true)
+                )
+        ).let{
+            it.withNetworkParameters(it.networkParameters.copy(minimumPlatformVersion = 4))
+        }
+        maybeNetwork = MockNetwork(networkParam)
+    }
 
     @After
-    fun tearDown() = network.stopNodes()
+    fun tearDown() {
+        network.stopNodes()
+        maybeNetwork = null
+    }
 
     @Test
     fun `relayer logic`() {
-        val ibcA = TestCordaIbcClient(network, a)
-        val ibcB = TestCordaIbcClient(network, x)
+        val a1 = network.createNode()
+        val a2 = network.createNode()
+        val b1 = network.createNode()
+        val b2 = network.createNode()
 
-        ibcA.createGenesis(listOf(
-                a.info.legalIdentities.single(),
-                b.info.legalIdentities.single(),
-                c.info.legalIdentities.single()
-        ))
+        val ibcA = TestCordaIbcClient(network, a1)
+        val ibcB = TestCordaIbcClient(network, b1)
+
+        ibcA.createGenesis(listOf(a1.party, a2.party))
         ibcA.createHost()
 
-        ibcB.createGenesis(listOf(
-                x.info.legalIdentities.single(),
-                y.info.legalIdentities.single(),
-                z.info.legalIdentities.single()
-        ))
+        ibcB.createGenesis(listOf(b1.party, b2.party))
         ibcB.createHost()
 
         val expectedClientId = "corda-ibc-0"
@@ -170,7 +132,7 @@ class IbcFlowTests {
         val portBid = Identifier("portB")
         val channelVersionA = "CHANNEL_VERSION_A" // arbitrary string is ok
         val channelVersionB = "CHANNEL_VERSION_B" // arbitrary string is ok
-        val ordering = ChannelOuterClass.Order.ORDER_UNORDERED
+        val ordering = ChannelOuterClass.Order.ORDER_ORDERED
 
         val chanAid = ibcA.chanOpenInit(MsgChannelOpenInit.newBuilder().apply{
             portId = portAid.id
@@ -226,7 +188,7 @@ class IbcFlowTests {
 
             ibcA.sendPacket(packet)
 
-            ibcB.recvPacketUnordered(MsgRecvPacket.newBuilder()
+            ibcB.recvPacketOrdered(MsgRecvPacket.newBuilder()
                     .setPacket(packet)
                     .setProofCommitment(ibcA.chanProof(chanAid).toByteString())
                     .setProofHeight(ibcA.host().getCurrentHeight())
@@ -234,7 +196,7 @@ class IbcFlowTests {
 
             val ack = ibcB.chan(chanBid).acknowledgements[sequence]!!.toJson()
 
-            ibcA.acknowledgePacketUnordered(MsgAcknowledgement.newBuilder()
+            ibcA.acknowledgePacketOrdered(MsgAcknowledgement.newBuilder()
                     .setPacket(packet)
                     .setAcknowledgement(ack)
                     .setProofAcked(ibcB.chanProof(chanBid).toByteString())
@@ -256,7 +218,7 @@ class IbcFlowTests {
 
             ibcB.sendPacket(packet)
 
-            ibcA.recvPacketUnordered(MsgRecvPacket.newBuilder()
+            ibcA.recvPacketOrdered(MsgRecvPacket.newBuilder()
                     .setPacket(packet)
                     .setProofCommitment(ibcB.chanProof(chanBid).toByteString())
                     .setProofHeight(ibcB.host().getCurrentHeight())
@@ -264,7 +226,7 @@ class IbcFlowTests {
 
             val ack = ibcA.chan(chanAid).acknowledgements[sequence]!!.toJson()
 
-            ibcB.acknowledgePacketUnordered(MsgAcknowledgement.newBuilder()
+            ibcB.acknowledgePacketOrdered(MsgAcknowledgement.newBuilder()
                     .setPacket(packet)
                     .setAcknowledgement(ack)
                     .setProofAcked(ibcA.chanProof(chanAid).toByteString())
@@ -285,323 +247,280 @@ class IbcFlowTests {
         }.build())
     }
 
-    /*
     @Test
     fun `fund allocation`() {
-        val ibcA = TestCordaIbcClient(network, a)
-        val ibcB = TestCordaIbcClient(network, b)
-        val ibcC = TestCordaIbcClient(network, c)
-        val ibcX = TestCordaIbcClient(network, x)
-        val ibcY = TestCordaIbcClient(network, y)
-        val ibcZ = TestCordaIbcClient(network, z)
+        val a1 = network.createNode()
+        val a2 = network.createNode()
+        val b1 = network.createNode()
+        val b2 = network.createNode()
 
-        val aKey = a.info.legalIdentities.single().owningKey
-        val bKey = b.info.legalIdentities.single().owningKey
-        val cKey = c.info.legalIdentities.single().owningKey
-        val xKey = x.info.legalIdentities.single().owningKey
-        val yKey = y.info.legalIdentities.single().owningKey
-        val zKey = z.info.legalIdentities.single().owningKey
+        val ibcA = TestCordaIbcClient(network, a1)
+        val ibcB = TestCordaIbcClient(network, b1)
 
-        ibcA.createHostAndBank(listOf(
-                a.info.legalIdentities.single(),
-                b.info.legalIdentities.single(),
-                c.info.legalIdentities.single()
-        ))
-        ibcX.createHostAndBank(listOf(
-                x.info.legalIdentities.single(),
-                y.info.legalIdentities.single(),
-                z.info.legalIdentities.single()
-        ))
-        ibcB._baseId = ibcA.baseId
-        ibcC._baseId = ibcA.baseId
-        ibcY._baseId = ibcX.baseId
-        ibcZ._baseId = ibcX.baseId
+        ibcA.createGenesis(listOf(a1.party, a2.party))
+        ibcA.createHost()
+        ibcA.createBank()
 
-        ibcB.allocateFund(bKey, Denom("JPY"), Amount(2000))
-        ibcC.allocateFund(cKey, Denom("JPY"), Amount(3000))
-        ibcA.allocateFund(aKey, Denom("JPY"), Amount(11000))
-        ibcA.allocateFund(bKey, Denom("JPY"), Amount(20000))
-        ibcA.allocateFund(cKey, Denom("JPY"), Amount(30000))
+        ibcB.createGenesis(listOf(b1.party, b2.party))
+        ibcB.createHost()
+        ibcB.createBank()
 
-        ibcY.allocateFund(yKey, Denom("USD"), Amount(100))
-        ibcZ.allocateFund(zKey, Denom("USD"), Amount(200))
-        ibcX.allocateFund(yKey, Denom("USD"), Amount(1000))
-        ibcX.allocateFund(zKey, Denom("USD"), Amount(2000))
+        ibcA.allocateFund(a1.addr, JPY, Amount.fromLong(10000))
+        ibcA.allocateFund(a2.addr, JPY, Amount.fromLong(20000))
 
-        val bankABC = ibcA.bank()
-        val bankXYZ = ibcX.bank()
+        ibcB.allocateFund(b1.addr, USD, Amount.fromLong(100))
+        ibcB.allocateFund(b2.addr, USD, Amount.fromLong(200))
 
-        assert(bankABC.allocated[Denom("JPY")]!![aKey]!! == Amount(11000))
-        assert(bankABC.allocated[Denom("JPY")]!![bKey]!! == Amount(22000))
-        assert(bankABC.allocated[Denom("JPY")]!![cKey]!! == Amount(33000))
-        assert(bankABC.allocated[Denom("USD")] == null)
+        val bankA = ibcA.bank()
+        val bankB = ibcB.bank()
 
-        assert(bankXYZ.allocated[Denom("USD")]!![xKey] == null)
-        assert(bankXYZ.allocated[Denom("USD")]!![yKey]!! == Amount(1100))
-        assert(bankXYZ.allocated[Denom("USD")]!![zKey]!! == Amount(2200))
-        assert(bankXYZ.allocated[Denom("JPY")] == null)
+        assert(bankA.allocated[JPY]!![a1.addr]!! == Amount.fromLong(10000))
+        assert(bankA.allocated[JPY]!![a2.addr]!! == Amount.fromLong(20000))
+        assert(bankA.allocated[JPY]!![b1.addr] == null)
+        assert(bankA.allocated[JPY]!![b2.addr] == null)
+        assert(bankA.allocated[USD] == null)
+
+        assert(bankB.allocated[USD]!![b1.addr]!! == Amount.fromLong(100))
+        assert(bankB.allocated[USD]!![b2.addr]!! == Amount.fromLong(200))
+        assert(bankB.allocated[USD]!![a1.addr] == null)
+        assert(bankB.allocated[USD]!![a2.addr] == null)
+        assert(bankB.allocated[JPY] == null)
     }
 
     @Test
     fun `ics-20`() {
-        val ibcA = TestCordaIbcClient(network, a)
-        val ibcB = TestCordaIbcClient(network, b)
-        val ibcC = TestCordaIbcClient(network, c)
-        val ibcX = TestCordaIbcClient(network, x)
-        val ibcY = TestCordaIbcClient(network, y)
-        val ibcZ = TestCordaIbcClient(network, z)
+        val a1 = network.createNode()
+        val a2 = network.createNode()
+        val b1 = network.createNode()
+        val b2 = network.createNode()
 
-        val aKey = a.info.legalIdentities.single().owningKey
-        val bKey = b.info.legalIdentities.single().owningKey
-        val cKey = c.info.legalIdentities.single().owningKey
-        val xKey = x.info.legalIdentities.single().owningKey
-        val yKey = y.info.legalIdentities.single().owningKey
-        val zKey = z.info.legalIdentities.single().owningKey
+        val ibcA = TestCordaIbcClient(network, a1)
+        val ibcB = TestCordaIbcClient(network, b1)
 
-        // create host&bank for the ABC group
-        ibcA.createHostAndBank(listOf(
-                a.info.legalIdentities.single(),
-                b.info.legalIdentities.single(),
-                c.info.legalIdentities.single()
-        ))
-        // create host&bank for the XYZ group
-        ibcX.createHostAndBank(listOf(
-                x.info.legalIdentities.single(),
-                y.info.legalIdentities.single(),
-                z.info.legalIdentities.single()
-        ))
-        // A, B and C share the same baseID
-        ibcB._baseId = ibcA.baseId
-        ibcC._baseId = ibcA.baseId
-        // X, Y and Z share the same baseID
-        ibcY._baseId = ibcX.baseId
-        ibcZ._baseId = ibcX.baseId
+        // create host&bank for chain A
+        ibcA.createGenesis(listOf(a1.party, a2.party))
+        ibcA.createHost()
+        ibcA.createBank()
 
-        // allocate some JPYs for A, B and C
-        ibcC.allocateFund(aKey, Denom("JPY"), Amount(1000))
-        ibcC.allocateFund(bKey, Denom("JPY"), Amount(2000))
-        ibcC.allocateFund(cKey, Denom("JPY"), Amount(3000))
-        // allocate some USDs for X, Y and Z
-        ibcZ.allocateFund(xKey, Denom("USD"), Amount(10000))
-        ibcZ.allocateFund(yKey, Denom("USD"), Amount(20000))
-        ibcZ.allocateFund(zKey, Denom("USD"), Amount(30000))
+        // create host&bank for chain B
+        ibcB.createGenesis(listOf(b1.party, b2.party))
+        ibcB.createHost()
+        ibcB.createBank()
 
-        val idCliABC = Identifier("clientABC")
-        val idCliXYZ = Identifier("clientXYZ")
+        // allocate some JPYs for chain A
+        ibcA.allocateFund(a1.addr, JPY, Amount.fromLong(10000))
+        ibcA.allocateFund(a2.addr, JPY, Amount.fromLong(20000))
 
-        // ABC creates client for interacting with XYZ
-        ibcA.createClient(
-                idCliABC,
-                ClientType.CordaClient,
-                ibcY.host().getConsensusState(HEIGHT))
-        // XYZ creates client for interacting with ABC
-        ibcX.createClient(
-                idCliXYZ,
-                ClientType.CordaClient,
-                ibcB.host().getConsensusState(HEIGHT))
+        // allocate some USDs for chain B
+        ibcB.allocateFund(b1.addr, USD, Amount.fromLong(1000))
+        ibcB.allocateFund(b2.addr, USD, Amount.fromLong(2000))
 
-        val idConnABC = Identifier("connABC")
-        val idConnXYZ = Identifier("connXYZ")
+        // create clients on both chains
+        val expectedClientId = "corda-ibc-0"
 
-        // ABC executes connOpenInit
-        ibcB.connOpenInit(
-                idConnABC,
-                idConnXYZ,
-                ibcZ.host().getCommitmentPrefix(),
-                idCliABC,
-                idCliXYZ,
-                null)
-        // XYZ executes connOpenTry
-        ibcY.connOpenTry(
-                idConnXYZ,
-                idConnXYZ,
-                idConnABC,
-                ibcC.host().getCommitmentPrefix(),
-                idCliABC,
-                idCliXYZ,
-                ibcC.host().getCompatibleVersions(),
-                ibcC.connProof(idConnABC),
-                ibcC.clientProof(idCliABC),
-                ibcC.host().getCurrentHeight(),
-                ibcC.host().getCurrentHeight())
-        // ABC executes connOpenAck
-        ibcC.connOpenAck(
-                idConnABC,
-                ibcX.conn(idConnXYZ).end.versionsList.single(),
-                idConnXYZ,
-                ibcX.connProof(idConnXYZ),
-                ibcX.clientProof(idCliXYZ),
-                ibcX.host().getCurrentHeight(),
-                ibcX.host().getCurrentHeight())
-        // XYZ executes connOpenConfirm
-        ibcZ.connOpenConfirm(
-                idConnXYZ,
-                ibcA.connProof(idConnABC),
-                ibcA.host().getCurrentHeight())
+        val clientAid = ibcA.createClient(MsgCreateClient.newBuilder().apply {
+            clientState = Any.pack(Corda.ClientState.newBuilder().setId(expectedClientId).build(), "")
+            consensusState = ibcB.host().getConsensusState(HEIGHT).consensusState
+        }.build())
 
-        val idPortABC = Identifier("transfer")
-        val idPortXYZ = Identifier("transfer")
-        val idChanABC = Identifier("chanABC")
-        val idChanXYZ = Identifier("chanXYZ")
-        val order = ChannelOuterClass.Order.ORDER_UNORDERED
+        val clientBid = ibcB.createClient(MsgCreateClient.newBuilder().apply {
+            clientState = Any.pack(Corda.ClientState.newBuilder().setId(expectedClientId).build(), "")
+            consensusState = ibcA.host().getConsensusState(HEIGHT).consensusState
+        }.build())
 
-        // ABC executes chanOpenInit
-        ibcA.chanOpenInit(
-                order,
-                listOf(idConnABC),
-                idPortABC,
-                idChanABC,
-                idPortXYZ,
-                idChanXYZ,
-                ibcB.conn(idConnABC).end.versionsList.single().toString())
-        // XYZ executes chanOpenTry
-        ibcX.chanOpenTry(
-                order,
-                listOf(idConnXYZ),
-                idPortXYZ,
-                idChanXYZ,
-                idChanXYZ,
-                idPortABC,
-                idChanABC,
-                ibcY.conn(idConnXYZ).end.versionsList.single().toString(),
-                ibcB.chan(idChanABC).end.version,
-                ibcB.chanProof(idChanABC),
-                ibcB.host().getCurrentHeight())
-        // ABC executes chanOpenAck
-        ibcB.chanOpenAck(
-                idPortABC,
-                idChanABC,
-                ibcZ.chan(idChanXYZ).end.version,
-                idChanXYZ,
-                ibcZ.chanProof(idChanXYZ),
-                ibcZ.host().getCurrentHeight())
-        // XYZ executes chanOpenConfirm
-        ibcY.chanOpenConfirm(
-                idPortXYZ,
-                idChanXYZ,
-                ibcC.chanProof(idChanABC),
-                ibcC.host().getCurrentHeight())
+        // create a connection between chain A and chain B
+        val connAid = ibcA.connOpenInit(MsgConnectionOpenInit.newBuilder().apply{
+            clientId = clientAid.id
+            counterpartyBuilder.clientId = clientBid.id
+            counterpartyBuilder.prefix = ibcB.host().getCommitmentPrefix()
+            version = ibcA.host().getCompatibleVersions().single()
+            delayPeriod = 0
+        }.build())
 
-        val denom = Denom("JPY")
-        val amount = Amount(100)
-        val sourcePort = idPortABC
-        val sourceChannel = idChanABC
-        val timeoutHeight = Height.getDefaultInstance()
-        val timeoutTimestamp = Timestamp(0)
-        // C sends 100 JPY to Z
-        val seqCtoZ = ibcC.chan(idChanABC).nextSequenceSend
-        ibcC.sendTransfer(
-                sourcePort,
-                sourceChannel,
-                denom,
-                amount,
-                cKey,
-                zKey,
-                timeoutHeight,
-                timeoutTimestamp)
-        // A sends 100 JPY to X
-        val seqAtoX = ibcC.chan(idChanABC).nextSequenceSend
-        ibcA.sendTransfer(
-                sourcePort,
-                sourceChannel,
-                denom,
-                amount,
-                aKey,
-                xKey,
-                timeoutHeight,
-                timeoutTimestamp)
-        // B sends 100 JPY to Y
-        val seqBtoY = ibcC.chan(idChanABC).nextSequenceSend
-        ibcB.sendTransfer(
-                sourcePort,
-                sourceChannel,
-                denom,
-                amount,
-                bKey,
-                yKey,
-                timeoutHeight,
-                timeoutTimestamp)
+        val connBid = ibcB.connOpenTry(MsgConnectionOpenTry.newBuilder().apply{
+            clientId = clientBid.id
+            previousConnectionId = ""
+            clientState = ibcA.client(clientAid).clientState
+            counterpartyBuilder.clientId = clientAid.id
+            counterpartyBuilder.connectionId = connAid.id
+            counterpartyBuilder.prefix = ibcA.host().getCommitmentPrefix()
+            delayPeriod = 0
+            addAllCounterpartyVersions(ibcA.host().getCompatibleVersions())
+            proofHeight = ibcA.host().getCurrentHeight()
+            proofInit = ibcA.connProof(connAid).toByteString()
+            proofClient = ibcA.clientProof(clientAid).toByteString()
+            proofConsensus = ibcA.clientProof(clientAid).toByteString()
+            consensusHeight = ibcB.host().getCurrentHeight()
+        }.build())
 
-        // Z receives 100 JPY from C
-        val packetCtoZ = ibcC.chan(idChanABC).packets[seqCtoZ]!!
-        ibcZ.recvPacketUnordered(
-                packetCtoZ,
-                ibcC.chanProof(idChanABC),
-                ibcC.host().getCurrentHeight())
-        // C receives ack from Z
-        val ackZtoC = ibcZ.chan(idChanXYZ).acknowledgements[seqCtoZ]!!
-        ibcC.acknowledgePacketUnordered(
-                packetCtoZ,
-                ackZtoC,
-                ibcZ.chanProof(idChanXYZ),
-                ibcZ.host().getCurrentHeight())
-        // X receives 100 JPY from A
-        val packetAtoX = ibcA.chan(idChanABC).packets[seqAtoX]!!
-        ibcX.recvPacketUnordered(
-                packetAtoX,
-                ibcA.chanProof(idChanABC),
-                ibcA.host().getCurrentHeight())
-        // A receives ack from X
-        val ackXtoA = ibcX.chan(idChanXYZ).acknowledgements[seqAtoX]!!
-        ibcA.acknowledgePacketUnordered(
-                packetAtoX,
-                ackXtoA,
-                ibcX.chanProof(idChanXYZ),
-                ibcX.host().getCurrentHeight())
-        // Y receives 100 JPY from B
-        val packetBtoY = ibcB.chan(idChanABC).packets[seqBtoY]!!
-        ibcY.recvPacketUnordered(
-                packetBtoY,
-                ibcB.chanProof(idChanABC),
-                ibcB.host().getCurrentHeight())
-        // B receives ack from Y
-        val ackYtoB = ibcY.chan(idChanXYZ).acknowledgements[seqBtoY]!!
-        ibcB.acknowledgePacketUnordered(
-                packetBtoY,
-                ackYtoB,
-                ibcY.chanProof(idChanXYZ),
-                ibcY.host().getCurrentHeight())
+        ibcA.connOpenAck(MsgConnectionOpenAck.newBuilder().apply{
+            connectionId = connAid.id
+            counterpartyConnectionId = connBid.id
+            version = ibcB.conn(connBid).end.versionsList.single()
+            clientState = ibcB.client(clientBid).clientState
+            proofHeight = ibcB.host().getCurrentHeight()
+            proofTry = ibcB.connProof(connBid).toByteString()
+            proofClient = ibcB.clientProof(clientBid).toByteString()
+            proofConsensus = ibcB.clientProof(clientBid).toByteString()
+            consensusHeight = ibcA.host().getCurrentHeight()
+        }.build())
 
-        assert(ackXtoA.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
-        assert(ackYtoB.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
-        assert(ackZtoC.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
+        ibcB.connOpenConfirm(MsgConnectionOpenConfirm.newBuilder().apply{
+            connectionId = connBid.id
+            proofAck = ibcA.connProof(connAid).toByteString()
+            proofHeight = ibcA.host().getCurrentHeight()
+        }.build())
+
+        // create a channel between chain A and chain B
+        val portTransferId = Identifier("transfer-old")
+        val channelVersionA = "CHANNEL_VERSION_A" // arbitrary string is ok
+        val channelVersionB = "CHANNEL_VERSION_B" // arbitrary string is ok
+        val ordering = ChannelOuterClass.Order.ORDER_UNORDERED
+
+        val chanAid = ibcA.chanOpenInit(MsgChannelOpenInit.newBuilder().apply{
+            portId = portTransferId.id
+            channelBuilder.state = ChannelOuterClass.State.STATE_UNINITIALIZED_UNSPECIFIED
+            channelBuilder.ordering = ordering
+            channelBuilder.counterpartyBuilder.portId = portTransferId.id
+            channelBuilder.counterpartyBuilder.channelId = ""
+            channelBuilder.addAllConnectionHops(listOf(connAid.id))
+            channelBuilder.version = channelVersionA
+        }.build())
+
+        val chanBid = ibcB.chanOpenTry(MsgChannelOpenTry.newBuilder().apply{
+            portId = portTransferId.id
+            previousChannelId = ""
+            channelBuilder.state = ChannelOuterClass.State.STATE_UNINITIALIZED_UNSPECIFIED
+            channelBuilder.ordering = ordering
+            channelBuilder.counterpartyBuilder.portId = portTransferId.id
+            channelBuilder.counterpartyBuilder.channelId = chanAid.id
+            channelBuilder.addAllConnectionHops(listOf(connBid.id))
+            channelBuilder.version = channelVersionB
+            counterpartyVersion = ibcA.chan(chanAid).end.version
+            proofInit = ibcA.chanProof(chanAid).toByteString()
+            proofHeight = ibcA.host().getCurrentHeight()
+        }.build())
+
+        ibcA.chanOpenAck(MsgChannelOpenAck.newBuilder().apply{
+            portId = portTransferId.id
+            channelId = chanAid.id
+            counterpartyChannelId = chanBid.id
+            counterpartyVersion = ibcB.chan(chanBid).end.version
+            proofTry = ibcB.chanProof(chanBid).toByteString()
+            proofHeight = ibcB.host().getCurrentHeight()
+        }.build())
+
+        ibcB.chanOpenConfirm(MsgChannelOpenConfirm.newBuilder().apply{
+            portId = portTransferId.id
+            channelId = chanBid.id
+            proofAck = ibcA.chanProof(chanAid).toByteString()
+            proofHeight = ibcA.host().getCurrentHeight()
+        }.build())
+
+        // A1 sends 100 JPY to B2
+        val seqA1toB2 = ibcA.chan(chanAid).nextSequenceSend
+        ibcA.sendTransfer(MsgTransfer.newBuilder().apply{
+            sourcePort = portTransferId.id
+            sourceChannel = chanAid.id
+            tokenBuilder.denom = JPY.toString()
+            tokenBuilder.amount = "100"
+            sender = a1.addr.toBech32()
+            receiver = b2.addr.toBech32()
+            timeoutHeight = Height.getDefaultInstance()!!
+            timeoutTimestamp = 0
+        }.build())
+
+        // A2 sends 100 JPY to B1
+        val seqA2toB1 = ibcA.chan(chanAid).nextSequenceSend
+        ibcA.sendTransfer(MsgTransfer.newBuilder().apply{
+            sourcePort = portTransferId.id
+            sourceChannel = chanAid.id
+            tokenBuilder.denom = JPY.toString()
+            tokenBuilder.amount = "100"
+            sender = a2.addr.toBech32()
+            receiver = b1.addr.toBech32()
+            timeoutHeight = Height.getDefaultInstance()!!
+            timeoutTimestamp = 0
+        }.build())
+
+        // B1 receives 100 JPY from A2
+        val packetA2toB1 = ibcA.chan(chanAid).packets[seqA2toB1]!!
+        ibcB.recvPacketUnordered(MsgRecvPacket.newBuilder().apply{
+            packet = packetA2toB1
+            proofCommitment = ibcA.chanProof(chanAid).toByteString()
+            proofHeight = ibcA.host().getCurrentHeight()
+        }.build())
+
+        // A2 receives ack from B1
+        val ackB1toA2 = ibcB.chan(chanBid).acknowledgements[seqA2toB1]!!
+        ibcA.acknowledgePacketUnordered(MsgAcknowledgement.newBuilder().apply{
+            packet = packetA2toB1
+            acknowledgement = ackB1toA2.toJson()
+            proofAcked = ibcB.chanProof(chanBid).toByteString()
+            proofHeight = ibcB.host().getCurrentHeight()
+        }.build())
+
+        // B2 receives 100 JPY from A1
+        val packetA1toB2 = ibcA.chan(chanAid).packets[seqA1toB2]!!
+        ibcB.recvPacketUnordered(MsgRecvPacket.newBuilder().apply{
+            packet = packetA1toB2
+            proofCommitment = ibcA.chanProof(chanAid).toByteString()
+            proofHeight = ibcA.host().getCurrentHeight()
+        }.build())
+
+        // A1 receives ack from B2
+        val ackB2toA1 = ibcB.chan(chanBid).acknowledgements[seqA1toB2]!!
+        ibcA.acknowledgePacketUnordered(MsgAcknowledgement.newBuilder().apply{
+            packet = packetA1toB2
+            acknowledgement = ackB2toA1.toJson()
+            proofAcked = ibcB.chanProof(chanBid).toByteString()
+            proofHeight = ibcB.host().getCurrentHeight()
+        }.build())
+
+        assert(ackB1toA2.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
+        assert(ackB2toA1.responseCase == ChannelOuterClass.Acknowledgement.ResponseCase.RESULT)
 
         // sending back
         for (i in 0 until 2) {
-            val seqXtoA = ibcX.chan(idChanXYZ).nextSequenceSend
-            ibcX.sendTransfer(
-                    idPortXYZ,
-                    idChanXYZ,
-                    Denom("${idPortXYZ.id}/${idChanXYZ.id}/JPY"),
-                    Amount(50),
-                    xKey,
-                    aKey,
-                    Height.getDefaultInstance(),
-                    Timestamp(0))
-            val packetXtoA = ibcX.chan(idChanXYZ).packets[seqXtoA]!!
-            ibcA.recvPacketUnordered(
-                    packetXtoA,
-                    ibcX.chanProof(idChanXYZ),
-                    ibcX.host().getCurrentHeight())
-            val ackAtoX = ibcA.chan(idChanABC).acknowledgements[seqXtoA]!!
-            ibcX.acknowledgePacketUnordered(
-                    packetXtoA,
-                    ackAtoX,
-                    ibcA.chanProof(idChanABC),
-                    ibcA.host().getCurrentHeight())
+            val seqB1toA1 = ibcB.chan(chanBid).nextSequenceSend
+            ibcB.sendTransfer(MsgTransfer.newBuilder().apply{
+                sourcePort = portTransferId.id
+                sourceChannel = chanBid.id
+                tokenBuilder.denom = "${portTransferId.id}/${chanBid.id}/JPY"
+                tokenBuilder.amount = "50"
+                sender = b1.addr.toBech32()
+                receiver = a1.addr.toBech32()
+                timeoutHeight = Height.getDefaultInstance()!!
+                timeoutTimestamp = 0
+            }.build())
+
+            val packetB1toA1 = ibcB.chan(chanBid).packets[seqB1toA1]!!
+            ibcA.recvPacketUnordered(MsgRecvPacket.newBuilder().apply{
+                packet = packetB1toA1
+                proofCommitment = ibcB.chanProof(chanBid).toByteString()
+                proofHeight = ibcB.host().getCurrentHeight()
+            }.build())
+
+            val ackA1toB1 = ibcA.chan(chanAid).acknowledgements[seqB1toA1]!!
+            ibcB.acknowledgePacketUnordered(MsgAcknowledgement.newBuilder().apply{
+                packet = packetB1toA1
+                acknowledgement = ackA1toB1.toJson()
+                proofAcked = ibcA.chanProof(chanAid).toByteString()
+                proofHeight = ibcA.host().getCurrentHeight()
+            }.build())
         }
 
         assertFailsWith<ExecutionException> {
-            ibcX.sendTransfer(
-                    idPortXYZ,
-                    idChanXYZ,
-                    Denom("${idPortXYZ.id}/${idChanXYZ.id}/JPY"),
-                    Amount(1),
-                    xKey,
-                    aKey,
-                    Height.getDefaultInstance(),
-                    Timestamp(0))
+            ibcB.sendTransfer(MsgTransfer.newBuilder().apply{
+                sourcePort = portTransferId.id
+                sourceChannel = chanBid.id
+                tokenBuilder.denom = "${portTransferId.id}/${chanBid.id}/JPY"
+                tokenBuilder.amount = "1"
+                sender = b1.addr.toBech32()
+                receiver = a1.addr.toBech32()
+                timeoutHeight = Height.getDefaultInstance()!!
+                timeoutTimestamp = 0
+            }.build())
         }
     }
-    */
 }

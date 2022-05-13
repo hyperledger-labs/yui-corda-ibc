@@ -1,6 +1,5 @@
 package jp.datachain.corda.ibc
 
-import ibc.applications.transfer.v1.Transfer
 import ibc.applications.transfer.v1.Tx.*
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.channel.v1.Tx.*
@@ -17,10 +16,7 @@ import jp.datachain.corda.ibc.flows.util.queryIbcBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics20.Address
-import jp.datachain.corda.ibc.ics20.Amount
-import jp.datachain.corda.ibc.ics20.Bank
-import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics20.*
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -33,9 +29,13 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 
 class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode: StartedMockNode) {
-    private var maybeBaseId: StateRef? = null
+    var maybeBaseId: StateRef? = null
     val baseId
         get() = maybeBaseId!!
+    fun setBaseId(baseId: StateRef) {
+        assert(maybeBaseId == null)
+        maybeBaseId = baseId
+    }
 
     fun host() = mockNode.services.vaultService.queryIbcHost(baseId)!!.state.data
 
@@ -64,11 +64,10 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
     }
 
     fun createGenesis(participants: List<Party>) {
-        assert(maybeBaseId == null)
         val stx = executeFlow(IbcGenesisCreateFlow(
                 participants
         ))
-        maybeBaseId = StateRef(stx.tx.id, 0)
+        setBaseId(StateRef(stx.tx.id, 0))
     }
 
     fun createHost() {
@@ -211,7 +210,7 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         assert(packet.destinationChannel == chan.end.counterparty.channelId)
         assert(packet.timeoutHeight == msg.timeoutHeight)
         assert(packet.timeoutTimestamp == msg.timeoutTimestamp)
-        val data = Transfer.FungibleTokenPacketData.parseFrom(packet.data)
+        val data = packet.data.toFungibleTokenPacketData()
         assert(data.denom == msg.token.denom)
         assert(data.amount == msg.token.amount.toLong())
         assert(data.sender == msg.sender)
@@ -219,9 +218,9 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         val bank = stx.tx.outputsOfType<Bank>().single()
         val denom = Denom.fromString(data.denom)
         val amount = Amount.fromLong(data.amount)
-        val sender = Address.fromHex(msg.sender)
+        val sender = Address.fromBech32(msg.sender)
         if (denom.hasPrefix(Identifier(msg.sourcePort), Identifier(msg.sourceChannel))) {
-            assert(prevBank.burn(sender, denom.removePrefix(), amount) == bank)
+            assert(prevBank.burn(sender, denom, amount) == bank)
         } else {
             assert(prevBank.lock(sender, denom, amount) == bank)
         }

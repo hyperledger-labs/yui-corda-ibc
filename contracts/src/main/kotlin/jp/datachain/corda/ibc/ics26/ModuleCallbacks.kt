@@ -3,14 +3,13 @@ package jp.datachain.corda.ibc.ics26
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
-//import jp.datachain.corda.ibc.ics20.ModuleCallbacks as Ics20ModuleCallbacks
-import jp.datachain.corda.ibc.ics20cash.ModuleCallbacks as Ics20ModuleCallbacks
 
 interface ModuleCallbacks {
     companion object {
         fun lookupModule(portIdentifier: Identifier): ModuleCallbacks {
             return when(portIdentifier.id) {
-                "transfer" -> Ics20ModuleCallbacks()
+                "transfer" -> jp.datachain.corda.ibc.ics20cash.ModuleCallbacks()
+                "transfer-old" -> jp.datachain.corda.ibc.ics20.ModuleCallbacks()
                 else -> NullModuleCallbacks()
             }
         }

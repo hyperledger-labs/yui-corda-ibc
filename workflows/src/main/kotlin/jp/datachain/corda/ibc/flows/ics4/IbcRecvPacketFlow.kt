@@ -2,15 +2,10 @@ package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
-import jp.datachain.corda.ibc.flows.util.prepareCoins
-import jp.datachain.corda.ibc.flows.util.queryIbcCashBank
-import jp.datachain.corda.ibc.flows.util.queryIbcHost
-import jp.datachain.corda.ibc.flows.util.queryIbcState
+import jp.datachain.corda.ibc.flows.util.*
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.Denom
-import jp.datachain.corda.ibc.ics20.hasPrefixes
 import jp.datachain.corda.ibc.ics20.toFungibleTokenPacketData
-import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketRecv
@@ -19,11 +14,9 @@ import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.internal.noneOrSingle
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.OpaqueBytes
-import net.corda.core.utilities.UntrustworthyData
 import net.corda.finance.AMOUNT
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.issuedBy
@@ -52,23 +45,29 @@ class IbcRecvPacketFlow(
         require(participants.contains(ourIdentity))
 
         // states specific to ICS-20
-        if (msg.packet.destinationPort == "transfer") {
-            val cashBank = serviceHub.vaultService.queryIbcCashBank(baseId)!!
-            inputs.add(cashBank)
+        when (msg.packet.destinationPort) {
+            "transfer" -> {
+                val cashBank = serviceHub.vaultService.queryIbcCashBank(baseId)!!
+                inputs.add(cashBank)
 
-            val packet = msg.packet.data.toFungibleTokenPacketData()
-            val denom = Denom.fromString(packet.denom)
-            val source = denom.hasPrefix(Identifier(msg.packet.sourcePort), Identifier(msg.packet.sourceChannel))
-            if (source && !denom.removePrefix().isVoucher()) {
-                val denom = denom.removePrefix()
-                val issuer = serviceHub.identityService.partyFromKey(denom.issuerKey)!!
-                val amount = AMOUNT(packet.amount, denom.currency).issuedBy(PartyAndReference(issuer, OpaqueBytes(ByteArray(1))))
-                val coins = serviceHub.vaultService.prepareCoins<Cash.State, Issued<Currency>>(
-                        ownerKey = cashBank.state.data.owner.owningKey,
-                        amount = amount)
-                require(coins.isNotEmpty())
-                inputs.addAll(coins)
-                builder.addCommand(Cash.Commands.Move(), cashBank.state.data.owner.owningKey)
+                val packet = msg.packet.data.toFungibleTokenPacketData()
+                val denom = Denom.fromString(packet.denom)
+                val source = denom.hasPrefix(Identifier(msg.packet.sourcePort), Identifier(msg.packet.sourceChannel))
+                if (source && !denom.removePrefix().isVoucher()) {
+                    val denom = denom.removePrefix()
+                    val issuer = serviceHub.identityService.partyFromKey(denom.issuerKey)!!
+                    val amount = AMOUNT(packet.amount, denom.currency).issuedBy(PartyAndReference(issuer, OpaqueBytes(ByteArray(1))))
+                    val coins = serviceHub.vaultService.prepareCoins<Cash.State, Issued<Currency>>(
+                            ownerKey = cashBank.state.data.owner.owningKey,
+                            amount = amount)
+                    require(coins.isNotEmpty())
+                    inputs.addAll(coins)
+                    builder.addCommand(Cash.Commands.Move(), cashBank.state.data.owner.owningKey)
+                }
+            }
+            "transfer-old" -> {
+                val bank = serviceHub.vaultService.queryIbcBank(baseId)!!
+                inputs.add(bank)
             }
         }
 
