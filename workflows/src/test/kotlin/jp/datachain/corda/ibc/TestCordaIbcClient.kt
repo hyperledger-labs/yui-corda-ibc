@@ -9,14 +9,18 @@ import ibc.core.connection.v1.Tx.*
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.flows.ics2.*
 import jp.datachain.corda.ibc.flows.ics20.*
+import jp.datachain.corda.ibc.flows.ics20cash.IbcCashBankCreateFlow
+import jp.datachain.corda.ibc.flows.ics20cash.IbcTransferFlow
 import jp.datachain.corda.ibc.flows.ics24.*
 import jp.datachain.corda.ibc.flows.ics3.*
 import jp.datachain.corda.ibc.flows.ics4.*
 import jp.datachain.corda.ibc.flows.util.queryIbcBank
+import jp.datachain.corda.ibc.flows.util.queryIbcCashBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.*
+import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -25,8 +29,13 @@ import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.StateRef
 import net.corda.core.identity.Party
+import net.corda.core.utilities.OpaqueBytes
+import net.corda.finance.AMOUNT
+import net.corda.finance.contracts.asset.Cash
+import net.corda.finance.flows.CashIssueAndPaymentFlow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
+import java.util.*
 
 class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode: StartedMockNode) {
     var maybeBaseId: StateRef? = null
@@ -40,6 +49,8 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
     fun host() = mockNode.services.vaultService.queryIbcHost(baseId)!!.state.data
 
     fun bank() = mockNode.services.vaultService.queryIbcBank(baseId)!!.state.data
+
+    fun cashBank() = mockNode.services.vaultService.queryIbcCashBank(baseId)!!.state.data
 
     private inline fun <reified T: IbcState> queryStateWithProof(id: Identifier): Pair<T, CommitmentProof> {
         val stateAndRef = mockNode.services.vaultService.queryIbcState<T>(baseId, id)!!
@@ -78,8 +89,15 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
 
     fun createBank() {
         val stx = executeFlow(IbcBankCreateFlow(baseId))
-        val host = stx.tx.outputsOfType<Bank>().single()
-        assert(host.baseId == baseId)
+        val bank = stx.tx.outputsOfType<Bank>().single()
+        assert(bank.baseId == baseId)
+    }
+
+    fun createCashBank(bank: Party) {
+        val stx = executeFlow(IbcCashBankCreateFlow(baseId, bank))
+        val cashBank = stx.tx.outputsOfType<CashBank>().single()
+        assert(cashBank.baseId == baseId)
+        assert(cashBank.owner == bank)
     }
 
     fun allocateFund(owner: Address, denom: Denom, amount: Amount) {
@@ -92,6 +110,24 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         ))
         val bank = stx.tx.outputsOfType<Bank>().single()
         assert(bank.allocated[denom]!![owner]!! == orgAmount + amount)
+    }
+
+    fun allocateCash(
+            recipient: Party,
+            amount: Long,
+            currency: Currency
+    ) {
+        val result = executeFlow(CashIssueAndPaymentFlow(
+                amount = AMOUNT(amount, currency),
+                issueRef = OpaqueBytes(ByteArray(1)),
+                recipient = recipient,
+                notary = host().notary,
+                anonymous = false
+        ))
+        val cash = result.stx.tx.outputsOfType<Cash.State>().single()
+        assert(cash.amount.quantity == amount)
+        assert(cash.amount.token.issuer.party == mockNode.info.legalIdentities.single())
+        assert(cash.amount.token.product == currency)
     }
 
     fun createClient(msg: MsgCreateClient) : Identifier {
@@ -224,5 +260,28 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         } else {
             assert(prevBank.lock(sender, denom, amount) == bank)
         }
+    }
+
+    fun transfer(msg: MsgTransfer) {
+        val stx = executeFlow(IbcTransferFlow(baseId, msg))
+        val chan = stx.tx.outputsOfType<IbcChannel>().single()
+        val packet = chan.packets[chan.nextSequenceSend - 1]!!
+        assert(packet.sequence == chan.nextSequenceSend - 1)
+        assert(packet.sourcePort == msg.sourcePort)
+        assert(packet.sourceChannel == msg.sourceChannel)
+        assert(packet.destinationPort == chan.end.counterparty.portId)
+        assert(packet.destinationChannel == chan.end.counterparty.channelId)
+        assert(packet.timeoutHeight == msg.timeoutHeight)
+        assert(packet.timeoutTimestamp == msg.timeoutTimestamp)
+        val data = packet.data.toFungibleTokenPacketData()
+        val denom =
+                if (msg.token.denom.hasPrefixes("ibc"))
+                    cashBank().resolveDenom(msg.token.denom)
+                else
+                    Denom.fromString(msg.token.denom)
+        assert(data.denom == denom.toString())
+        assert(data.amount == msg.token.amount.toLong())
+        assert(data.sender == msg.sender)
+        assert(data.receiver == msg.receiver)
     }
 }
