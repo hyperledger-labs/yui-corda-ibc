@@ -30,19 +30,19 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
 
         val source = !denom.hasPrefix(sourcePort, sourceChannel)
         if (source) {
-            require(!denom.isVoucher())
+            require(!denom.isVoucher()) { "Vouchers cannot be transferred to yet another blockchain" }
 
             // verify cash owner
             val cashes = ctx.getInputs<Cash.State>()
             val cashOwner = cashes.map{it.owner}.distinct().single()
-            require(cashOwner.owningKey == sender.toPublicKey())
+            require(cashOwner.owningKey == sender.toPublicKey()) { "A sender's cashes must be consumed"}
 
             // verify denom & amount
             val cashSum = cashes.map{it.amount}.sumOrThrow() // sumOrThrow ensures all Cashes have same token (= issuer + currency)
             val amount = net.corda.core.contracts.Amount.fromDecimal(quantity.toBigDecimal(), cashSum.token)
-            require(cashSum.token.issuer.party.owningKey == denom.issuerKey)
-            require(cashSum.token.product == denom.currency)
-            require(cashSum >= amount)
+            require(cashSum.token.issuer.party.owningKey == denom.issuerKey) { "Issuers specified by Denom and Cash must be equal" }
+            require(cashSum.token.product == denom.currency) { "Currencies specified by Denom and Cash must be equal" }
+            require(cashSum >= amount) { "Cash amount must be greater than or equal to an amount to be transferred" }
 
             // lock assets = transfer Cash from sender to Bank user
             ctx.addOutput(bank)
@@ -54,13 +54,13 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
             // verify voucher owner
             val vouchers = ctx.getInputs<Voucher>()
             val voucherOwner = vouchers.map{it.owner}.distinct().single()
-            require(voucherOwner.owningKey == sender.toPublicKey())
+            require(voucherOwner.owningKey == sender.toPublicKey()) { "A sender's vouchers must be consumed"}
 
             // verify denom & amount
             val voucherSum = vouchers.map{it.amount}.sumOrThrow() // sumCash ensures all Vouchers have same token (= issuer + currency)
             val amount = net.corda.core.contracts.Amount.fromDecimal(quantity.toBigDecimal(), voucherSum.token)
-            require(voucherSum.token == denom.denomTrace)
-            require(voucherSum >= amount)
+            require(voucherSum.token == denom.denomTrace) { "Denominations specified by Denom and Voucher must be equal" }
+            require(voucherSum >= amount) { "Voucher amount must be greater than or equal to an amount to be transferred" }
 
             // burn vouchers
             ctx.addOutput(bank.burn(denom, Amount.fromLong(quantity)))
@@ -89,6 +89,6 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
                 .build()
         Handler.sendPacket(ctx, packet)
 
-        require(signers.contains(sender.toPublicKey()))
+        require(signers.contains(sender.toPublicKey())) { "A sender must sign on this tx" }
     }
 }

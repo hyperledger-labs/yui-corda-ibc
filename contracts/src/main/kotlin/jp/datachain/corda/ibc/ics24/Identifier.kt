@@ -6,8 +6,7 @@ import java.util.UUID
 @CordaSerializable
 data class Identifier(val id: String): Comparable<Identifier> {
     init {
-        // TODO: Check the ICS-24 spec and revise this condition
-        assert(!id.matches(".*[^0-9a-zA-Z].*".toRegex()))
+        require(id.matches("[0-9a-zA-Z._+\\-#\\[\\]<>]*".toRegex()))
     }
 
     fun toUUID() = UUID.nameUUIDFromBytes(id.toByteArray(charset = Charsets.US_ASCII))!!

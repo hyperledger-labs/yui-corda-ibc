@@ -12,6 +12,10 @@ DOCKER_TAG	?= :latest
 build:
 	./gradlew -x test build
 
+.PHONY: buildWithTest
+buildWithTest:
+	./gradlew build
+
 .PHONY: clean
 clean:
 	./gradlew clean

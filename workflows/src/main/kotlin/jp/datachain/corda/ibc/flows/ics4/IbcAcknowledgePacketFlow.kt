@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
+import jp.datachain.corda.ibc.flows.util.queryIbcBank
 import jp.datachain.corda.ibc.flows.util.queryIbcCashBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
@@ -11,6 +12,7 @@ import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
+import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -37,6 +39,11 @@ class IbcAcknowledgePacketFlow(
                     serviceHub.vaultService.queryIbcCashBank(baseId)!!
                 else
                     null
+        val bankOrNull =
+                if (msg.packet.destinationPort == "transfer-old")
+                    serviceHub.vaultService.queryIbcBank(baseId)!!
+                else
+                    null
 
         // query chan from vault
         val chanId = Identifier(msg.packet.sourceChannel)
@@ -52,14 +59,10 @@ class IbcAcknowledgePacketFlow(
 
         // create command and outputs
         val command = HandlePacketAcknowledgement(msg)
-        val ctx = Context(
-                if (cashBankOrNull != null) {
-                    setOf(chan.state.data, cashBankOrNull.state.data)
-                } else {
-                    setOf(chan.state.data)
-                },
-                setOf(host, client, conn).map{it.state.data}
-        )
+        val inputs : MutableSet<IbcState> = mutableSetOf(chan.state.data)
+        cashBankOrNull?.let{inputs.add(it.state.data)}
+        bankOrNull?.let{inputs.add(it.state.data)}
+        val ctx = Context(inputs, setOf(host, client, conn).map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
         command.execute(ctx, signers)
 
@@ -72,6 +75,7 @@ class IbcAcknowledgePacketFlow(
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(chan)
         cashBankOrNull?.let{builder.addInputState(it)}
+        bankOrNull?.let{builder.addInputState(it)}
         ctx.outStates.forEach{builder.addOutputState(it)}
 
         val tx = serviceHub.signInitialTransaction(builder)

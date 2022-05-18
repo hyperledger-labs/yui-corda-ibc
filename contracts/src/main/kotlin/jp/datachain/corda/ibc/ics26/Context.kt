@@ -22,7 +22,9 @@ class Context(val inStates: Collection<ContractState>, val refStates: Collection
     inline fun <reified T: ContractState> getReference() = getReferences<T>().single()
 
     inline fun <reified T: ContractState> addOutput(state: T) {
-        assert(outStates.none{it is T})
+        if (state is IbcState) {
+            require(outStates.none { it is T }) { "At most one IBC state can be contained in a transaction"}
+        }
         outStates.add(state)
     }
 
