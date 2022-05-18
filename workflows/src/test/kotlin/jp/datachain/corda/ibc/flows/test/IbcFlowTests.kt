@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc
+package jp.datachain.corda.ibc.flows.test
 
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString

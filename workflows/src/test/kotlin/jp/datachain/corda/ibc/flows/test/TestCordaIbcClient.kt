@@ -1,4 +1,4 @@
-package jp.datachain.corda.ibc
+package jp.datachain.corda.ibc.flows.test
 
 import ibc.applications.transfer.v1.Tx.*
 import ibc.core.channel.v1.ChannelOuterClass
