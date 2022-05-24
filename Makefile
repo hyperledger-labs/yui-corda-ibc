@@ -12,10 +12,6 @@ DOCKER_TAG	?= :latest
 build:
 	./gradlew -x test build
 
-.PHONY: buildWithTest
-buildWithTest:
-	./gradlew build
-
 .PHONY: clean
 clean:
 	./gradlew clean
@@ -136,3 +132,11 @@ test: upA upB executeTest downA downB
 
 .PHONY: oldTest
 oldTest: upA upB executeOldTest downA downB
+
+.PHONY: testContracts
+testContracts:
+	./gradlew :contracts:test
+
+.PHONY: testFlows
+testFlows:
+	./gradlew :workflows:test
