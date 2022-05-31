@@ -9,11 +9,13 @@ import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
+import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics26.*
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
+import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
@@ -23,6 +25,12 @@ import net.corda.core.node.NotaryInfo
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.OpaqueBytes
+import net.corda.finance.AMOUNT
+import net.corda.finance.JPY
+import net.corda.finance.USD
+import net.corda.finance.contracts.asset.Cash
+import net.corda.finance.`issued by`
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.dsl.*
@@ -30,6 +38,7 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.internal.setDriverSerialization
 import net.corda.testing.node.ledger
 import org.junit.Test
+import java.util.Currency
 import kotlin.test.assertEquals
 
 class IbcContractTests {
@@ -45,7 +54,7 @@ class IbcContractTests {
     private val relayer = TestIdentity.fresh("Relayer")
 
     private val ledgerServices = MockServices(
-            listOf("jp.datachain.corda.ibc"),
+            listOf("jp.datachain.corda.ibc", "net.corda.finance.contracts.asset"),
             relayer,
             testNetworkParameters(
                     notaries = listOf(notaryA, notaryB).map{ NotaryInfo(it.party, validating = true) },
@@ -60,6 +69,9 @@ class IbcContractTests {
     object CLIENT : StateType
     object CONNECTION : StateType
     object CHANNEL : StateType
+    object CASHBANK : StateType
+    object CASH : StateType
+    object VOUCHER : StateType
 
     interface ChainType
     object A : ChainType
@@ -74,6 +86,18 @@ class IbcContractTests {
         return label(s, c)
     }
 
+    private fun userOf(chain: ChainType): TestIdentity = when(chain) {
+        is A -> alice
+        is B -> bob
+        else -> throw IllegalArgumentException("chain must be A or B")
+    }
+
+    private fun bankOf(chain: ChainType): TestIdentity = when(chain) {
+        is A -> bankA
+        is B -> bankB
+        else -> throw IllegalArgumentException("chain must be A or B")
+    }
+
     private fun notaryOf(chain: ChainType): TestIdentity = when(chain) {
         is A -> notaryA
         is B -> notaryB
@@ -86,6 +110,8 @@ class IbcContractTests {
         val sigs = identities.map{it.keyPair.sign(signableData)}
         return SignedTransaction(wtx, sigs)
     }
+
+    private val TestIdentity.partyAndReference get() = PartyAndReference(party, OpaqueBytes(ByteArray(1)))
 
     companion object {
         private const val CLIENT_ID = "corda-ibc-0"
@@ -102,11 +128,8 @@ class IbcContractTests {
     ) = signTx(transaction(transactionBuilder = TransactionBuilder(notaryOf(chain).party), dsl = dsl), relayer, notaryOf(chain))
 
     private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createHost(participants: List<Party>, chain: ChainType) {
-        val attachmentId = ledgerServices.attachments.getLatestContractAttachments(Ibc::class.qualifiedName!!).single()
-
         transactionOn(chain) {
-            command(listOf(relayer.publicKey), Ibc.Commands.GenesisCreate())
-            attachment(attachmentId)
+            command(relayer.publicKey, Ibc.Commands.GenesisCreate())
             output(Ibc::class.qualifiedName!!, newLabel(GENESIS, chain), Genesis(participants))
             verifies()
         }
@@ -114,7 +137,7 @@ class IbcContractTests {
         val genesis = label(GENESIS, chain).outputStateAndRef<Genesis>()
 
         transactionOn(chain) {
-            command(listOf(relayer.publicKey), Ibc.Commands.HostCreate())
+            command(relayer.publicKey, Ibc.Commands.HostCreate())
             input(genesis.ref)
             output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), Host(genesis))
             verifies()
@@ -135,7 +158,7 @@ class IbcContractTests {
         assertEquals(ctx.outStates.size, 2)
 
         return transactionOn(self) {
-            command(listOf(relayer.publicKey), HandleClientCreate(msg))
+            command(relayer.publicKey, HandleClientCreate(msg))
             input(host.ref)
             ctx.outStates.forEach{
                 when(it) {
@@ -173,7 +196,7 @@ class IbcContractTests {
             }.outStates
             assertEquals(outputs.size, 2)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             input(hostA.ref)
             reference(clientA.ref)
             outputs.forEach{
@@ -210,7 +233,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             input(hostB.ref)
             reference(clientB.ref)
             outputs.forEach{
@@ -243,7 +266,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             input(connA.ref)
             reference(hostA.ref)
             reference(clientA.ref)
@@ -265,7 +288,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             input(connB.ref)
             reference(hostB.ref)
             reference(clientB.ref)
@@ -274,7 +297,7 @@ class IbcContractTests {
         }
     }
 
-    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.establishChannel(): Pair<SignedTransaction, SignedTransaction> {
+    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.establishChannel() {
         var hostA = label(HOST, A).outputStateAndRef<Host>()
         val connA = label(CONNECTION, A).outputStateAndRef<IbcConnection>() // CordaClientState is constant
 
@@ -294,7 +317,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -332,7 +355,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -365,7 +388,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), outputs.single())
@@ -390,25 +413,59 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(listOf(relayer.publicKey), handler)
+            command(relayer.publicKey, handler)
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, B), outputs.single())
             verifies()
         }
+    }
 
-        return Pair(stxChanInit, stxChanInit)
+    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createCashBank(chain: ChainType) {
+        val bankIdentity = bankOf(chain)
+        val host = label(HOST, chain).outputStateAndRef<Host>()
+
+        transactionOn(chain) {
+            val handler = Ibc.Commands.CashBankCreate(bankIdentity.party)
+            val expectedBank = CashBank(host.state.data, bankIdentity.party)
+            val expectedHost = host.state.data.addBank(expectedBank.id)
+
+            command(bankIdentity.publicKey, handler)
+            input(host.ref)
+            output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), expectedHost)
+            output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, chain), expectedBank)
+            verifies()
+        }
+    }
+
+    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.mintCash(currency: Currency, quantity: Long, chain: ChainType) {
+        val bankIdentity = bankOf(chain)
+        val userIdentity = userOf(chain)
+        val amount = AMOUNT(quantity, currency) `issued by` bankIdentity.partyAndReference
+
+        transactionOn(chain) {
+            command(bankIdentity.publicKey, Cash.Commands.Issue())
+            output(Cash.PROGRAM_ID, newLabel(CASH, chain), Cash.State(amount, bankIdentity.party))
+            verifies()
+        }
+
+        transactionOn(chain) {
+            command(bankIdentity.publicKey, Cash.Commands.Move())
+            input(label(CASH, chain))
+            output(Cash.PROGRAM_ID, newLabel(CASH, chain), Cash.State(amount, userIdentity.party))
+            verifies()
+        }
     }
 
     @Test
     fun testIbc() {
         setDriverSerialization(ClassLoader.getSystemClassLoader()).use {
             ledgerServices.ledger {
-                // create host state on both sides
+                // create host state on both chains
                 createHost(listOf(alice, bankA, relayer).map { it.party }, A)
                 createHost(listOf(bob, bankB, relayer).map { it.party }, B)
 
-                // create client states on both sides
+                // create client states on both chains
                 val stxClientA = createCordaClient(A, B)
                 val stxClientB = createCordaClient(B, A)
 
@@ -416,7 +473,16 @@ class IbcContractTests {
                 establishConnection(stxClientA, stxClientB)
 
                 // establish a channel between chain A and B
-                val (@Suppress("UNUSED_VARIABLE")stxChannelA, @Suppress("UNUSED_VARIABLE")stxChannelB) = establishChannel()
+                establishChannel()
+
+                // create banks for ics20cash on both chains
+                createCashBank(A)
+                createCashBank(B)
+
+                // mint some money to Alice
+                mintCash(JPY, 100, A)
+                // mint some money to Bob
+                mintCash(USD, 100, B)
             }
         }
     }
