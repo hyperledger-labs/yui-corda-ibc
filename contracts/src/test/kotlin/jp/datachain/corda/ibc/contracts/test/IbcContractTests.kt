@@ -1,19 +1,18 @@
 package jp.datachain.corda.ibc.contracts.test
 
 import com.google.protobuf.Any
+import ibc.core.channel.v1.ChannelOuterClass
+import ibc.core.channel.v1.Tx.*
 import ibc.core.client.v1.Tx.MsgCreateClient
-import ibc.core.connection.v1.Tx
-import ibc.core.connection.v1.Tx.MsgConnectionOpenAck
-import ibc.core.connection.v1.Tx.MsgConnectionOpenConfirm
-import ibc.core.connection.v1.Tx.MsgConnectionOpenInit
+import ibc.core.connection.v1.Tx.*
 import ibc.lightclients.corda.v1.Corda
-import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics26.*
+import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignableData
@@ -149,13 +148,13 @@ class IbcContractTests {
         }
     }
 
-    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createConnection(
+    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.establishConnection(
             stxClientA: SignedTransaction,
             stxClientB: SignedTransaction
-    ): Pair<SignedTransaction, SignedTransaction> {
+    ) {
         var hostA = label(HOST, A).outputStateAndRef<Host>()
         var hostB = label(HOST, B).outputStateAndRef<Host>()
-        val clientA = label(CLIENT, A).outputStateAndRef<CordaClientState>() // CordaClientState is constant
+        val clientA = label(CLIENT, A).outputStateAndRef<ClientState>() // CordaClientState is constant
         val prefixA = hostA.state.data.getCommitmentPrefix()
         val prefixB = hostB.state.data.getCommitmentPrefix()
         val versionsA = hostA.state.data.getCompatibleVersions()
@@ -188,11 +187,11 @@ class IbcContractTests {
         }
 
         hostA = label(HOST, A).outputStateAndRef()
-        val clientB = label(CLIENT, B).outputStateAndRef<CordaClientState>() // CordaClientState is constant
+        val clientB = label(CLIENT, B).outputStateAndRef<ClientState>() // CordaClientState is constant
         var connA = label(CONNECTION, A).outputStateAndRef<IbcConnection>()
 
         val stxConnTry = transactionOn(B) {
-            val handler = HandleConnOpenTry(Tx.MsgConnectionOpenTry.newBuilder().apply{
+            val handler = HandleConnOpenTry(MsgConnectionOpenTry.newBuilder().apply{
                 clientId = CLIENT_ID
                 clientState = clientA.state.data.clientState
                 counterpartyBuilder.clientId = CLIENT_ID
@@ -254,6 +253,7 @@ class IbcContractTests {
 
         connA = label(CONNECTION, A).outputStateAndRef()
 
+        @Suppress("UNUSED_VARIABLE")
         val stxConnConfirm = transactionOn(B) {
             val handler = HandleConnOpenConfirm(MsgConnectionOpenConfirm.newBuilder().apply{
                 connectionId = CONNECTION_ID
@@ -272,21 +272,151 @@ class IbcContractTests {
             output(Ibc::class.qualifiedName!!, newLabel(CONNECTION, B), outputs.single())
             verifies()
         }
+    }
 
-        return Pair(stxConnAck, stxConnConfirm)
+    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.establishChannel(): Pair<SignedTransaction, SignedTransaction> {
+        var hostA = label(HOST, A).outputStateAndRef<Host>()
+        val connA = label(CONNECTION, A).outputStateAndRef<IbcConnection>() // CordaClientState is constant
+
+        val stxChanInit = transactionOn(A) {
+            val handler = HandleChanOpenInit(MsgChannelOpenInit.newBuilder().apply{
+                portId = PORT_ID
+                channelBuilder.ordering = ChannelOuterClass.Order.ORDER_ORDERED
+                channelBuilder.counterpartyBuilder.portId = PORT_ID
+                channelBuilder.counterpartyBuilder.channelId = ""
+                channelBuilder.addAllConnectionHops(listOf(CONNECTION_ID))
+                channelBuilder.version = CHANNEL_VERSION_A
+            }.build())
+            val inputs = listOf(hostA)
+            val references = listOf(connA)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { handler.execute(it, listOf(relayer.publicKey)) }
+                    .outStates
+            assertEquals(outputs.size, 2)
+
+            command(listOf(relayer.publicKey), handler)
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            outputs.forEach{
+                when(it) {
+                    is Host -> output(Ibc::class.qualifiedName!!, newLabel(HOST, A), it)
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), it)
+                    else -> throw IllegalArgumentException("unexpected output state")
+                }
+            }
+            verifies()
+        }
+
+        hostA = label(HOST, A).outputStateAndRef()
+        var chanA = label(CHANNEL, A).outputStateAndRef<IbcChannel>()
+        var hostB = label(HOST, B).outputStateAndRef<Host>()
+        val clientB = label(CLIENT, B).outputStateAndRef<ClientState>()
+        val connB = label(CONNECTION, B).outputStateAndRef<IbcConnection>()
+
+        val stxChanTry = transactionOn(B) {
+            val handler = HandleChanOpenTry(MsgChannelOpenTry.newBuilder().apply{
+                portId = PORT_ID
+                channelBuilder.ordering = ChannelOuterClass.Order.ORDER_ORDERED
+                channelBuilder.counterpartyBuilder.portId = PORT_ID
+                channelBuilder.counterpartyBuilder.channelId = CHANNEL_ID
+                channelBuilder.addAllConnectionHops(listOf(CONNECTION_ID))
+                channelBuilder.version = CHANNEL_VERSION_B
+                counterpartyVersion = CHANNEL_VERSION_A
+                proofInit = stxChanInit.toProof().toByteString()
+                proofHeight = hostA.state.data.getCurrentHeight()
+            }.build())
+            val inputs = listOf(hostB)
+            val references = listOf(clientB, connB)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { handler.execute(it, listOf(relayer.publicKey)) }
+                    .outStates
+            assertEquals(outputs.size, 2)
+
+            command(listOf(relayer.publicKey), handler)
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            outputs.forEach{
+                when(it) {
+                    is Host -> output(Ibc::class.qualifiedName!!, newLabel(HOST, B), it)
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, B), it)
+                    else -> throw IllegalArgumentException("unexpected output state")
+                }
+            }
+            verifies()
+        }
+
+        hostB = label(HOST, B).outputStateAndRef()
+        val chanB = label(CHANNEL, B).outputStateAndRef<IbcChannel>()
+        val clientA = label(CLIENT, A).outputStateAndRef<ClientState>()
+
+        val stxChanAck = transactionOn(A) {
+            val handler = HandleChanOpenAck(MsgChannelOpenAck.newBuilder().apply{
+                portId = PORT_ID
+                channelId = CHANNEL_ID
+                counterpartyChannelId = CHANNEL_ID
+                counterpartyVersion = CHANNEL_VERSION_B
+                proofTry = stxChanTry.toProof().toByteString()
+                proofHeight = hostB.state.data.getCurrentHeight()
+            }.build())
+            val inputs = listOf(chanA)
+            val references = listOf(hostA, clientA, connA)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { handler.execute(it, listOf(relayer.publicKey)) }
+                    .outStates
+            assertEquals(outputs.size, 1)
+
+            command(listOf(relayer.publicKey), handler)
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), outputs.single())
+            verifies()
+        }
+
+        hostA = label(HOST, A).outputStateAndRef()
+        chanA = label(CHANNEL, A).outputStateAndRef()
+
+        @Suppress("UNUSED_VARIABLE")
+        val stxChanConfirm = transactionOn(B) {
+            val handler = HandleChanOpenConfirm(MsgChannelOpenConfirm.newBuilder().apply{
+                portId = PORT_ID
+                channelId = CHANNEL_ID
+                proofAck = stxChanAck.toProof().toByteString()
+                proofHeight = hostA.state.data.getCurrentHeight()
+            }.build())
+            val inputs = listOf(chanB)
+            val references = listOf(hostB, clientB, connB)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { handler.execute(it, listOf(relayer.publicKey)) }
+                    .outStates
+            assertEquals(outputs.size, 1)
+
+            command(listOf(relayer.publicKey), handler)
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, B), outputs.single())
+            verifies()
+        }
+
+        return Pair(stxChanInit, stxChanInit)
     }
 
     @Test
     fun testIbc() {
         setDriverSerialization(ClassLoader.getSystemClassLoader()).use {
             ledgerServices.ledger {
+                // create host state on both sides
                 createHost(listOf(alice, bankA, relayer).map { it.party }, A)
                 createHost(listOf(bob, bankB, relayer).map { it.party }, B)
 
+                // create client states on both sides
                 val stxClientA = createCordaClient(A, B)
                 val stxClientB = createCordaClient(B, A)
 
-                val (stxConnA, stxConnB) = createConnection(stxClientA, stxClientB)
+                // establish a connection between chain A and B
+                establishConnection(stxClientA, stxClientB)
+
+                // establish a channel between chain A and B
+                val (@Suppress("UNUSED_VARIABLE")stxChannelA, @Suppress("UNUSED_VARIABLE")stxChannelB) = establishChannel()
             }
         }
     }
