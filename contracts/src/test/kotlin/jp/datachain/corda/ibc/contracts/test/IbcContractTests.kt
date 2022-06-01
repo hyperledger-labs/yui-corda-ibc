@@ -583,6 +583,125 @@ class IbcContractTests {
         }
     }
 
+    private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.transferCashBack(senderChain: ChainType, receiverChain: ChainType) {
+        val senderIdentity = userOf(senderChain)
+        val receiverIdentity = userOf(receiverChain)
+        val receiverBankIdentity = bankOf(receiverChain)
+
+        val hostS = label(HOST, senderChain).outputStateAndRef<Host>()
+        val clientS = label(CLIENT, senderChain).outputStateAndRef<ClientState>()
+        val connS = label(CONNECTION, senderChain).outputStateAndRef<IbcConnection>()
+
+        var cashBankS = label(CASHBANK, senderChain).outputStateAndRef<CashBank>()
+        var chanS = label(CHANNEL, senderChain).outputStateAndRef<IbcChannel>()
+        val voucherS = label(VOUCHER, senderChain).outputStateAndRef<Voucher>()
+        val denom = voucherS.state.data.amount.token.let(::Denom)
+        val amount = voucherS.state.data.amount.toDecimal().longValueExact()
+
+        val stxTransfer = transactionOn(chain = senderChain, initiator = senderIdentity) {
+            val handler = HandleTransfer(MsgTransfer.newBuilder().apply{
+                sourcePort = PORT_ID
+                sourceChannel = CHANNEL_ID
+                tokenBuilder.denom = denom.toIbcDenom()
+                tokenBuilder.amount = amount.toString()
+                sender = Address.fromPublicKey(senderIdentity.publicKey).toBech32()
+                receiver = Address.fromPublicKey(receiverIdentity.publicKey).toBech32()
+                timeoutHeight = Client.Height.getDefaultInstance()
+                timeoutTimestamp = 0
+            }.build())
+            val inputs = listOf(chanS, cashBankS, voucherS)
+            val references = listOf(hostS, clientS, connS)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { handler.execute(it, listOf(senderIdentity.publicKey)) }
+                    .outStates
+            assertEquals(expected = 2, actual = outputs.size)
+
+            command(senderIdentity.publicKey, handler)
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            outputs.forEach {
+                when (it) {
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, senderChain), it)
+                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, senderChain), it)
+                    else -> throw IllegalArgumentException("unexpected output state")
+                }
+            }
+            verifies()
+        }
+
+        chanS = label(CHANNEL, senderChain).outputStateAndRef()
+        cashBankS = label(CASHBANK, senderChain).outputStateAndRef()
+        val packetData = chanS.state.data.let { it.packets[it.nextSequenceSend - 1]!! }
+
+        val hostR = label(HOST, receiverChain).outputStateAndRef<Host>()
+        val clientR = label(CLIENT, receiverChain).outputStateAndRef<ClientState>()
+        val connR = label(CONNECTION, receiverChain).outputStateAndRef<IbcConnection>()
+
+        var chanR = label(CHANNEL, receiverChain).outputStateAndRef<IbcChannel>()
+        var cashBankR = label(CASHBANK, receiverChain).outputStateAndRef<CashBank>()
+        var cashR = label(CASH, receiverChain).outputStateAndRef<Cash.State>()
+
+        val stxRecv = transactionOn(chain = receiverChain, initiator = receiverBankIdentity) {
+            val handler = HandlePacketRecv(MsgRecvPacket.newBuilder().apply{
+                packet = packetData
+                proofCommitment = stxTransfer.toProof().toByteString()
+                proofHeight = hostS.state.data.getCurrentHeight()
+            }.build())
+            val inputs = listOf(chanR, cashBankR, cashR)
+            val references = listOf(hostR, clientR, connR)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { handler.execute(it, listOf(receiverBankIdentity.publicKey)) }
+                    .outStates
+            assertEquals(expected = 3, actual = outputs.size)
+
+            command(receiverBankIdentity.publicKey, handler)
+            command(receiverBankIdentity.publicKey, Cash.Commands.Move())
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            outputs.forEach {
+                when (it) {
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, receiverChain), it)
+                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, receiverChain), it)
+                    is Cash.State -> output(Cash.PROGRAM_ID, newLabel(CASH, receiverChain), it)
+                    else -> throw IllegalArgumentException("unexpected output state")
+                }
+            }
+            verifies()
+        }
+
+        chanR = label(CHANNEL, receiverChain).outputStateAndRef()
+        cashBankR = label(CASHBANK, receiverChain).outputStateAndRef()
+        cashR = label(CASH, receiverChain).outputStateAndRef()
+        val ackData = chanR.state.data.let { it.acknowledgements[packetData.sequence]!! }
+
+        transactionOn(senderChain) {
+            val handler = HandlePacketAcknowledgement(MsgAcknowledgement.newBuilder().apply {
+                packet = packetData
+                acknowledgement = ackData.toJson()
+                proofAcked = stxRecv.toProof().toByteString()
+                proofHeight = hostR.state.data.getCurrentHeight()
+            }.build())
+            val inputs = listOf(chanS, cashBankS)
+            val references = listOf(hostS, clientS, connS)
+            val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
+                    .also { ctx -> handler.execute(ctx, listOf(relayer.publicKey)) }
+                    .outStates
+            assertEquals(expected = 2, actual = outputs.size)
+
+            command(listOf(relayer.publicKey), handler)
+            inputs.forEach{input(it.ref)}
+            references.forEach{reference(it.ref)}
+            outputs.forEach{
+                when(it) {
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, senderChain), it)
+                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, senderChain), it)
+                    else -> IllegalArgumentException("unexpected output state")
+                }
+            }
+            verifies()
+        }
+    }
+
     @Test
     fun testIbc() {
         setDriverSerialization(ClassLoader.getSystemClassLoader()).use {
@@ -614,6 +733,11 @@ class IbcContractTests {
                 transferCash(A, B)
                 // transfer Cash (100 USD) from Bob to Alice
                 transferCash(B, A)
+
+                // transfer Cash (100 JPY) back from Bob to Alice
+                transferCashBack(B, A)
+                // transfer Cash (100 USD) back from Alice to Bob
+                transferCashBack(A, B)
             }
         }
     }
