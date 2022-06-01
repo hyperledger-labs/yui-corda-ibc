@@ -469,15 +469,15 @@ class IbcContractTests {
         val senderIdentity = userOf(senderChain)
         val receiverIdentity = userOf(receiverChain)
 
-        val hostA = label(HOST, A).outputStateAndRef<Host>()
-        val clientA = label(CLIENT, A).outputStateAndRef<ClientState>()
-        val connA = label(CONNECTION, A).outputStateAndRef<IbcConnection>()
+        val hostS = label(HOST, senderChain).outputStateAndRef<Host>()
+        val clientS = label(CLIENT, senderChain).outputStateAndRef<ClientState>()
+        val connS = label(CONNECTION, senderChain).outputStateAndRef<IbcConnection>()
 
-        var cashBankA = label(CASHBANK, A).outputStateAndRef<CashBank>()
-        var chanA = label(CHANNEL, A).outputStateAndRef<IbcChannel>()
-        var cashA = label(CASH, A).outputStateAndRef<Cash.State>()
-        val denom = cashA.state.data.amount.token.let { Denom.fromIssuedCurrency(it.issuer.party.owningKey, it.product) }
-        val amount = cashA.state.data.amount.quantity
+        var cashBankS = label(CASHBANK, senderChain).outputStateAndRef<CashBank>()
+        var chanS = label(CHANNEL, senderChain).outputStateAndRef<IbcChannel>()
+        var cashS = label(CASH, senderChain).outputStateAndRef<Cash.State>()
+        val denom = cashS.state.data.amount.token.let { Denom.fromIssuedCurrency(it.issuer.party.owningKey, it.product) }
+        val amount = cashS.state.data.amount.toDecimal().longValueExact()
 
         val stxTransfer = transactionOn(chain = senderChain, initiator = senderIdentity) {
             val handler = HandleTransfer(MsgTransfer.newBuilder().apply{
@@ -490,8 +490,8 @@ class IbcContractTests {
                 timeoutHeight = Client.Height.getDefaultInstance()
                 timeoutTimestamp = 0
             }.build())
-            val inputs = listOf(chanA, cashBankA, cashA)
-            val references = listOf(hostA, clientA, connA)
+            val inputs = listOf(chanS, cashBankS, cashS)
+            val references = listOf(hostS, clientS, connS)
             val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
                     .also { handler.execute(it, listOf(senderIdentity.publicKey)) }
                     .outStates
@@ -503,35 +503,35 @@ class IbcContractTests {
             references.forEach{reference(it.ref)}
             outputs.forEach {
                 when (it) {
-                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), it)
-                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, A), it)
-                    is Cash.State -> output(Cash.PROGRAM_ID, newLabel(CASH, A), it)
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, senderChain), it)
+                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, senderChain), it)
+                    is Cash.State -> output(Cash.PROGRAM_ID, newLabel(CASH, senderChain), it)
                     else -> throw IllegalArgumentException("unexpected output state")
                 }
             }
             verifies()
         }
 
-        chanA = label(CHANNEL, A).outputStateAndRef()
-        cashBankA = label(CASHBANK, A).outputStateAndRef()
-        cashA = label(CASH, A).outputStateAndRef()
-        val packetData = chanA.state.data.let { it.packets[it.nextSequenceSend - 1]!! }
+        chanS = label(CHANNEL, senderChain).outputStateAndRef()
+        cashBankS = label(CASHBANK, senderChain).outputStateAndRef()
+        cashS = label(CASH, senderChain).outputStateAndRef()
+        val packetData = chanS.state.data.let { it.packets[it.nextSequenceSend - 1]!! }
 
-        val hostB = label(HOST, B).outputStateAndRef<Host>()
-        val clientB = label(CLIENT, B).outputStateAndRef<ClientState>()
-        val connB = label(CONNECTION, B).outputStateAndRef<IbcConnection>()
+        val hostR = label(HOST, receiverChain).outputStateAndRef<Host>()
+        val clientR = label(CLIENT, receiverChain).outputStateAndRef<ClientState>()
+        val connR = label(CONNECTION, receiverChain).outputStateAndRef<IbcConnection>()
 
-        var chanB = label(CHANNEL, B).outputStateAndRef<IbcChannel>()
-        var cashBankB = label(CASHBANK, B).outputStateAndRef<CashBank>()
+        var chanR = label(CHANNEL, receiverChain).outputStateAndRef<IbcChannel>()
+        var cashBankR = label(CASHBANK, receiverChain).outputStateAndRef<CashBank>()
 
         val stxRecv = transactionOn(receiverChain) {
             val handler = HandlePacketRecv(MsgRecvPacket.newBuilder().apply{
                 packet = packetData
                 proofCommitment = stxTransfer.toProof().toByteString()
-                proofHeight = hostA.state.data.getCurrentHeight()
+                proofHeight = hostS.state.data.getCurrentHeight()
             }.build())
-            val inputs = listOf(chanB, cashBankB)
-            val references = listOf(hostB, clientB, connB)
+            val inputs = listOf(chanR, cashBankR)
+            val references = listOf(hostR, clientR, connR)
             val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
                     .also { handler.execute(it, listOf(relayer.publicKey)) }
                     .outStates
@@ -542,28 +542,28 @@ class IbcContractTests {
             references.forEach{reference(it.ref)}
             outputs.forEach {
                 when (it) {
-                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, B), it)
-                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, B), it)
-                    is Voucher -> output(Ibc::class.qualifiedName!!, newLabel(VOUCHER, B), it)
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, receiverChain), it)
+                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, receiverChain), it)
+                    is Voucher -> output(Ibc::class.qualifiedName!!, newLabel(VOUCHER, receiverChain), it)
                     else -> throw IllegalArgumentException("unexpected output state")
                 }
             }
             verifies()
         }
 
-        chanB = label(CHANNEL, B).outputStateAndRef()
-        cashBankB = label(CASHBANK, B).outputStateAndRef()
-        val ackData = chanB.state.data.let { it.acknowledgements[packetData.sequence]!! }
+        chanR = label(CHANNEL, receiverChain).outputStateAndRef()
+        cashBankR = label(CASHBANK, receiverChain).outputStateAndRef()
+        val ackData = chanR.state.data.let { it.acknowledgements[packetData.sequence]!! }
 
         transactionOn(senderChain) {
             val handler = HandlePacketAcknowledgement(MsgAcknowledgement.newBuilder().apply {
                 packet = packetData
                 acknowledgement = ackData.toJson()
                 proofAcked = stxRecv.toProof().toByteString()
-                proofHeight = hostB.state.data.getCurrentHeight()
+                proofHeight = hostR.state.data.getCurrentHeight()
             }.build())
-            val inputs = listOf(chanA, cashBankA)
-            val references = listOf(hostA, clientA, connA)
+            val inputs = listOf(chanS, cashBankS)
+            val references = listOf(hostS, clientS, connS)
             val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
                     .also { ctx -> handler.execute(ctx, listOf(relayer.publicKey)) }
                     .outStates
@@ -574,8 +574,8 @@ class IbcContractTests {
             references.forEach{reference(it.ref)}
             outputs.forEach{
                 when(it) {
-                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), it)
-                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, A), it)
+                    is IbcChannel -> output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, senderChain), it)
+                    is CashBank -> output(Ibc::class.qualifiedName!!, newLabel(CASHBANK, senderChain), it)
                     else -> IllegalArgumentException("unexpected output state")
                 }
             }
@@ -610,8 +610,10 @@ class IbcContractTests {
                 // mint some money to Bob
                 mintCash(USD, 100, B)
 
-                // transfer Cash from Alice to Bob
+                // transfer Cash (100 JPY) from Alice to Bob
                 transferCash(A, B)
+                // transfer Cash (100 USD) from Bob to Alice
+                transferCash(B, A)
             }
         }
     }
