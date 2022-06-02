@@ -4,7 +4,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+      - name: Contract testing
+        run: make testContracts
+      - name: Flow testing
+        run: make testFlows
+  e2e-test:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Build the client written in Rust
