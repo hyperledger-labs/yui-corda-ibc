@@ -6,6 +6,13 @@ For now this implementation supports communication between Corda-IBC and Corda-I
 It is planned to support communication with Tendermint-IBC (Cosmos SDK).
 
 # Try it!
+
+## Check out submodules
+```bash
+$ git submodule update --init
+```
+
+## Build and test the project
 ```bash
 $ make buildClientImage
 $ make buildClient
