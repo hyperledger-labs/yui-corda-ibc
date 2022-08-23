@@ -9,6 +9,7 @@ proto_root='../proto/src/main/proto'
 proto_dirs="$proto_root/ibc/lightclients/corda/v1"
 proto_dirs+=" $proto_root/ibc/lightclientd/corda/v1"
 proto_dirs+=" $proto_root/ibc/lightclientd/fabric/v1"
+proto_dirs+=" $proto_root/relayer/chains/corda"
 for dir in $proto_dirs; do
   protoc \
   -I "$proto_root" \
