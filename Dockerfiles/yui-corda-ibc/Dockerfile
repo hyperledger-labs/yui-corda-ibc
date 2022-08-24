@@ -9,7 +9,7 @@ FROM golang:$GO_VER-buster AS lightclientd
 WORKDIR /usr/src/app
 COPY . .
 WORKDIR /usr/src/app/go
-RUN go build ./cmd/fabric-ibc-lightclientd
+RUN go build -buildvcs=false ./cmd/fabric-ibc-lightclientd
 
 FROM ${DOCKER_REG}${DOCKER_REPO}${CLIENT_NAME}${DOCKER_TAG} AS client
 
