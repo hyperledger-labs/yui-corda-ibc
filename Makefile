@@ -140,3 +140,7 @@ testContracts:
 .PHONY: testFlows
 testFlows:
 	./gradlew :workflows:test
+
+.PHONY: testRelayerBuild
+testRelayerBuild:
+	cd go/cmd/relayer && go build . && rm relayer

@@ -1,4 +1,4 @@
-ARG RUST_VER=1.54
+ARG RUST_VER=1.63
 ARG CLIENT_NAME=yui-corda-ibc-client
 
 FROM rust:$RUST_VER-slim as builder
