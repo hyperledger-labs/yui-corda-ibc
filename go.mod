@@ -1,4 +1,4 @@
-module github.com/hyperledger-labs/yui-corda-ibc/go
+module github.com/hyperledger-labs/yui-corda-ibc
 
 go 1.18
 
