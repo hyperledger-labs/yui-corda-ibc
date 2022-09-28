@@ -1,6 +1,10 @@
 use super::connection;
 use super::Result;
+use bytes::{BufMut, BytesMut};
+use prost::Message;
+use std::path::PathBuf;
 use structopt::StructOpt;
+use tokio::fs;
 
 #[derive(StructOpt, Debug)]
 pub enum Opt {
@@ -29,6 +33,12 @@ pub enum Opt {
 
         #[structopt(short, long)]
         connection_id: String,
+
+        #[structopt(short, long)]
+        output_path: PathBuf,
+
+        #[structopt(short, long)]
+        save_whole_response: bool,
     },
 }
 
@@ -55,9 +65,17 @@ pub async fn execute(opt: Opt) -> Result<()> {
         Opt::QueryConnection {
             endpoint,
             connection_id,
+            output_path,
+            save_whole_response,
         } => {
             let response = connection::query_connection(endpoint, connection_id).await?;
-            println!("{:?}", response);
+            let mut buf = BytesMut::new();
+            if save_whole_response {
+                response.encode(&mut buf)?;
+            } else {
+                buf.put(response.proof.as_slice());
+            }
+            fs::write(output_path, buf).await?;
         }
     }
     Ok(())
