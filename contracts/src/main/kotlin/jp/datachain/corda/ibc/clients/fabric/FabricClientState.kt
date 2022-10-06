@@ -64,7 +64,6 @@ data class FabricClientState constructor(
         }
     }
     private fun makeState() = Lightclientd.State.newBuilder()
-        .setId(id.id)
         .setClientState(fabricClientState)
         .also { builder ->
             consensusStates.forEach{ (height, consensusState) ->

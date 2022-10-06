@@ -25,7 +25,6 @@ type Lightclient struct {
 	ctx   sdk.Context
 	cdc   codec.BinaryCodec
 	store sdk.KVStore
-	id    string
 	cs    *fabrictypes.ClientState
 }
 
@@ -47,7 +46,6 @@ func mustParseKeyConsensusState(key []byte) clienttypes.Height {
 
 func (lc *Lightclient) State() *pb.State {
 	state := &pb.State{
-		Id:              lc.id,
 		ClientState:     lc.cs,
 		ConsensusStates: make(map[uint64]*fabrictypes.ConsensusState),
 	}
@@ -74,7 +72,6 @@ func NewLightclient(state *pb.State) *Lightclient {
 		ctx:   sdk.Context{},
 		cdc:   example.MakeEncodingConfig().Marshaler,
 		store: mem.NewStore(),
-		id:    state.Id,
 		cs:    state.ClientState,
 	}
 
