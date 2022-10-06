@@ -1,6 +1,5 @@
 package jp.datachain.corda.ibc.contracts.test
 
-import com.google.protobuf.Any
 import ibc.applications.transfer.v1.Tx.MsgTransfer
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.channel.v1.Tx.*
@@ -10,7 +9,8 @@ import ibc.core.connection.v1.Tx.*
 import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.ics2.ClientState
+import jp.datachain.corda.ibc.conversion.into
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toJson
@@ -21,6 +21,7 @@ import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics26.*
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
@@ -156,8 +157,11 @@ class IbcContractTests {
         val host = label(HOST, self).outputStateAndRef<Host>()
         val counterpartyHost = label(HOST, counterparty).outputStateAndRef<Host>()
         val msg = MsgCreateClient.newBuilder()
-                .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_ID).build(), ""))
-                .setConsensusState(counterpartyHost.state.data.let{it.getConsensusState(it.getCurrentHeight())}.consensusState)
+                .setClientState(Corda.ClientState.newBuilder().apply {
+                    baseId = counterpartyHost.state.data.baseId.into()
+                    notaryKey = counterpartyHost.state.data.notary.owningKey.into()
+                }.build().pack())
+                .setConsensusState(counterpartyHost.state.data.let{it.getConsensusState(it.getCurrentHeight())}.anyConsensusState)
                 .build()
         val handler = HandleClientCreate(msg)
         val ctx = Context(listOf(host.state.data), emptyList()).also {
@@ -171,7 +175,7 @@ class IbcContractTests {
             ctx.outStates.forEach{
                 when(it) {
                     is Host -> output(Ibc::class.qualifiedName!!, newLabel(HOST, self), it)
-                    is ClientState -> output(Ibc::class.qualifiedName!!, newLabel(CLIENT, self), it)
+                    is IbcClientState -> output(Ibc::class.qualifiedName!!, newLabel(CLIENT, self), it)
                     else -> throw IllegalArgumentException("unexpected output state")
                 }
             }
@@ -185,7 +189,7 @@ class IbcContractTests {
     ) {
         var hostA = label(HOST, A).outputStateAndRef<Host>()
         var hostB = label(HOST, B).outputStateAndRef<Host>()
-        val clientA = label(CLIENT, A).outputStateAndRef<ClientState>() // CordaClientState is constant
+        val clientA = label(CLIENT, A).outputStateAndRef<IbcClientState>() // CordaClientState is constant
         val prefixA = hostA.state.data.getCommitmentPrefix()
         val prefixB = hostB.state.data.getCommitmentPrefix()
         val versionsA = hostA.state.data.getCompatibleVersions()
@@ -218,13 +222,13 @@ class IbcContractTests {
         }
 
         hostA = label(HOST, A).outputStateAndRef()
-        val clientB = label(CLIENT, B).outputStateAndRef<ClientState>() // CordaClientState is constant
+        val clientB = label(CLIENT, B).outputStateAndRef<IbcClientState>() // CordaClientState is constant
         var connA = label(CONNECTION, A).outputStateAndRef<IbcConnection>()
 
         val stxConnTry = transactionOn(B) {
             val handler = HandleConnOpenTry(MsgConnectionOpenTry.newBuilder().apply{
                 clientId = CLIENT_ID
-                clientState = clientA.state.data.clientState
+                clientState = clientA.state.data.anyClientState
                 counterpartyBuilder.clientId = CLIENT_ID
                 counterpartyBuilder.connectionId = CONNECTION_ID
                 counterpartyBuilder.prefix = prefixA
@@ -262,7 +266,7 @@ class IbcContractTests {
                 connectionId = CONNECTION_ID
                 counterpartyConnectionId = CONNECTION_ID
                 version = versionsA.single()
-                clientState = clientB.state.data.clientState
+                clientState = clientB.state.data.anyClientState
                 proofHeight = hostB.state.data.getCurrentHeight()
                 proofTry = stxConnTry.toProof().toByteString()
                 proofClient = stxClientB.toProof().toByteString()
@@ -341,7 +345,7 @@ class IbcContractTests {
         hostA = label(HOST, A).outputStateAndRef()
         var chanA = label(CHANNEL, A).outputStateAndRef<IbcChannel>()
         var hostB = label(HOST, B).outputStateAndRef<Host>()
-        val clientB = label(CLIENT, B).outputStateAndRef<ClientState>()
+        val clientB = label(CLIENT, B).outputStateAndRef<IbcClientState>()
         val connB = label(CONNECTION, B).outputStateAndRef<IbcConnection>()
 
         val stxChanTry = transactionOn(B) {
@@ -378,7 +382,7 @@ class IbcContractTests {
 
         hostB = label(HOST, B).outputStateAndRef()
         val chanB = label(CHANNEL, B).outputStateAndRef<IbcChannel>()
-        val clientA = label(CLIENT, A).outputStateAndRef<ClientState>()
+        val clientA = label(CLIENT, A).outputStateAndRef<IbcClientState>()
 
         val stxChanAck = transactionOn(A) {
             val handler = HandleChanOpenAck(MsgChannelOpenAck.newBuilder().apply{
@@ -470,7 +474,7 @@ class IbcContractTests {
         val receiverIdentity = userOf(receiverChain)
 
         val hostS = label(HOST, senderChain).outputStateAndRef<Host>()
-        val clientS = label(CLIENT, senderChain).outputStateAndRef<ClientState>()
+        val clientS = label(CLIENT, senderChain).outputStateAndRef<IbcClientState>()
         val connS = label(CONNECTION, senderChain).outputStateAndRef<IbcConnection>()
 
         var cashBankS = label(CASHBANK, senderChain).outputStateAndRef<CashBank>()
@@ -518,7 +522,7 @@ class IbcContractTests {
         val packetData = chanS.state.data.let { it.packets[it.nextSequenceSend - 1]!! }
 
         val hostR = label(HOST, receiverChain).outputStateAndRef<Host>()
-        val clientR = label(CLIENT, receiverChain).outputStateAndRef<ClientState>()
+        val clientR = label(CLIENT, receiverChain).outputStateAndRef<IbcClientState>()
         val connR = label(CONNECTION, receiverChain).outputStateAndRef<IbcConnection>()
 
         var chanR = label(CHANNEL, receiverChain).outputStateAndRef<IbcChannel>()
@@ -589,7 +593,7 @@ class IbcContractTests {
         val receiverBankIdentity = bankOf(receiverChain)
 
         val hostS = label(HOST, senderChain).outputStateAndRef<Host>()
-        val clientS = label(CLIENT, senderChain).outputStateAndRef<ClientState>()
+        val clientS = label(CLIENT, senderChain).outputStateAndRef<IbcClientState>()
         val connS = label(CONNECTION, senderChain).outputStateAndRef<IbcConnection>()
 
         var cashBankS = label(CASHBANK, senderChain).outputStateAndRef<CashBank>()
@@ -634,7 +638,7 @@ class IbcContractTests {
         val packetData = chanS.state.data.let { it.packets[it.nextSequenceSend - 1]!! }
 
         val hostR = label(HOST, receiverChain).outputStateAndRef<Host>()
-        val clientR = label(CLIENT, receiverChain).outputStateAndRef<ClientState>()
+        val clientR = label(CLIENT, receiverChain).outputStateAndRef<IbcClientState>()
         val connR = label(CONNECTION, receiverChain).outputStateAndRef<IbcConnection>()
 
         var chanR = label(CHANNEL, receiverChain).outputStateAndRef<IbcChannel>()

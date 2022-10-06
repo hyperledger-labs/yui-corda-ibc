@@ -4,11 +4,11 @@ import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleChanOpenTry
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -36,7 +36,7 @@ class IbcChanOpenTryFlow(
 
         // query client from vault
         val clientId = Identifier(conn.state.data.end.clientId)
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
 
         // (optional) channel from vault
         val chanOrNull = if (msg.previousChannelId.isNotEmpty()) {

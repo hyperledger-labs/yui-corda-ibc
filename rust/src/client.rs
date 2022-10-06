@@ -18,34 +18,29 @@ async fn query_client(
     Ok(v1client::query_client::QueryClient::connect(endpoint).await?)
 }
 
-pub async fn create_clients(
-    endpoint_a: String,
-    endpoint_b: String,
-    client_id_a: String,
-    client_id_b: String,
-) -> Result<()> {
-    let client_state_a = v1corda::ClientState { id: client_id_a };
-    let client_state_a = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &client_state_a)?;
-
-    let client_state_b = v1corda::ClientState { id: client_id_b };
-    let client_state_b = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &client_state_b)?;
-
+pub async fn create_clients(endpoint_a: String, endpoint_b: String) -> Result<()> {
     let host_a = host::query_host(endpoint_a.clone()).await?;
     let host_b = host::query_host(endpoint_b.clone()).await?;
 
+    let client_state_a = v1corda::ClientState {
+        base_id: host_b.base_id,
+        notary_key: host_b.notary.and_then(|n| n.owning_key),
+    };
+    let client_state_a = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &client_state_a)?;
+
+    let client_state_b = v1corda::ClientState {
+        base_id: host_a.base_id,
+        notary_key: host_a.notary.and_then(|n| n.owning_key),
+    };
+    let client_state_b = util::pack_any(CLIENT_STATE_TYPE_URL.to_owned(), &client_state_b)?;
+
     let consensus_state_a = util::pack_any(
         CONSENSUS_STATE_TYPE_URL.to_owned(),
-        &v1corda::ConsensusState {
-            base_id: host_b.base_id,
-            notary_key: host_b.notary.and_then(|n| n.owning_key),
-        },
+        &v1corda::ConsensusState {},
     )?;
     let consensus_state_b = util::pack_any(
         CONSENSUS_STATE_TYPE_URL.to_owned(),
-        &v1corda::ConsensusState {
-            base_id: host_a.base_id,
-            notary_key: host_a.notary.and_then(|n| n.owning_key),
-        },
+        &v1corda::ConsensusState {},
     )?;
 
     let mut client_a = msg_client(endpoint_a).await?;

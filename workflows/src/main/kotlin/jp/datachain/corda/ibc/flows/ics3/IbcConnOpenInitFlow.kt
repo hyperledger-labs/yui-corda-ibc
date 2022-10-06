@@ -4,10 +4,10 @@ import co.paralleluniverse.fibers.Suspendable
 import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenInit
+import jp.datachain.corda.ibc.states.IbcClientState
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
@@ -27,7 +27,7 @@ class IbcConnOpenInitFlow(
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(msg.clientId))!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, Identifier(msg.clientId))!!
 
         val command = HandleConnOpenInit(msg)
         val ctx = Context(setOf(host.state.data), setOf(client.state.data))

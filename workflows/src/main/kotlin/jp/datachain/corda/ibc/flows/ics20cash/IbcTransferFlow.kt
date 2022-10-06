@@ -4,7 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import ibc.applications.transfer.v1.Transfer
 import ibc.applications.transfer.v1.Tx
 import jp.datachain.corda.ibc.flows.util.*
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.hasPrefixes
 import jp.datachain.corda.ibc.ics20cash.HandleTransfer
@@ -12,6 +11,7 @@ import jp.datachain.corda.ibc.ics20cash.Voucher
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
@@ -49,7 +49,7 @@ class IbcTransferFlow(
 
         // query client from vault
         val clientId = Identifier(conn.state.data.end.clientId)
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
 
         // query bank from vault
         val bank = serviceHub.vaultService.queryIbcCashBank(baseId)!!

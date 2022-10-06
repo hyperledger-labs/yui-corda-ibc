@@ -14,12 +14,6 @@ pub enum Opt {
 
         #[structopt(long, default_value = "http://localhost:9998")]
         endpoint_b: String,
-
-        #[structopt(long)]
-        client_id_a: String,
-
-        #[structopt(long)]
-        client_id_b: String,
     },
     QueryClientState {
         #[structopt(short, long, default_value = "http://localhost:9999")]
@@ -63,10 +57,8 @@ pub async fn execute(opt: Opt) -> Result<()> {
         Opt::CreateClients {
             endpoint_a,
             endpoint_b,
-            client_id_a,
-            client_id_b,
         } => {
-            client::create_clients(endpoint_a, endpoint_b, client_id_a, client_id_b).await?;
+            client::create_clients(endpoint_a, endpoint_b).await?;
         }
         Opt::QueryClientState {
             endpoint,

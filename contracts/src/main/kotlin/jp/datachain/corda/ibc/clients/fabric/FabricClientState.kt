@@ -13,43 +13,33 @@ import ibc.lightclients.fabric.v1.Fabric
 import ics23.Proofs
 import io.grpc.ManagedChannelBuilder
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.conversion.pack
+import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics20.toJson
 import jp.datachain.corda.ibc.ics23.CommitmentProof
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.StateRef
-import net.corda.core.identity.AbstractParty
 
 @BelongsToContract(Ibc::class)
 data class FabricClientState constructor(
-    override val participants: List<AbstractParty>,
-    override val baseId: StateRef,
-    val fabricClientState: Fabric.ClientState,
-    val fabricConsensusStates: Map<Long, Fabric.ConsensusState>
+        override val anyClientState: Any,
+        override val anyConsensusStates: Map<Client.Height, Any>
 ) : ClientState {
-    override val id get() = Identifier(fabricClientState.id)
-    override val clientState get() = Any.pack(fabricClientState, "")!!
-    override val consensusStates get() = fabricConsensusStates
-        .mapKeys { e ->
-            Client.Height.newBuilder()
-                .setRevisionNumber(0)
-                .setRevisionHeight(e.key)
-                .build()
-        }
-        .mapValues { e ->
-            FabricConsensusState(e.value)
-        }
+    override val consensusStates = anyConsensusStates.mapValues{kv -> FabricConsensusState(kv.value)}
 
-    constructor(host: Host, id: Identifier, fabricClientState: Fabric.ClientState, fabricConsensusState: Fabric.ConsensusState) : this(
-        host.participants,
-        host.baseId,
-        fabricClientState,
-        mapOf(fabricClientState.lastChaincodeHeader.sequence.value to fabricConsensusState)
-    ) {
-        require(id.id == fabricClientState.id)
+    companion object {
+        private fun latestHeightOf(anyClientState: Any) : Client.Height {
+            val clientState = anyClientState.unpack<Fabric.ClientState>()
+            val lastSequence = clientState.lastChaincodeHeader!!.sequence!!.value
+            return Client.Height.newBuilder().setRevisionHeight(lastSequence).build()
+        }
     }
+
+    constructor(anyClientState: Any, anyConsensusState: Any)
+            : this(anyClientState, mapOf(latestHeightOf(anyClientState) to anyConsensusState))
+
+    private val clientState = anyClientState.unpack<Fabric.ClientState>()
 
     private fun <R> withLightClientStub(f: (lc: LightClientGrpc.LightClientBlockingStub) -> R): R {
         val channel = ManagedChannelBuilder
@@ -64,10 +54,10 @@ data class FabricClientState constructor(
         }
     }
     private fun makeState() = Lightclientd.State.newBuilder()
-        .setClientState(fabricClientState)
+        .setClientState(clientState)
         .also { builder ->
             consensusStates.forEach{ (height, consensusState) ->
-                builder.putConsensusStates(height.revisionHeight, consensusState.fabricConsensusState)
+                builder.putConsensusStates(height.revisionHeight, consensusState.consensusState)
             }
         }
         .build()
@@ -110,7 +100,7 @@ data class FabricClientState constructor(
         val req = Lightclientd.InitializeRequest
                 .newBuilder()
                 .setState(makeState())
-                .setConsensusState((consState as FabricConsensusState).fabricConsensusState)
+                .setConsensusState((consState as FabricConsensusState).consensusState)
                 .build()
         it.initialize(req)
         Unit
@@ -139,12 +129,14 @@ data class FabricClientState constructor(
             val req = Lightclientd.CheckHeaderAndUpdateStateRequest
                 .newBuilder()
                 .setState(makeState())
-                .setHeader((header as FabricHeader).fabricHeader)
+                .setHeader((header as FabricHeader).header)
                 .build()
             val res = it.checkHeaderAndUpdateState(req)
             val newClientState = this.copy(
-                fabricClientState = res.state.clientState,
-                fabricConsensusStates = res.state.consensusStatesMap
+                    anyClientState = res.state.clientState.pack(),
+                    anyConsensusStates = res.state.consensusStatesMap
+                            .mapKeys { kv -> Client.Height.newBuilder().setRevisionHeight(kv.key).build() }
+                            .mapValues { kv -> kv.value.pack() }
             )
             val newConsensusState = newClientState.consensusStates[newClientState.getLatestHeight()]!!
             Pair(newClientState, newConsensusState)
@@ -157,15 +149,17 @@ data class FabricClientState constructor(
         val req = Lightclientd.VerifyUpgradeAndUpdateStateRequest
                 .newBuilder()
                 .setState(makeState())
-                .setNewClient((newClient as FabricClientState).fabricClientState)
-                .setNewConsState((newConsState as FabricConsensusState).fabricConsensusState)
+                .setNewClient((newClient as FabricClientState).clientState)
+                .setNewConsState((newConsState as FabricConsensusState).consensusState)
                 .setProofUpgradeClient(ByteString.copyFrom(proofUpgradeClient.bytes))
                 .setProofUpgradeConsState(ByteString.copyFrom(proofUpgradeConsState.bytes))
                 .build()
         val res = it.verifyUpgradeAndUpdateState(req)
         val newClientState = this.copy(
-                fabricClientState = res.state.clientState,
-                fabricConsensusStates = res.state.consensusStatesMap
+                anyClientState = res.state.clientState.pack(),
+                anyConsensusStates = res.state.consensusStatesMap
+                        .mapKeys{kv -> Client.Height.newBuilder().setRevisionHeight(kv.key).build()}
+                        .mapValues{kv -> kv.value.pack()}
         )
         val newConsensusState = newClientState.consensusStates[newClientState.getLatestHeight()]!!
         Pair(newClientState, newConsensusState)

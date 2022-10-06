@@ -6,21 +6,21 @@ import ibc.core.client.v1.QueryOuterClass
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.toProof
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.states.IbcClientState
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.node.services.vault.QueryCriteria
 
 class ClientQueryService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): QueryGrpc.QueryImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
     override fun clientState(request: QueryOuterClass.QueryClientStateRequest, responseObserver: StreamObserver<QueryOuterClass.QueryClientStateResponse>) {
-        val stateAndRef = ops.vaultQueryBy<ClientState>(QueryCriteria.LinearStateQueryCriteria(
+        val stateAndRef = ops.vaultQueryBy<IbcClientState>(QueryCriteria.LinearStateQueryCriteria(
                 externalId = listOf(baseId.toString()),
                 uuid = listOf(Identifier(request.clientId).toUUID())
         )).states.single()
         val proof = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!.toProof()
         val reply = QueryOuterClass.QueryClientStateResponse.newBuilder()
-                .setClientState(stateAndRef.state.data.clientState)
+                .setClientState(stateAndRef.state.data.anyClientState)
                 .setProof(proof.toByteString())
                 .setProofHeight(HEIGHT)
                 .build()
@@ -29,7 +29,7 @@ class ClientQueryService(host: String, port: Int, username: String, password: St
     }
 
     override fun consensusState(request: QueryOuterClass.QueryConsensusStateRequest, responseObserver: StreamObserver<QueryOuterClass.QueryConsensusStateResponse>) {
-        val stateAndRef = ops.vaultQueryBy<ClientState>(QueryCriteria.LinearStateQueryCriteria(
+        val stateAndRef = ops.vaultQueryBy<IbcClientState>(QueryCriteria.LinearStateQueryCriteria(
                 externalId = listOf(baseId.toString()),
                 uuid = listOf(Identifier(request.clientId).toUUID())
         )).states.single()
@@ -37,14 +37,14 @@ class ClientQueryService(host: String, port: Int, username: String, password: St
         val clientState = stateAndRef.state.data
         val height =
                 if (request.latestHeight)
-                    clientState.getLatestHeight()
+                    clientState.impl.getLatestHeight()
                 else
                     Client.Height.newBuilder()
                             .setRevisionNumber(request.revisionNumber)
                             .setRevisionHeight(request.revisionHeight)
                             .build()
         val reply = QueryOuterClass.QueryConsensusStateResponse.newBuilder()
-                .setConsensusState(clientState.consensusStates[height]!!.consensusState)
+                .setConsensusState(clientState.impl.consensusStates[height]!!.anyConsensusState)
                 .setProof(proof.toByteString())
                 .setProofHeight(HEIGHT)
                 .build()

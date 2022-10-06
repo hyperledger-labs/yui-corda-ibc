@@ -7,7 +7,7 @@ import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
 interface ConsensusState {
-    val consensusState: Any
+    val anyConsensusState: Any
 
     fun clientType(): ClientType // Consensus kind
 

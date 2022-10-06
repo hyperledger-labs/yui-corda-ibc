@@ -3,13 +3,13 @@ package jp.datachain.corda.ibc.flows.ics4
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.flows.util.*
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toFungibleTokenPacketData
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketRecv
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
@@ -83,7 +83,7 @@ class IbcRecvPacketFlow(
 
         // query client from vault
         val clientId = Identifier(conn.state.data.end.clientId)
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
         refs.add(client)
 
         // create command and outputs

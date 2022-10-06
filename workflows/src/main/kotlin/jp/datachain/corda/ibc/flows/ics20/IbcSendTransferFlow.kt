@@ -5,11 +5,11 @@ import ibc.applications.transfer.v1.Tx
 import jp.datachain.corda.ibc.flows.util.queryIbcBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.CreateOutgoingPacket
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -40,7 +40,7 @@ class IbcSendTransferFlow(
 
         // query client from vault
         val clientId = Identifier(conn.state.data.end.clientId)
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
 
         // query bank from vault
         val bank = serviceHub.vaultService.queryIbcBank(baseId)!!

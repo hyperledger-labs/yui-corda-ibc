@@ -6,7 +6,7 @@ import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
 interface Header {
-    val header: Any
+    val anyHeader: Any
 
     fun clientType(): ClientType
     fun getHeight(): Client.Height

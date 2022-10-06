@@ -5,12 +5,11 @@ import ibc.lightclientd.corda.v1.Lightclientd
 import ibc.lightclientd.corda.v1.LightClientGrpc
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.ics20.toAcknowledgement
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.client.rpc.CordaRPCClient
-import net.corda.core.contracts.StateRef
-import net.corda.core.crypto.SecureHash
 import net.corda.core.utilities.NetworkHostAndPort
 
 class LightClient: LightClientGrpc.LightClientImplBase() {
@@ -32,7 +31,7 @@ class LightClient: LightClientGrpc.LightClientImplBase() {
     }
 
     private fun withClientState(state: Lightclientd.State, f: (cs: CordaClientState) -> Unit) {
-        val cs = CordaClientState(emptyList(), StateRef(SecureHash.zeroHash, 0), state.clientState, state.consensusState)
+        val cs = CordaClientState(state.clientState.pack(), state.consensusState.pack())
         f(cs)
     }
 

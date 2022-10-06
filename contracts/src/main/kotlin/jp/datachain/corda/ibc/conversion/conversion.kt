@@ -1,6 +1,8 @@
 package jp.datachain.corda.ibc.conversion
 
+import com.google.protobuf.Any
 import com.google.protobuf.ByteString
+import com.google.protobuf.Message
 import ibc.lightclients.corda.v1.BankProto
 import ibc.lightclients.corda.v1.CashBankProto
 import ibc.lightclients.corda.v1.CordaTypes
@@ -18,6 +20,9 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import java.security.PublicKey
+
+fun Message.pack() = Any.pack(this, "")!!
+inline fun<reified T: Message> Any.unpack() = this.unpack(T::class.java)!!
 
 fun SecureHash.into(): CordaTypes.SecureHash = CordaTypes.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
 fun CordaTypes.SecureHash.into() = SecureHash.SHA256(bytes.toByteArray())

@@ -113,9 +113,7 @@ executeOldTest:
 
 .PHONY: executeTest
 executeTest:
-	$(CLIENT) client create-clients \
-		--client-id-a corda-ibc-0 \
-		--client-id-b corda-ibc-0
+	$(CLIENT) client create-clients
 	$(CLIENT) connection handshake \
 		--client-id-a corda-ibc-0 \
 		--client-id-b corda-ibc-0 \

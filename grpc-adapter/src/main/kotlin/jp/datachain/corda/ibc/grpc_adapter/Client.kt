@@ -24,6 +24,7 @@ import ibc.applications.transfer.v1.MsgGrpc as TransferMsgGrpc
 import io.grpc.ManagedChannelBuilder
 import jp.datachain.corda.ibc.conversion.into
 import io.grpc.StatusRuntimeException
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.utilities.toHex
@@ -146,13 +147,19 @@ object Client {
 
         // createClient @ A
         clientTxServiceA.createClient(MsgCreateClient.newBuilder()
-                .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_A).build(), ""))
-                .setConsensusState(consensusStateB.consensusState)
+                .setClientState(Corda.ClientState.newBuilder().apply {
+                    baseId = hostB.baseId.into()
+                    notaryKey = hostB.notary.owningKey.into()
+                }.build().pack())
+                .setConsensusState(consensusStateB.anyConsensusState)
                 .build())
         // createClient @ B
         clientTxServiceB.createClient(MsgCreateClient.newBuilder()
-                .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_B).build(), ""))
-                .setConsensusState(consensusStateA.consensusState)
+                .setClientState(Corda.ClientState.newBuilder().apply {
+                    baseId = hostA.baseId.into()
+                    notaryKey = hostA.notary.owningKey.into()
+                }.build().pack())
+                .setConsensusState(consensusStateA.anyConsensusState)
                 .build())
 
         // connOpenInit @ A
