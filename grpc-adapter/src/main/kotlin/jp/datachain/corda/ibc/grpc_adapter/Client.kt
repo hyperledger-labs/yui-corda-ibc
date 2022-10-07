@@ -370,6 +370,7 @@ object Client {
             assert(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
         }
 
+        /*
         // recv acks for $10, $20 and $30 @ A
         repeat(3) {
             val seq = (it + 1).toLong()
@@ -399,6 +400,7 @@ object Client {
         }.build()).let {
             assert(it.sequencesCount == 0)
         }
+        */
 
         // check acks
         channelQueryServiceB.packetAcknowledgements(QueryPacketAcknowledgementsRequest.newBuilder().apply{
