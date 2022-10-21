@@ -28,14 +28,14 @@ object Server {
             opsReadyServices += BankService(hostname, port, username, password, it)
             opsReadyServices += CashBankService(hostname, port, username, password, it)
 
-            opsReadyServices += ClientTxService(hostname, port, username, password, it)
-            opsReadyServices += ConnectionTxService(hostname, port, username, password, it)
-            opsReadyServices += ChannelTxService(hostname, port, username, password, it)
-            opsReadyServices += TransferTxService(hostname, port, username, password, it)
+            opsReadyServices += ClientTxService(hostname, port, username, password)
+            opsReadyServices += ConnectionTxService(hostname, port, username, password)
+            opsReadyServices += ChannelTxService(hostname, port, username, password)
+            opsReadyServices += TransferTxService(hostname, port, username, password)
 
-            opsReadyServices += ClientQueryService(hostname, port, username, password, it)
-            opsReadyServices += ConnectionQueryService(hostname, port, username, password, it)
-            opsReadyServices += ChannelQueryService(hostname, port, username, password, it)
+            opsReadyServices += ClientQueryService(hostname, port, username, password)
+            opsReadyServices += ConnectionQueryService(hostname, port, username, password)
+            opsReadyServices += ChannelQueryService(hostname, port, username, password)
         }
         opsReadyServices.forEach{serverBuilder.addService(it as BindableService)}
 
