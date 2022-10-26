@@ -7,7 +7,7 @@ import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.conversion.into
+import jp.datachain.corda.ibc.conversion.toCorda
 import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics20.toCommitment
@@ -30,8 +30,8 @@ data class CordaClientState constructor(
 
     constructor(anyClientState: Any, anyConsensusState: Any) : this(anyClientState, mapOf(HEIGHT to anyConsensusState))
 
-    private val counterpartyBaseId = anyClientState.unpack<Corda.ClientState>().baseId.into()
-    private val counterpartyNotaryKey = anyClientState.unpack<Corda.ClientState>().notaryKey.into()
+    private val counterpartyBaseId = anyClientState.unpack<Corda.ClientState>().baseId.toCorda()
+    private val counterpartyNotaryKey = anyClientState.unpack<Corda.ClientState>().notaryKey.toCorda()
 
     override fun clientType() = ClientType.CordaClient
     override fun getLatestHeight() = HEIGHT

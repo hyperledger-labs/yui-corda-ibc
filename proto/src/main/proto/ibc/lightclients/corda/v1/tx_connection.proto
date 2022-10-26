@@ -7,50 +7,50 @@ import "ibc/core/connection/v1/tx.proto";
 import "ibc/lightclients/corda/v1/corda-types.proto";
 
 service ConnectionMsg {
-  rpc ConnectionOpenInit(MsgConnectionOpenInit) returns (MsgConnectionOpenInitResponse);
-  rpc ConnectionOpenTry(MsgConnectionOpenTry) returns (MsgConnectionOpenTryResponse);
-  rpc ConnectionOpenAck(MsgConnectionOpenAck) returns (MsgConnectionOpenAckResponse);
-  rpc ConnectionOpenConfirm(MsgConnectionOpenConfirm) returns (MsgConnectionOpenConfirmResponse);
+  rpc ConnectionOpenInit(ConnectionOpenInitRequest) returns (ConnectionOpenInitResponse);
+  rpc ConnectionOpenTry(ConnectionOpenTryRequest) returns (ConnectionOpenTryResponse);
+  rpc ConnectionOpenAck(ConnectionOpenAckRequest) returns (ConnectionOpenAckResponse);
+  rpc ConnectionOpenConfirm(ConnectionOpenConfirmRequest) returns (ConnectionOpenConfirmResponse);
 }
 
-message MsgConnectionOpenInit {
+message ConnectionOpenInitRequest {
   ibc.core.connection.v1.MsgConnectionOpenInit request = 1;
   StateRef base_id = 2;
 }
 
-message MsgConnectionOpenInitResponse {
+message ConnectionOpenInitResponse {
   ibc.core.connection.v1.MsgConnectionOpenInitResponse response = 1;
   bytes proof = 2;
   string connection_id = 3;
 }
 
-message MsgConnectionOpenTry {
+message ConnectionOpenTryRequest {
   ibc.core.connection.v1.MsgConnectionOpenTry request = 1;
   StateRef base_id = 2;
 }
 
-message MsgConnectionOpenTryResponse {
+message ConnectionOpenTryResponse {
   ibc.core.connection.v1.MsgConnectionOpenTryResponse response = 1;
   bytes proof = 2;
   string connection_id = 3;
 }
 
-message MsgConnectionOpenAck {
+message ConnectionOpenAckRequest {
   ibc.core.connection.v1.MsgConnectionOpenAck request = 1;
   StateRef base_id = 2;
 }
 
-message MsgConnectionOpenAckResponse {
+message ConnectionOpenAckResponse {
   ibc.core.connection.v1.MsgConnectionOpenAckResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgConnectionOpenConfirm {
+message ConnectionOpenConfirmRequest {
   ibc.core.connection.v1.MsgConnectionOpenConfirm request = 1;
   StateRef base_id = 2;
 }
 
-message MsgConnectionOpenConfirmResponse {
+message ConnectionOpenConfirmResponse {
   ibc.core.connection.v1.MsgConnectionOpenConfirmResponse response = 1;
   bytes proof = 2;
 }

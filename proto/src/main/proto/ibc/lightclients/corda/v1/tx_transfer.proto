@@ -7,15 +7,15 @@ import "ibc/applications/transfer/v1/tx.proto";
 import "ibc/lightclients/corda/v1/corda-types.proto";
 
 service TransferMsg {
-  rpc Transfer(MsgTransfer) returns (MsgTransferResponse);
+  rpc Transfer(TransferRequest) returns (TransferResponse);
 }
 
-message MsgTransfer {
+message TransferRequest {
   ibc.applications.transfer.v1.MsgTransfer request = 1;
   StateRef base_id = 2;
 }
 
-message MsgTransferResponse {
+message TransferResponse {
   ibc.applications.transfer.v1.MsgTransferResponse response = 1;
   bytes proof = 2;
   uint64 sequence = 3;

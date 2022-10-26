@@ -7,116 +7,116 @@ import "ibc/core/channel/v1/tx.proto";
 import "ibc/lightclients/corda/v1/corda-types.proto";
 
 service ChannelMsg {
-  rpc ChannelOpenInit(MsgChannelOpenInit) returns (MsgChannelOpenInitResponse);
-  rpc ChannelOpenTry(MsgChannelOpenTry) returns (MsgChannelOpenTryResponse);
-  rpc ChannelOpenAck(MsgChannelOpenAck) returns (MsgChannelOpenAckResponse);
-  rpc ChannelOpenConfirm(MsgChannelOpenConfirm) returns (MsgChannelOpenConfirmResponse);
-  rpc ChannelCloseInit(MsgChannelCloseInit) returns (MsgChannelCloseInitResponse);
-  rpc ChannelCloseConfirm(MsgChannelCloseConfirm) returns (MsgChannelCloseConfirmResponse);
-  rpc RecvPacket(MsgRecvPacket) returns (MsgRecvPacketResponse);
-  rpc Timeout(MsgTimeout) returns (MsgTimeoutResponse);
-  rpc TimeoutOnClose(MsgTimeoutOnClose) returns (MsgTimeoutOnCloseResponse);
-  rpc Acknowledgement(MsgAcknowledgement) returns (MsgAcknowledgementResponse);
+  rpc ChannelOpenInit(ChannelOpenInitRequest) returns (ChannelOpenInitResponse);
+  rpc ChannelOpenTry(ChannelOpenTryRequest) returns (ChannelOpenTryResponse);
+  rpc ChannelOpenAck(ChannelOpenAckRequest) returns (ChannelOpenAckResponse);
+  rpc ChannelOpenConfirm(ChannelOpenConfirmRequest) returns (ChannelOpenConfirmResponse);
+  rpc ChannelCloseInit(ChannelCloseInitRequest) returns (ChannelCloseInitResponse);
+  rpc ChannelCloseConfirm(ChannelCloseConfirmRequest) returns (ChannelCloseConfirmResponse);
+  rpc RecvPacket(RecvPacketRequest) returns (RecvPacketResponse);
+  rpc Timeout(TimeoutRequest) returns (TimeoutResponse);
+  rpc TimeoutOnClose(TimeoutOnCloseRequest) returns (TimeoutOnCloseResponse);
+  rpc Acknowledgement(AcknowledgementRequest) returns (AcknowledgementResponse);
 }
 
-message MsgChannelOpenInit {
+message ChannelOpenInitRequest {
   ibc.core.channel.v1.MsgChannelOpenInit request = 1;
   StateRef base_id = 2;
 }
 
-message MsgChannelOpenInitResponse {
+message ChannelOpenInitResponse {
   ibc.core.channel.v1.MsgChannelOpenInitResponse response = 1;
   bytes proof = 2;
   string channel_id = 3;
 }
 
-message MsgChannelOpenTry {
+message ChannelOpenTryRequest {
   ibc.core.channel.v1.MsgChannelOpenTry request = 1;
   StateRef base_id = 2;
 }
 
-message MsgChannelOpenTryResponse {
+message ChannelOpenTryResponse {
   ibc.core.channel.v1.MsgChannelOpenTryResponse response = 1;
   bytes proof = 2;
   string channel_id = 3;
 }
 
-message MsgChannelOpenAck {
+message ChannelOpenAckRequest {
   ibc.core.channel.v1.MsgChannelOpenAck request = 1;
   StateRef base_id = 2;
 }
 
-message MsgChannelOpenAckResponse {
+message ChannelOpenAckResponse {
   ibc.core.channel.v1.MsgChannelOpenAckResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgChannelOpenConfirm {
+message ChannelOpenConfirmRequest {
   ibc.core.channel.v1.MsgChannelOpenConfirm request = 1;
   StateRef base_id = 2;
 }
 
-message MsgChannelOpenConfirmResponse {
+message ChannelOpenConfirmResponse {
   ibc.core.channel.v1.MsgChannelOpenConfirmResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgChannelCloseInit {
+message ChannelCloseInitRequest {
   ibc.core.channel.v1.MsgChannelCloseInit request = 1;
   StateRef base_id = 2;
 }
 
-message MsgChannelCloseInitResponse {
+message ChannelCloseInitResponse {
   ibc.core.channel.v1.MsgChannelCloseInitResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgChannelCloseConfirm {
+message ChannelCloseConfirmRequest {
   ibc.core.channel.v1.MsgChannelCloseConfirm request = 1;
   StateRef base_id = 2;
 }
 
-message MsgChannelCloseConfirmResponse {
+message ChannelCloseConfirmResponse {
   ibc.core.channel.v1.MsgChannelCloseConfirmResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgRecvPacket {
+message RecvPacketRequest {
   ibc.core.channel.v1.MsgRecvPacket request = 1;
   StateRef base_id = 2;
 }
 
-message MsgRecvPacketResponse {
+message RecvPacketResponse {
   ibc.core.channel.v1.MsgRecvPacketResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgTimeout {
+message TimeoutRequest {
   ibc.core.channel.v1.MsgTimeout request = 1;
   StateRef base_id = 2;
 }
 
-message MsgTimeoutResponse {
+message TimeoutResponse {
   ibc.core.channel.v1.MsgTimeoutResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgTimeoutOnClose {
+message TimeoutOnCloseRequest {
   ibc.core.channel.v1.MsgTimeoutOnClose request = 1;
   StateRef base_id = 2;
 }
 
-message MsgTimeoutOnCloseResponse {
+message TimeoutOnCloseResponse {
   ibc.core.channel.v1.MsgTimeoutOnCloseResponse response = 1;
   bytes proof = 2;
 }
 
-message MsgAcknowledgement {
+message AcknowledgementRequest {
   ibc.core.channel.v1.MsgAcknowledgement request = 1;
   StateRef base_id = 2;
 }
 
-message MsgAcknowledgementResponse {
+message AcknowledgementResponse {
   ibc.core.channel.v1.MsgAcknowledgementResponse response = 1;
   bytes proof = 2;
 }

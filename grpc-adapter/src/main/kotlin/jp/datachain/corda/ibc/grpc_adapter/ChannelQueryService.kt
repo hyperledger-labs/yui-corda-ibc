@@ -4,21 +4,33 @@ import cosmos.base.query.v1beta1.Pagination
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.channel.v1.QueryOuterClass
 import ibc.lightclients.corda.v1.ChannelQueryGrpc
+import ibc.lightclients.corda.v1.CordaTypes
 import ibc.lightclients.corda.v1.QueryChannel
 import io.grpc.stub.StreamObserver
 import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.toProof
-import jp.datachain.corda.ibc.conversion.into
+import jp.datachain.corda.ibc.conversion.toCorda
 import jp.datachain.corda.ibc.ics20.toJson
+import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
+import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.vaultQueryBy
 import net.corda.core.node.services.vault.QueryCriteria
 
 class ChannelQueryService(host: String, port: Int, username: String, password: String): ChannelQueryGrpc.ChannelQueryImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
+
+    private fun resolveBaseId(baseId: CordaTypes.StateRef): StateRef {
+        return if (baseId == CordaTypes.StateRef.getDefaultInstance()) {
+            ops.vaultQuery(Host::class.java).states.single().state.data.baseId
+        } else {
+            baseId.toCorda()
+        }
+    }
+
     override fun channel(request: QueryChannel.QueryChannelRequest, responseObserver: StreamObserver<QueryChannel.QueryChannelResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.singleOrNull()
         if (stateAndRef != null) {
@@ -48,7 +60,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
 
     override fun packetCommitment(request: QueryChannel.QueryPacketCommitmentRequest, responseObserver: StreamObserver<QueryChannel.QueryPacketCommitmentResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)
@@ -68,7 +80,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
     override fun packetCommitments(request: QueryChannel.QueryPacketCommitmentsRequest, responseObserver: StreamObserver<QueryChannel.QueryPacketCommitmentsResponse>) {
         assert(request.request.pagination.key.isEmpty)
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)
@@ -102,7 +114,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
 
     override fun packetReceipt(request: QueryChannel.QueryPacketReceiptRequest, responseObserver: StreamObserver<QueryChannel.QueryPacketReceiptResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)
@@ -121,7 +133,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
 
     override fun packetAcknowledgement(request: QueryChannel.QueryPacketAcknowledgementRequest, responseObserver: StreamObserver<QueryChannel.QueryPacketAcknowledgementResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)
@@ -141,7 +153,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
     override fun packetAcknowledgements(request: QueryChannel.QueryPacketAcknowledgementsRequest, responseObserver: StreamObserver<QueryChannel.QueryPacketAcknowledgementsResponse>) {
         assert(request.request.pagination.key.isEmpty)
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)
@@ -176,7 +188,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
 
     override fun unreceivedPackets(request: QueryChannel.QueryUnreceivedPacketsRequest, responseObserver: StreamObserver<QueryChannel.QueryUnreceivedPacketsResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)
@@ -193,7 +205,7 @@ class ChannelQueryService(host: String, port: Int, username: String, password: S
 
     override fun unreceivedAcks(request: QueryChannel.QueryUnreceivedAcksRequest, responseObserver: StreamObserver<QueryChannel.QueryUnreceivedAcksResponse>) {
         val stateAndRef = ops.vaultQueryBy<IbcChannel>(QueryCriteria.LinearStateQueryCriteria(
-                externalId = listOf(request.baseId.into().toString()),
+                externalId = listOf(resolveBaseId(request.baseId).toString()),
                 uuid = listOf(Identifier(request.request.channelId).toUUID())
         )).states.single()
         assert(stateAndRef.state.data.portId.id == request.request.portId)

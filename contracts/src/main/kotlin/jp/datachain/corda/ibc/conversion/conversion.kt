@@ -24,16 +24,16 @@ import java.security.PublicKey
 fun Message.pack() = Any.pack(this, "")!!
 inline fun<reified T: Message> Any.unpack() = this.unpack(T::class.java)!!
 
-fun SecureHash.into(): CordaTypes.SecureHash = CordaTypes.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
-fun CordaTypes.SecureHash.into() = SecureHash.SHA256(bytes.toByteArray())
+fun SecureHash.toProto(): CordaTypes.SecureHash = CordaTypes.SecureHash.newBuilder().setBytes(ByteString.copyFrom(bytes)).build()
+fun CordaTypes.SecureHash.toCorda() = SecureHash.SHA256(bytes.toByteArray())
 
-fun StateRef.into(): CordaTypes.StateRef = CordaTypes.StateRef.newBuilder()
-        .setTxhash(txhash.into())
+fun StateRef.toProto(): CordaTypes.StateRef = CordaTypes.StateRef.newBuilder()
+        .setTxhash(txhash.toProto())
         .setIndex(index)
         .build()
-fun CordaTypes.StateRef.into() = StateRef(txhash.into(), index)
+fun CordaTypes.StateRef.toCorda() = StateRef(txhash.toCorda(), index)
 
-fun CordaX500Name.into(): CordaTypes.CordaX500Name = CordaTypes.CordaX500Name.newBuilder()
+fun CordaX500Name.toProto(): CordaTypes.CordaX500Name = CordaTypes.CordaX500Name.newBuilder()
         .setCommonName(commonName.orEmpty())
         .setCountry(country)
         .setLocality(locality)
@@ -41,7 +41,7 @@ fun CordaX500Name.into(): CordaTypes.CordaX500Name = CordaTypes.CordaX500Name.ne
         .setOrganisationUnit(organisationUnit.orEmpty())
         .setState(state.orEmpty())
         .build()
-fun CordaTypes.CordaX500Name.into() = CordaX500Name(
+fun CordaTypes.CordaX500Name.toCorda() = CordaX500Name(
         commonName = if (commonName == "") null else commonName,
         country = country,
         locality = locality,
@@ -50,103 +50,103 @@ fun CordaTypes.CordaX500Name.into() = CordaX500Name(
         state = if (state == "") null else state
 )
 
-fun PublicKey.into(): CordaTypes.PublicKey = CordaTypes.PublicKey.newBuilder()
+fun PublicKey.toProto(): CordaTypes.PublicKey = CordaTypes.PublicKey.newBuilder()
         .setEncoded(ByteString.copyFrom(this.encoded))
         .build()
-fun CordaTypes.PublicKey.into() = Crypto.decodePublicKey(encoded.toByteArray())
+fun CordaTypes.PublicKey.toCorda() = Crypto.decodePublicKey(encoded.toByteArray())
 
-fun Party.into(): CordaTypes.Party = CordaTypes.Party.newBuilder()
-        .setName(name.into())
-        .setOwningKey(owningKey.into())
+fun Party.toProto(): CordaTypes.Party = CordaTypes.Party.newBuilder()
+        .setName(name.toProto())
+        .setOwningKey(owningKey.toProto())
         .build()
-fun CordaTypes.Party.into() = Party(name.into(), owningKey.into())
+fun CordaTypes.Party.toCorda() = Party(name.toCorda(), owningKey.toCorda())
 
-fun Host.into(): HostProto.Host = HostProto.Host.newBuilder()
-        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
-        .setBaseId(baseId.into())
-        .setNotary(notary.into())
+fun Host.toProto(): HostProto.Host = HostProto.Host.newBuilder()
+        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).toProto()})
+        .setBaseId(baseId.toProto())
+        .setNotary(notary.toProto())
         .setNextClientSequence(nextClientSequence)
         .setNextConnectionSequence(nextConnectionSequence)
         .setNextChannelSequence(nextChannelSequence)
         .addAllBankIds(bankIds.map{it.id})
         .build()
-fun HostProto.Host.into() = Host(
-        participants = participantsList.map{it.into()},
-        baseId = baseId.into(),
-        notary = notary.into(),
+fun HostProto.Host.toCorda() = Host(
+        participants = participantsList.map{it.toCorda()},
+        baseId = baseId.toCorda(),
+        notary = notary.toCorda(),
         nextClientSequence = nextClientSequence,
         nextConnectionSequence = nextConnectionSequence,
         nextChannelSequence = nextChannelSequence,
         bankIds = bankIdsList.map(::Identifier)
 )
 
-fun MutableMap<Address, Amount>.into(): BankProto.Bank.BalanceMapPerDenom = BankProto.Bank.BalanceMapPerDenom.newBuilder()
+fun MutableMap<Address, Amount>.toProto(): BankProto.Bank.BalanceMapPerDenom = BankProto.Bank.BalanceMapPerDenom.newBuilder()
         .putAllPubkeyToAmount(this
                 .mapKeys{it.key.toBech32()}
                 .mapValues{it.value.toString()})
         .build()
-fun BankProto.Bank.BalanceMapPerDenom.into() = pubkeyToAmountMap
+fun BankProto.Bank.BalanceMapPerDenom.toCorda() = pubkeyToAmountMap
         .mapKeys{Address.fromBech32(it.key)}
         .mapValues{Amount.fromString(it.value)}
         .toMutableMap()
 
-fun MutableMap<Denom, MutableMap<Address, Amount>>.into(): BankProto.Bank.BalanceMap = BankProto.Bank.BalanceMap.newBuilder()
+fun MutableMap<Denom, MutableMap<Address, Amount>>.toProto(): BankProto.Bank.BalanceMap = BankProto.Bank.BalanceMap.newBuilder()
         .putAllDenomToMap(this
                 .mapKeys{it.key.toString()}
-                .mapValues{it.value.into()})
+                .mapValues{it.value.toProto()})
         .build()
-fun BankProto.Bank.BalanceMap.into() = denomToMapMap
+fun BankProto.Bank.BalanceMap.toCorda() = denomToMapMap
         .mapKeys{Denom.fromString(it.key)}
-        .mapValues{it.value.into()}
+        .mapValues{it.value.toCorda()}
         .toMutableMap()
 
-fun MutableMap<String, Denom>.into(): BankProto.Bank.IbcDenomMap = BankProto.Bank.IbcDenomMap.newBuilder()
+fun MutableMap<String, Denom>.toProto(): BankProto.Bank.IbcDenomMap = BankProto.Bank.IbcDenomMap.newBuilder()
         .putAllIbcDenomToDenom(this
                 .mapKeys{it.key}
                 .mapValues{it.value.toString()})
         .build()
-fun BankProto.Bank.IbcDenomMap.into() = ibcDenomToDenomMap
+fun BankProto.Bank.IbcDenomMap.toCorda() = ibcDenomToDenomMap
         .mapValues{Denom.fromString(it.value)}
         .toMutableMap()
 
-fun Bank.into(): BankProto.Bank = BankProto.Bank.newBuilder()
-        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
-        .setBaseId(baseId.into())
-        .setAllocated(allocated.into())
-        .setLocked(locked.into())
-        .setMinted(minted.into())
-        .setDenoms(denoms.into())
+fun Bank.toProto(): BankProto.Bank = BankProto.Bank.newBuilder()
+        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).toProto()})
+        .setBaseId(baseId.toProto())
+        .setAllocated(allocated.toProto())
+        .setLocked(locked.toProto())
+        .setMinted(minted.toProto())
+        .setDenoms(denoms.toProto())
         .build()
-fun BankProto.Bank.into() = Bank(
-        participants = participantsList.map{it.into()},
-        baseId = baseId.into(),
-        allocated = allocated.into(),
-        locked = locked.into(),
-        minted = minted.into(),
-        denoms = denoms.into())
+fun BankProto.Bank.toCorda() = Bank(
+        participants = participantsList.map{it.toCorda()},
+        baseId = baseId.toCorda(),
+        allocated = allocated.toCorda(),
+        locked = locked.toCorda(),
+        minted = minted.toCorda(),
+        denoms = denoms.toCorda())
 
-fun Map<Denom, Amount>.into(): CashBankProto.CashBank.SupplyMap = CashBankProto.CashBank.SupplyMap.newBuilder()
+fun Map<Denom, Amount>.toProto(): CashBankProto.CashBank.SupplyMap = CashBankProto.CashBank.SupplyMap.newBuilder()
         .putAllDenomToAmount(this
                 .mapKeys{it.key.toString()}
                 .mapValues{it.value.toString()})
         .build()
-fun CashBankProto.CashBank.SupplyMap.into(): Map<Denom, Amount> = denomToAmountMap
+fun CashBankProto.CashBank.SupplyMap.toCorda(): Map<Denom, Amount> = denomToAmountMap
         .mapKeys{Denom.fromString(it.key)}
         .mapValues{Amount.fromString(it.value)}
 
-fun Map<String, Denom>.into(): CashBankProto.CashBank.IbcDenomMap = CashBankProto.CashBank.IbcDenomMap.newBuilder()
+fun Map<String, Denom>.toProto(): CashBankProto.CashBank.IbcDenomMap = CashBankProto.CashBank.IbcDenomMap.newBuilder()
         .putAllIbcDenomToDenom(this
                 .mapKeys{it.key}
                 .mapValues{it.value.toString()})
         .build()
-fun CashBankProto.CashBank.IbcDenomMap.into(): Map<String, Denom> = ibcDenomToDenomMap
+fun CashBankProto.CashBank.IbcDenomMap.toCorda(): Map<String, Denom> = ibcDenomToDenomMap
         .mapValues{Denom.fromString(it.value)}
         .toMap()
 
-fun CashBank.into(): CashBankProto.CashBank = CashBankProto.CashBank.newBuilder()
-        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).into()})
-        .setBaseId(baseId.into())
-        .setOwner(owner.into())
-        .setSupply(supply.into())
-        .setDenoms(denoms.into())
+fun CashBank.toProto(): CashBankProto.CashBank = CashBankProto.CashBank.newBuilder()
+        .addAllParticipants(participants.map{Party(it.nameOrNull()!!, it.owningKey).toProto()})
+        .setBaseId(baseId.toProto())
+        .setOwner(owner.toProto())
+        .setSupply(supply.toProto())
+        .setDenoms(denoms.toProto())
         .build()

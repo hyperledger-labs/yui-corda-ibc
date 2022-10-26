@@ -5,39 +5,56 @@ option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-cl
 option java_outer_classname = "CashBankProto";
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
-import "google/protobuf/empty.proto";
 
 service CashBankService {
   // transactions
-  rpc CreateCashBank (CreateCashBankRequest) returns (google.protobuf.Empty);
-  rpc AllocateCash (AllocateCashRequest) returns (google.protobuf.Empty);
+  rpc CreateCashBank (CreateCashBankRequest) returns (CreateCashBankResponse);
+  rpc AllocateCash (AllocateCashRequest) returns (AllocateCashResponse);
 
   // queries
-  rpc QueryCashBank (google.protobuf.Empty) returns (CashBank);
-}
-
-message CreateCashBankRequest {
-  string bank_address = 1;
-}
-
-message AllocateCashRequest {
-  string owner_address = 1;
-  string currency = 2;
-  string amount = 3;
+  rpc QueryCashBank (QueryCashBankRequest) returns (QueryCashBankResponse);
 }
 
 message CashBank {
   message SupplyMap {
-    map<string, string> denomToAmount = 1;
+    map<string, string> denom_to_amount = 1;
   }
 
   message IbcDenomMap {
-    map<string, string> ibcDenomToDenom = 1;
+    map<string, string> ibc_denom_to_denom = 1;
   }
 
   repeated Party participants = 1;
-  StateRef baseId = 2;
+  StateRef base_id = 2;
   Party owner = 3;
   SupplyMap supply = 4;
   IbcDenomMap denoms = 5;
+}
+
+message CreateCashBankRequest {
+  StateRef base_id = 1;
+  string bank_address = 2;
+}
+
+message CreateCashBankResponse {
+  bytes proof = 1;
+}
+
+message AllocateCashRequest {
+  StateRef base_id = 1;
+  string owner_address = 2;
+  string currency = 3;
+  string amount = 4;
+}
+
+message AllocateCashResponse {
+  bytes proof = 1;
+}
+
+message QueryCashBankRequest {
+  StateRef base_id = 1;
+}
+
+message QueryCashBankResponse {
+  CashBank cash_bank = 1;
 }
