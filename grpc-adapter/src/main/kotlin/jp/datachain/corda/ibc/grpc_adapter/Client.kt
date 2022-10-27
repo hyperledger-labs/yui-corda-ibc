@@ -239,7 +239,7 @@ object Client {
         // chanOpenInit @ A
         channelTxServiceA.channelOpenInit(TxChannel.ChannelOpenInitRequest.newBuilder().apply {
             requestBuilder.portId = PORT_A
-            requestBuilder.channelBuilder.ordering = Order.ORDER_ORDERED
+            requestBuilder.channelBuilder.ordering = Order.ORDER_UNORDERED
             requestBuilder.channelBuilder.counterpartyBuilder.portId = PORT_B
             requestBuilder.channelBuilder.counterpartyBuilder.channelId = ""
             requestBuilder.channelBuilder.addAllConnectionHops(listOf(CONNECTION_A))
@@ -253,7 +253,7 @@ object Client {
         }.build()).response
         channelTxServiceB.channelOpenTry(TxChannel.ChannelOpenTryRequest.newBuilder().apply {
             requestBuilder.portId = PORT_B
-            requestBuilder.channelBuilder.ordering = Order.ORDER_ORDERED
+            requestBuilder.channelBuilder.ordering = Order.ORDER_UNORDERED
             requestBuilder.channelBuilder.counterpartyBuilder.portId = PORT_A
             requestBuilder.channelBuilder.counterpartyBuilder.channelId = CHANNEL_A
             requestBuilder.channelBuilder.addAllConnectionHops(listOf(CONNECTION_B))
