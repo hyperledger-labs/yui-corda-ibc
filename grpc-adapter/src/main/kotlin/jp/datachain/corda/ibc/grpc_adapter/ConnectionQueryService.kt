@@ -36,7 +36,7 @@ class ConnectionQueryService(host: String, port: Int, username: String, password
             val stx = ops.internalFindVerifiedTransaction(stateAndRef.ref.txhash)!!
             stx.verifyRequiredSignatures()
             val proof = stx.toProof()
-            assert(proof.toSignedTransaction().tx.outputsOfType<IbcConnection>().single() == stateAndRef.state.data)
+            require(proof.toSignedTransaction().coreTransaction.outputsOfType<IbcConnection>().single() == stateAndRef.state.data)
             val response = QueryOuterClass.QueryConnectionResponse.newBuilder()
                     .setConnection(stateAndRef.state.data.end)
                     .setProof(proof.toByteString())
