@@ -9,8 +9,8 @@ import ibc.core.connection.v1.Tx.*
 import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.contracts.Ibc
-import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.conversion.pack
+import jp.datachain.corda.ibc.conversion.toProto
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toJson
@@ -158,8 +158,8 @@ class IbcContractTests {
         val counterpartyHost = label(HOST, counterparty).outputStateAndRef<Host>()
         val msg = MsgCreateClient.newBuilder()
                 .setClientState(Corda.ClientState.newBuilder().apply {
-                    baseId = counterpartyHost.state.data.baseId.into()
-                    notaryKey = counterpartyHost.state.data.notary.owningKey.into()
+                    baseId = counterpartyHost.state.data.baseId.toProto()
+                    notaryKey = counterpartyHost.state.data.notary.owningKey.toProto()
                 }.build().pack())
                 .setConsensusState(counterpartyHost.state.data.let{it.getConsensusState(it.getCurrentHeight())}.anyConsensusState)
                 .build()

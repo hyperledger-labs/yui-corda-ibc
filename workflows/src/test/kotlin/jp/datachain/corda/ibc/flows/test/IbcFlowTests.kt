@@ -9,8 +9,8 @@ import ibc.core.client.v1.Tx.*
 import ibc.core.connection.v1.Tx.*
 import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.clients.corda.HEIGHT
-import jp.datachain.corda.ibc.conversion.into
 import jp.datachain.corda.ibc.conversion.pack
+import jp.datachain.corda.ibc.conversion.toProto
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Denom
@@ -77,8 +77,8 @@ class IbcFlowTests {
 
         val clientAid = ibcA.createClient(MsgCreateClient.newBuilder().apply{
             clientState = Corda.ClientState.newBuilder().apply{
-                baseId = ibcB.host().baseId.into()
-                notaryKey = ibcB.host().notary.owningKey.into()
+                baseId = ibcB.host().baseId.toProto()
+                notaryKey = ibcB.host().notary.owningKey.toProto()
             }.build().pack()
             consensusState = ibcB.host().getConsensusState(HEIGHT).anyConsensusState
         }.build())
@@ -86,8 +86,8 @@ class IbcFlowTests {
 
         val clientBid = ibcB.createClient(MsgCreateClient.newBuilder().apply{
             clientState = Corda.ClientState.newBuilder().apply{
-                baseId = ibcA.host().baseId.into()
-                notaryKey = ibcA.host().notary.owningKey.into()
+                baseId = ibcA.host().baseId.toProto()
+                notaryKey = ibcA.host().notary.owningKey.toProto()
             }.build().pack()
             consensusState = ibcA.host().getConsensusState(HEIGHT).anyConsensusState
         }.build())
@@ -332,16 +332,16 @@ class IbcFlowTests {
         // create clients on both chains
         val clientAid = ibcA.createClient(MsgCreateClient.newBuilder().apply {
             clientState = Corda.ClientState.newBuilder().apply{
-                baseId = ibcB.host().baseId.into()
-                notaryKey = ibcB.host().notary.owningKey.into()
+                baseId = ibcB.host().baseId.toProto()
+                notaryKey = ibcB.host().notary.owningKey.toProto()
             }.build().pack()
             consensusState = ibcB.host().getConsensusState(HEIGHT).anyConsensusState
         }.build())
 
         val clientBid = ibcB.createClient(MsgCreateClient.newBuilder().apply {
             clientState = Corda.ClientState.newBuilder().apply{
-                baseId = ibcA.host().baseId.into()
-                notaryKey = ibcA.host().notary.owningKey.into()
+                baseId = ibcA.host().baseId.toProto()
+                notaryKey = ibcA.host().notary.owningKey.toProto()
             }.build().pack()
             consensusState = ibcA.host().getConsensusState(HEIGHT).anyConsensusState
         }.build())
@@ -577,16 +577,16 @@ class IbcFlowTests {
         // create clients on both chains
         val clientAid = ibcAlice.createClient(MsgCreateClient.newBuilder().apply {
             clientState = Corda.ClientState.newBuilder().apply{
-                baseId = ibcBob.host().baseId.into()
-                notaryKey = ibcBob.host().notary.owningKey.into()
+                baseId = ibcBob.host().baseId.toProto()
+                notaryKey = ibcBob.host().notary.owningKey.toProto()
             }.build().pack()
             consensusState = ibcBob.host().getConsensusState(HEIGHT).anyConsensusState
         }.build())
 
         val clientBid = ibcBob.createClient(MsgCreateClient.newBuilder().apply {
             clientState = Corda.ClientState.newBuilder().apply{
-                baseId = ibcAlice.host().baseId.into()
-                notaryKey = ibcAlice.host().notary.owningKey.into()
+                baseId = ibcAlice.host().baseId.toProto()
+                notaryKey = ibcAlice.host().notary.owningKey.toProto()
             }.build().pack()
             consensusState = ibcAlice.host().getConsensusState(HEIGHT).anyConsensusState
         }.build())
