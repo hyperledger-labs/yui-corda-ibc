@@ -11,14 +11,18 @@ async fn connect(
 
 pub async fn create_bank(endpoint: String) -> Result<()> {
     let mut client = connect(endpoint).await?;
-    client.create_bank(()).await?;
+    client
+        .create_bank(v1corda::CreateBankRequest { base_id: None })
+        .await?;
     Ok(())
 }
 
 pub async fn query_bank(endpoint: String) -> Result<v1corda::Bank> {
     let mut client = connect(endpoint).await?;
-    let bank = client.query_bank(()).await?;
-    Ok(bank.into_inner())
+    let bank = client
+        .query_bank(v1corda::QueryBankRequest { base_id: None })
+        .await?;
+    Ok(bank.into_inner().bank.unwrap())
 }
 
 pub async fn allocate_fund(
@@ -30,6 +34,7 @@ pub async fn allocate_fund(
     let mut client = connect(endpoint).await?;
     client
         .allocate_fund(v1corda::AllocateFundRequest {
+            base_id: None,
             owner: party_name,
             denom,
             amount,

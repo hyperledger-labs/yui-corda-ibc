@@ -57,10 +57,7 @@ prepareHost:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10003 user1 test 9999' &
 	while ! nc -z localhost 9999; do sleep 1; done
 	$(CLIENT) genesis create-genesis -e http://localhost:9999 -p PartyA,Notary > base-hash.txt
-	$(CLIENT) admin shutdown         -e http://localhost:9999
-	./gradlew :grpc-adapter:runServer --args "localhost 10003 user1 test 9999 `cat base-hash.txt`" &
-	while ! nc -z localhost 9999; do sleep 1; done
-	$(CLIENT) host create-host           -e http://localhost:9999
+	$(CLIENT) host create-host           -e http://localhost:9999 -b `cat base-hash.txt`
 	$(CLIENT) cash-bank create-cash-bank -e http://localhost:9999 -b `$(CLIENT) node address-from-name -e http://localhost:9999 -n Notary`
 	$(CLIENT) cash-bank allocate-cash    -e http://localhost:9999 -o `$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA` -c USD -a 100
 	$(CLIENT) admin shutdown             -e http://localhost:9999
