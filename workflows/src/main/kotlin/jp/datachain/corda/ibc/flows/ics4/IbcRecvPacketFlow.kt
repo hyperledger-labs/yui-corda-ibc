@@ -56,7 +56,7 @@ class IbcRecvPacketFlow(
                 if (source && !denom.removePrefix().isVoucher()) {
                     val denom = denom.removePrefix()
                     val issuer = serviceHub.identityService.partyFromKey(denom.issuerKey)!!
-                    val amount = AMOUNT(packet.amount, denom.currency).issuedBy(PartyAndReference(issuer, OpaqueBytes(ByteArray(1))))
+                    val amount = AMOUNT(packet.amount.toLong(), denom.currency).issuedBy(PartyAndReference(issuer, OpaqueBytes(ByteArray(1))))
                     val coins = serviceHub.vaultService.prepareCoins<Cash.State, Issued<Currency>>(
                             ownerKey = cashBank.state.data.owner.owningKey,
                             amount = amount)

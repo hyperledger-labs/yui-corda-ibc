@@ -10,7 +10,7 @@ class ModuleCallbacks: ModuleCallbacks {
     override fun onRecvPacket(ctx: Context, packet: ChannelOuterClass.Packet): ChannelOuterClass.Acknowledgement {
         val data = packet.data.toFungibleTokenPacketData()
         val denom = Denom.fromString(data.denom)
-        val amount = Amount.fromLong(data.amount)
+        val amount = Amount.fromString(data.amount)
         val receiver = Address.fromBech32(data.receiver)
 
         val ackBuilder = ChannelOuterClass.Acknowledgement.newBuilder()
@@ -53,7 +53,7 @@ class ModuleCallbacks: ModuleCallbacks {
     private fun refundTokens(ctx: Context, packet: ChannelOuterClass.Packet) {
         val data = packet.data.toFungibleTokenPacketData()
         val denom = Denom.fromString(data.denom)
-        val amount = Amount.fromLong(data.amount)
+        val amount = Amount.fromString(data.amount)
         val sender = Address.fromBech32(data.sender)
 
         val source = !denom.hasPrefix(Identifier(packet.sourcePort), Identifier(packet.sourceChannel))

@@ -248,12 +248,12 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         assert(packet.timeoutTimestamp == msg.timeoutTimestamp)
         val data = packet.data.toFungibleTokenPacketData()
         assert(data.denom == msg.token.denom)
-        assert(data.amount == msg.token.amount.toLong())
+        assert(data.amount == msg.token.amount)
         assert(data.sender == msg.sender)
         assert(data.receiver == msg.receiver)
         val bank = stx.tx.outputsOfType<Bank>().single()
         val denom = Denom.fromString(data.denom)
-        val amount = Amount.fromLong(data.amount)
+        val amount = Amount.fromString(data.amount)
         val sender = Address.fromBech32(msg.sender)
         if (denom.hasPrefix(Identifier(msg.sourcePort), Identifier(msg.sourceChannel))) {
             assert(prevBank.burn(sender, denom, amount) == bank)
@@ -280,7 +280,7 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
                 else
                     Denom.fromString(msg.token.denom)
         assert(data.denom == denom.toString())
-        assert(data.amount == msg.token.amount.toLong())
+        assert(data.amount == msg.token.amount)
         assert(data.sender == msg.sender)
         assert(data.receiver == msg.receiver)
     }

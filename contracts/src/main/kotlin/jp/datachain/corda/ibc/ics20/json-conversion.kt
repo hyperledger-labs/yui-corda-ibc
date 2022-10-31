@@ -3,7 +3,7 @@ package jp.datachain.corda.ibc.ics20
 import com.google.protobuf.ByteString
 import com.google.protobuf.MessageOrBuilder
 import com.google.protobuf.util.JsonFormat
-import ibc.applications.transfer.v1.Transfer
+import ibc.applications.transfer.v2.Packet.FungibleTokenPacketData
 import ibc.core.channel.v1.ChannelOuterClass
 import net.corda.core.crypto.SecureHash
 import java.nio.ByteBuffer
@@ -16,7 +16,7 @@ fun <T: MessageOrBuilder> T.toJson() = ByteString.copyFromUtf8(JsonFormat.printe
     .omittingInsignificantWhitespace()
     .print(this))!!
 
-fun ByteString.toFungibleTokenPacketData() = Transfer.FungibleTokenPacketData.newBuilder().also{
+fun ByteString.toFungibleTokenPacketData() = FungibleTokenPacketData.newBuilder().also{
     JsonFormat.parser().merge(toStringUtf8(), it)
 }.build()!!
 
