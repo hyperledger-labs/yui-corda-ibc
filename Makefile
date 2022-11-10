@@ -139,3 +139,14 @@ testFlows:
 .PHONY: testRelayerBuild
 testRelayerBuild:
 	cd go/cmd/relayer && go build . && rm relayer
+
+.PHONY: dumpInfos
+dumpInfos:
+	$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA > party-a-addr.txt
+	$(CLIENT) node address-from-name -e http://localhost:9998 -n PartyA > party-b-addr.txt
+	$(CLIENT) host query-host > host.txt
+	$(CLIENT) cash-bank query-cash-bank > cash-bank.txt
+	$(CLIENT) client query-client-state -c corda-ibc-0 -o client.dat
+	$(CLIENT) client query-consensus-state -c corda-ibc-0 -n 0 -h 1 -o consensus.dat
+	$(CLIENT) connection query-connection -c connection-0 -o connection.dat
+	$(CLIENT) channel query-channel -c channel-0 -o channel.dat

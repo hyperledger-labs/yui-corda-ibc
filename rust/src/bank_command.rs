@@ -32,7 +32,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
         Opt::CreateBank { endpoint } => bank::create_bank(endpoint).await?,
         Opt::QueryBank { endpoint } => {
             let bank = bank::query_bank(endpoint).await?;
-            println!("{:?}", bank);
+            println!("{:#?}", bank);
         }
         Opt::AllocateFund {
             endpoint,

@@ -25,7 +25,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
         } => host::create_host(endpoint, base_id_hash).await?,
         Opt::QueryHost { endpoint } => {
             let host = host::query_host(endpoint).await?;
-            println!("{:?}", host);
+            println!("{:#?}", host);
         }
     }
     Ok(())
