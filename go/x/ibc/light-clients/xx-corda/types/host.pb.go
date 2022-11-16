@@ -6,12 +6,11 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -120,8 +119,188 @@ func (m *Host) GetBankIds() []string {
 	return nil
 }
 
+type CreateHostRequest struct {
+	BaseId *StateRef `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+}
+
+func (m *CreateHostRequest) Reset()         { *m = CreateHostRequest{} }
+func (m *CreateHostRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateHostRequest) ProtoMessage()    {}
+func (*CreateHostRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49a17a943ca31e48, []int{1}
+}
+func (m *CreateHostRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateHostRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateHostRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CreateHostRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateHostRequest.Merge(m, src)
+}
+func (m *CreateHostRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateHostRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateHostRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateHostRequest proto.InternalMessageInfo
+
+func (m *CreateHostRequest) GetBaseId() *StateRef {
+	if m != nil {
+		return m.BaseId
+	}
+	return nil
+}
+
+type CreateHostResponse struct {
+	Proof []byte `protobuf:"bytes,1,opt,name=proof,proto3" json:"proof,omitempty"`
+}
+
+func (m *CreateHostResponse) Reset()         { *m = CreateHostResponse{} }
+func (m *CreateHostResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateHostResponse) ProtoMessage()    {}
+func (*CreateHostResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49a17a943ca31e48, []int{2}
+}
+func (m *CreateHostResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateHostResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateHostResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CreateHostResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateHostResponse.Merge(m, src)
+}
+func (m *CreateHostResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateHostResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateHostResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateHostResponse proto.InternalMessageInfo
+
+func (m *CreateHostResponse) GetProof() []byte {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+type QueryHostRequest struct {
+	BaseId *StateRef `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+}
+
+func (m *QueryHostRequest) Reset()         { *m = QueryHostRequest{} }
+func (m *QueryHostRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryHostRequest) ProtoMessage()    {}
+func (*QueryHostRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49a17a943ca31e48, []int{3}
+}
+func (m *QueryHostRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryHostRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryHostRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryHostRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryHostRequest.Merge(m, src)
+}
+func (m *QueryHostRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryHostRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryHostRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryHostRequest proto.InternalMessageInfo
+
+func (m *QueryHostRequest) GetBaseId() *StateRef {
+	if m != nil {
+		return m.BaseId
+	}
+	return nil
+}
+
+type QueryHostResponse struct {
+	Host *Host `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+}
+
+func (m *QueryHostResponse) Reset()         { *m = QueryHostResponse{} }
+func (m *QueryHostResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryHostResponse) ProtoMessage()    {}
+func (*QueryHostResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_49a17a943ca31e48, []int{4}
+}
+func (m *QueryHostResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryHostResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryHostResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryHostResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryHostResponse.Merge(m, src)
+}
+func (m *QueryHostResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryHostResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryHostResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryHostResponse proto.InternalMessageInfo
+
+func (m *QueryHostResponse) GetHost() *Host {
+	if m != nil {
+		return m.Host
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Host)(nil), "ibc.lightclients.corda.v1.Host")
+	proto.RegisterType((*CreateHostRequest)(nil), "ibc.lightclients.corda.v1.CreateHostRequest")
+	proto.RegisterType((*CreateHostResponse)(nil), "ibc.lightclients.corda.v1.CreateHostResponse")
+	proto.RegisterType((*QueryHostRequest)(nil), "ibc.lightclients.corda.v1.QueryHostRequest")
+	proto.RegisterType((*QueryHostResponse)(nil), "ibc.lightclients.corda.v1.QueryHostResponse")
 }
 
 func init() {
@@ -129,35 +308,38 @@ func init() {
 }
 
 var fileDescriptor_49a17a943ca31e48 = []byte{
-	// 434 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0xc1, 0x6f, 0xd3, 0x30,
-	0x14, 0xc6, 0x9b, 0xb5, 0xb4, 0xd4, 0xe5, 0x64, 0xa4, 0xa9, 0x2b, 0x52, 0x88, 0x80, 0x43, 0x25,
-	0x54, 0x9b, 0x15, 0x09, 0x71, 0xd8, 0x69, 0x1b, 0x12, 0x3b, 0x31, 0xd2, 0x1b, 0x97, 0xc9, 0x71,
-	0xde, 0x12, 0x8b, 0xcc, 0x0e, 0xf6, 0x4b, 0xd5, 0xfc, 0x17, 0xf0, 0x5f, 0x71, 0xdc, 0x91, 0x23,
-	0x6a, 0xff, 0x0a, 0x6e, 0x28, 0x0e, 0xab, 0x40, 0x5a, 0xcb, 0x2d, 0xf6, 0xf7, 0xfd, 0x5e, 0xac,
-	0xf7, 0x7d, 0xe4, 0x85, 0x4a, 0x24, 0x2f, 0x54, 0x96, 0xa3, 0x2c, 0x14, 0x68, 0x74, 0x5c, 0x1a,
-	0x9b, 0x0a, 0xbe, 0x3c, 0xe6, 0xb9, 0x71, 0xc8, 0x4a, 0x6b, 0xd0, 0xd0, 0x23, 0x95, 0x48, 0xf6,
-	0xb7, 0x8b, 0x79, 0x17, 0x5b, 0x1e, 0x4f, 0x5e, 0xee, 0x1e, 0xe0, 0x3f, 0x66, 0x58, 0x97, 0xe0,
-	0xda, 0x39, 0x93, 0x27, 0x99, 0x31, 0x59, 0x01, 0xdc, 0x9f, 0x92, 0xea, 0x9a, 0xc3, 0x4d, 0x89,
-	0x75, 0x2b, 0x3e, 0xfb, 0x75, 0x40, 0x7a, 0xef, 0x8d, 0x43, 0x7a, 0x4e, 0x1e, 0x95, 0xc2, 0xa2,
-	0x92, 0xaa, 0x14, 0x1a, 0xdd, 0x38, 0x88, 0xba, 0xd3, 0xd1, 0x3c, 0x62, 0x3b, 0x1f, 0xc1, 0x2e,
-	0x85, 0xc5, 0x3a, 0xfe, 0x87, 0xa2, 0x27, 0x64, 0x90, 0x08, 0x07, 0x57, 0x2a, 0x1d, 0x1f, 0x44,
-	0xc1, 0x74, 0x34, 0x7f, 0xbe, 0x67, 0xc0, 0x02, 0x05, 0x42, 0x0c, 0xd7, 0x71, 0xbf, 0x61, 0x2e,
-	0x52, 0xfa, 0x96, 0xf4, 0xb5, 0x41, 0x61, 0xeb, 0x71, 0xd7, 0xc3, 0xff, 0xff, 0xfb, 0x1f, 0x3f,
-	0x65, 0x84, 0x6a, 0x58, 0xe1, 0x99, 0x77, 0x2d, 0xe0, 0x4b, 0x05, 0x5a, 0xc2, 0xb8, 0x17, 0x05,
-	0xd3, 0x5e, 0x7c, 0x8f, 0x42, 0xdf, 0x90, 0x43, 0x7f, 0x6b, 0xb4, 0x06, 0x89, 0xca, 0xe8, 0x2d,
-	0xf3, 0xc0, 0x33, 0x3b, 0x54, 0xfa, 0x8a, 0x3c, 0xf6, 0x4a, 0x2e, 0xb4, 0x86, 0x62, 0x0b, 0xf5,
-	0x3d, 0x74, 0x9f, 0x44, 0x8f, 0xc8, 0xc3, 0x44, 0xe8, 0xcf, 0x57, 0x2a, 0x75, 0xe3, 0x41, 0xd4,
-	0x9d, 0x0e, 0xe3, 0x41, 0x73, 0xbe, 0x48, 0xdd, 0xfc, 0x5b, 0x40, 0x46, 0xcd, 0xee, 0x17, 0x60,
-	0x97, 0x4a, 0x02, 0x3d, 0x21, 0xe4, 0xcc, 0x82, 0x40, 0xf0, 0x81, 0x1c, 0xb2, 0x36, 0x37, 0x76,
-	0x97, 0x1b, 0x7b, 0xd7, 0xe4, 0x36, 0xd9, 0x71, 0x4f, 0xcf, 0xc9, 0xf0, 0x63, 0x05, 0xb6, 0xde,
-	0x0b, 0x3f, 0xdd, 0xb3, 0xd1, 0x06, 0x3c, 0xc5, 0xef, 0xeb, 0x30, 0xb8, 0x5d, 0x87, 0xc1, 0xcf,
-	0x75, 0x18, 0x7c, 0xdd, 0x84, 0x9d, 0xdb, 0x4d, 0xd8, 0xf9, 0xb1, 0x09, 0x3b, 0xa7, 0xc3, 0x46,
-	0xbf, 0x6c, 0xc6, 0x7d, 0xfa, 0x90, 0x29, 0xcc, 0xab, 0x84, 0x49, 0x73, 0xc3, 0xf3, 0xba, 0x04,
-	0x5b, 0x40, 0x9a, 0x81, 0x9d, 0x15, 0x22, 0x71, 0xbc, 0xae, 0xd4, 0xac, 0x2d, 0x61, 0x53, 0xd2,
-	0xcc, 0xf0, 0x15, 0xdf, 0xb6, 0x75, 0x76, 0x57, 0xd7, 0xd5, 0xaa, 0xf5, 0x70, 0x5f, 0xd4, 0xa4,
-	0xef, 0x9f, 0xf9, 0xfa, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0xcf, 0x41, 0xd9, 0x59, 0x19, 0x03,
-	0x00, 0x00,
+	// 488 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0x31, 0x6f, 0xd3, 0x40,
+	0x14, 0xc7, 0xeb, 0x26, 0x4d, 0xc8, 0x4b, 0x07, 0x7a, 0x20, 0xe4, 0x66, 0x30, 0x56, 0x60, 0x88,
+	0x68, 0x6d, 0xd3, 0x54, 0x42, 0x0c, 0x4c, 0x2d, 0x43, 0x3b, 0x91, 0x3a, 0x1b, 0x4b, 0x75, 0xb6,
+	0x5f, 0xe2, 0x13, 0xe6, 0xce, 0xdc, 0x5d, 0xa2, 0xf8, 0x5b, 0xf0, 0xb1, 0x18, 0x3b, 0x32, 0x56,
+	0xc9, 0xa7, 0x60, 0x43, 0x3e, 0x87, 0x10, 0xa0, 0x09, 0x45, 0x62, 0xf3, 0xf3, 0xfb, 0xff, 0xfe,
+	0xcf, 0xf7, 0x7c, 0x7f, 0x78, 0xce, 0xa2, 0x38, 0xc8, 0xd8, 0x38, 0xd5, 0x71, 0xc6, 0x90, 0x6b,
+	0x15, 0xc4, 0x42, 0x26, 0x34, 0x98, 0x9e, 0x04, 0xa9, 0x50, 0xda, 0xcf, 0xa5, 0xd0, 0x82, 0x1c,
+	0xb2, 0x28, 0xf6, 0xd7, 0x55, 0xbe, 0x51, 0xf9, 0xd3, 0x93, 0xce, 0xd1, 0x66, 0x03, 0xf3, 0xe0,
+	0xe9, 0x22, 0x47, 0x55, 0xf9, 0x74, 0xbf, 0xed, 0x42, 0xfd, 0x42, 0x28, 0x4d, 0xde, 0xc2, 0x7e,
+	0x4e, 0xa5, 0x66, 0x31, 0xcb, 0x29, 0xd7, 0xca, 0xb6, 0xdc, 0x5a, 0xaf, 0xdd, 0x77, 0xfd, 0x8d,
+	0x73, 0xfc, 0x01, 0x95, 0xba, 0x08, 0x7f, 0xa1, 0xc8, 0x1b, 0x68, 0x46, 0x54, 0xe1, 0x35, 0x4b,
+	0xec, 0x5d, 0xd7, 0xea, 0xb5, 0xfb, 0xcf, 0xb6, 0x18, 0x0c, 0x35, 0xd5, 0x18, 0xe2, 0x28, 0x6c,
+	0x94, 0xcc, 0x65, 0x42, 0x5e, 0x43, 0x83, 0x0b, 0x4d, 0x65, 0x61, 0xd7, 0x0c, 0xfc, 0xf7, 0xe9,
+	0x4b, 0x3d, 0xf1, 0x81, 0x70, 0x9c, 0xe9, 0x73, 0xa3, 0x1a, 0xe2, 0xa7, 0x09, 0xf2, 0x18, 0xed,
+	0xba, 0x6b, 0xf5, 0xea, 0xe1, 0x1d, 0x1d, 0xf2, 0x0a, 0x9e, 0x98, 0xb7, 0x82, 0x73, 0x8c, 0x35,
+	0x13, 0x7c, 0xc5, 0xec, 0x19, 0x66, 0x43, 0x97, 0xbc, 0x84, 0x47, 0xa6, 0x93, 0x52, 0xce, 0x31,
+	0x5b, 0x41, 0x0d, 0x03, 0xdd, 0xd5, 0x22, 0x87, 0xf0, 0x20, 0xa2, 0xfc, 0xc3, 0x35, 0x4b, 0x94,
+	0xdd, 0x74, 0x6b, 0xbd, 0x56, 0xd8, 0x2c, 0xeb, 0xcb, 0x44, 0x75, 0xaf, 0xe0, 0xe0, 0x5c, 0x22,
+	0xd5, 0x58, 0xfe, 0x80, 0xb0, 0x04, 0x94, 0x5e, 0xdf, 0xa0, 0xf5, 0xcf, 0x1b, 0xec, 0xbe, 0x00,
+	0xb2, 0x6e, 0xa9, 0x72, 0xc1, 0x15, 0x92, 0xc7, 0xb0, 0x97, 0x4b, 0x21, 0x46, 0xc6, 0x71, 0x3f,
+	0xac, 0x8a, 0xee, 0x00, 0x1e, 0x5e, 0x4d, 0x50, 0x16, 0xff, 0x6f, 0xfa, 0x05, 0x1c, 0xac, 0x39,
+	0x2e, 0x87, 0x9f, 0x42, 0xbd, 0xbc, 0xb7, 0x4b, 0xbf, 0xa7, 0x5b, 0xfc, 0x0c, 0x66, 0xc4, 0xfd,
+	0x5b, 0x0b, 0xda, 0x65, 0x39, 0x44, 0x39, 0x65, 0x31, 0x12, 0x06, 0xf0, 0xf3, 0x5c, 0xe4, 0x78,
+	0x8b, 0xc9, 0x1f, 0x1b, 0xed, 0x78, 0xf7, 0x54, 0x2f, 0xbf, 0x77, 0x04, 0xad, 0xd5, 0x21, 0xc8,
+	0xd1, 0x16, 0xf6, 0xf7, 0xe5, 0x75, 0x8e, 0xef, 0x27, 0xae, 0xe6, 0x9c, 0xe9, 0x2f, 0x73, 0xc7,
+	0xba, 0x99, 0x3b, 0xd6, 0xed, 0xdc, 0xb1, 0x3e, 0x2f, 0x9c, 0x9d, 0x9b, 0x85, 0xb3, 0xf3, 0x75,
+	0xe1, 0xec, 0x9c, 0xb5, 0x4a, 0xdd, 0xa0, 0x8c, 0xe7, 0xfb, 0x77, 0x63, 0xa6, 0xd3, 0x49, 0xe4,
+	0xc7, 0xe2, 0x63, 0x90, 0x16, 0x39, 0xca, 0x0c, 0x93, 0x31, 0x4a, 0x2f, 0xa3, 0x91, 0x0a, 0x8a,
+	0x09, 0xf3, 0xaa, 0x44, 0x97, 0x89, 0x1f, 0x8b, 0x60, 0x16, 0xac, 0xa2, 0xef, 0xfd, 0xc8, 0xfe,
+	0x6c, 0x56, 0x69, 0x02, 0x93, 0xfa, 0xa8, 0x61, 0x62, 0x7f, 0xfa, 0x3d, 0x00, 0x00, 0xff, 0xff,
+	0xba, 0xd3, 0x11, 0x7f, 0x66, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -173,9 +355,9 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type HostServiceClient interface {
 	// transactions
-	CreateHost(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateHost(ctx context.Context, in *CreateHostRequest, opts ...grpc.CallOption) (*CreateHostResponse, error)
 	// queries
-	QueryHost(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Host, error)
+	QueryHost(ctx context.Context, in *QueryHostRequest, opts ...grpc.CallOption) (*QueryHostResponse, error)
 }
 
 type hostServiceClient struct {
@@ -186,8 +368,8 @@ func NewHostServiceClient(cc grpc1.ClientConn) HostServiceClient {
 	return &hostServiceClient{cc}
 }
 
-func (c *hostServiceClient) CreateHost(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *hostServiceClient) CreateHost(ctx context.Context, in *CreateHostRequest, opts ...grpc.CallOption) (*CreateHostResponse, error) {
+	out := new(CreateHostResponse)
 	err := c.cc.Invoke(ctx, "/ibc.lightclients.corda.v1.HostService/CreateHost", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -195,8 +377,8 @@ func (c *hostServiceClient) CreateHost(ctx context.Context, in *emptypb.Empty, o
 	return out, nil
 }
 
-func (c *hostServiceClient) QueryHost(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Host, error) {
-	out := new(Host)
+func (c *hostServiceClient) QueryHost(ctx context.Context, in *QueryHostRequest, opts ...grpc.CallOption) (*QueryHostResponse, error) {
+	out := new(QueryHostResponse)
 	err := c.cc.Invoke(ctx, "/ibc.lightclients.corda.v1.HostService/QueryHost", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -207,19 +389,19 @@ func (c *hostServiceClient) QueryHost(ctx context.Context, in *emptypb.Empty, op
 // HostServiceServer is the server API for HostService service.
 type HostServiceServer interface {
 	// transactions
-	CreateHost(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	CreateHost(context.Context, *CreateHostRequest) (*CreateHostResponse, error)
 	// queries
-	QueryHost(context.Context, *emptypb.Empty) (*Host, error)
+	QueryHost(context.Context, *QueryHostRequest) (*QueryHostResponse, error)
 }
 
 // UnimplementedHostServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedHostServiceServer struct {
 }
 
-func (*UnimplementedHostServiceServer) CreateHost(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedHostServiceServer) CreateHost(ctx context.Context, req *CreateHostRequest) (*CreateHostResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHost not implemented")
 }
-func (*UnimplementedHostServiceServer) QueryHost(ctx context.Context, req *emptypb.Empty) (*Host, error) {
+func (*UnimplementedHostServiceServer) QueryHost(ctx context.Context, req *QueryHostRequest) (*QueryHostResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryHost not implemented")
 }
 
@@ -228,7 +410,7 @@ func RegisterHostServiceServer(s grpc1.Server, srv HostServiceServer) {
 }
 
 func _HostService_CreateHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(CreateHostRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -240,13 +422,13 @@ func _HostService_CreateHost_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/ibc.lightclients.corda.v1.HostService/CreateHost",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostServiceServer).CreateHost(ctx, req.(*emptypb.Empty))
+		return srv.(HostServiceServer).CreateHost(ctx, req.(*CreateHostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _HostService_QueryHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(QueryHostRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -258,7 +440,7 @@ func _HostService_QueryHost_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/ibc.lightclients.corda.v1.HostService/QueryHost",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostServiceServer).QueryHost(ctx, req.(*emptypb.Empty))
+		return srv.(HostServiceServer).QueryHost(ctx, req.(*QueryHostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -365,6 +547,141 @@ func (m *Host) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *CreateHostRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateHostRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CreateHostRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		{
+			size, err := m.BaseId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintHost(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CreateHostResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateHostResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CreateHostResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Proof) > 0 {
+		i -= len(m.Proof)
+		copy(dAtA[i:], m.Proof)
+		i = encodeVarintHost(dAtA, i, uint64(len(m.Proof)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryHostRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryHostRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryHostRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		{
+			size, err := m.BaseId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintHost(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryHostResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryHostResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryHostResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Host != nil {
+		{
+			size, err := m.Host.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintHost(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintHost(dAtA []byte, offset int, v uint64) int {
 	offset -= sovHost(v)
 	base := offset
@@ -410,6 +727,58 @@ func (m *Host) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovHost(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *CreateHostRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		l = m.BaseId.Size()
+		n += 1 + l + sovHost(uint64(l))
+	}
+	return n
+}
+
+func (m *CreateHostResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Proof)
+	if l > 0 {
+		n += 1 + l + sovHost(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryHostRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		l = m.BaseId.Size()
+		n += 1 + l + sovHost(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryHostResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Host != nil {
+		l = m.Host.Size()
+		n += 1 + l + sovHost(uint64(l))
 	}
 	return n
 }
@@ -650,10 +1019,349 @@ func (m *Host) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthHost
 			}
-			if (iNdEx + skippy) < 0 {
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CreateHostRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowHost
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateHostRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateHostRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BaseId == nil {
+				m.BaseId = &StateRef{}
+			}
+			if err := m.BaseId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipHost(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthHost
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CreateHostResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowHost
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateHostResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateHostResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proof = append(m.Proof[:0], dAtA[iNdEx:postIndex]...)
+			if m.Proof == nil {
+				m.Proof = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipHost(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthHost
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryHostRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowHost
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryHostRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryHostRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BaseId == nil {
+				m.BaseId = &StateRef{}
+			}
+			if err := m.BaseId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipHost(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthHost
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryHostResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowHost
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryHostResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryHostResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Host", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Host == nil {
+				m.Host = &Host{}
+			}
+			if err := m.Host.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipHost(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthHost
 			}
 			if (iNdEx + skippy) > l {

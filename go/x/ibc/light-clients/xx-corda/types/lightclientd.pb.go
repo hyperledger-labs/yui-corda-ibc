@@ -7,12 +7,12 @@ import (
 	context "context"
 	fmt "fmt"
 	types2 "github.com/cosmos/cosmos-sdk/codec/types"
-	types "github.com/cosmos/ibc-go/modules/core/02-client/types"
-	types3 "github.com/cosmos/ibc-go/modules/core/03-connection/types"
-	types4 "github.com/cosmos/ibc-go/modules/core/04-channel/types"
-	types1 "github.com/cosmos/ibc-go/modules/core/23-commitment/types"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	types "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	types3 "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
+	types4 "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	types1 "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -2567,10 +2567,7 @@ func (m *State) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -2830,10 +2827,7 @@ func (m *VerifyClientStateRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -3129,10 +3123,7 @@ func (m *VerifyClientConsensusStateRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -3392,10 +3383,7 @@ func (m *VerifyConnectionStateRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -3687,10 +3675,7 @@ func (m *VerifyChannelStateRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -4037,10 +4022,7 @@ func (m *VerifyPacketCommitmentRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -4387,10 +4369,7 @@ func (m *VerifyPacketAcknowledgementRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -4703,10 +4682,7 @@ func (m *VerifyPacketReceiptAbsenceRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {
@@ -5019,10 +4995,7 @@ func (m *VerifyNextSequenceRecvRequest) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthLightclientd
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthLightclientd
 			}
 			if (iNdEx + skippy) > l {

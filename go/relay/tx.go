@@ -5,10 +5,11 @@ import (
 	"log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
-	conntypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
-	chantypes "github.com/cosmos/ibc-go/modules/core/04-channel/types"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	conntypes "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
+	chantypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	cordatypes "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types"
 )
 
 func (c *Chain) SendMsgs(msgs []sdk.Msg) ([]byte, error) {
@@ -66,7 +67,9 @@ func (c *Chain) Send(msgs []sdk.Msg) bool {
 func (cic *cordaIbcClient) createClient(msg *clienttypes.MsgCreateClient) error {
 	_, err := cic.clientTx.CreateClient(
 		context.TODO(),
-		msg,
+		&cordatypes.CreateClientRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -74,7 +77,9 @@ func (cic *cordaIbcClient) createClient(msg *clienttypes.MsgCreateClient) error 
 func (cic *cordaIbcClient) connOpenInit(msg *conntypes.MsgConnectionOpenInit) error {
 	_, err := cic.connTx.ConnectionOpenInit(
 		context.TODO(),
-		msg,
+		&cordatypes.ConnectionOpenInitRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -82,7 +87,9 @@ func (cic *cordaIbcClient) connOpenInit(msg *conntypes.MsgConnectionOpenInit) er
 func (cic *cordaIbcClient) connOpenTry(msg *conntypes.MsgConnectionOpenTry) error {
 	_, err := cic.connTx.ConnectionOpenTry(
 		context.TODO(),
-		msg,
+		&cordatypes.ConnectionOpenTryRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -90,7 +97,9 @@ func (cic *cordaIbcClient) connOpenTry(msg *conntypes.MsgConnectionOpenTry) erro
 func (cic *cordaIbcClient) connOpenAck(msg *conntypes.MsgConnectionOpenAck) error {
 	_, err := cic.connTx.ConnectionOpenAck(
 		context.TODO(),
-		msg,
+		&cordatypes.ConnectionOpenAckRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -98,7 +107,9 @@ func (cic *cordaIbcClient) connOpenAck(msg *conntypes.MsgConnectionOpenAck) erro
 func (cic *cordaIbcClient) connOpenConfirm(msg *conntypes.MsgConnectionOpenConfirm) error {
 	_, err := cic.connTx.ConnectionOpenConfirm(
 		context.TODO(),
-		msg,
+		&cordatypes.ConnectionOpenConfirmRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -106,7 +117,9 @@ func (cic *cordaIbcClient) connOpenConfirm(msg *conntypes.MsgConnectionOpenConfi
 func (cic *cordaIbcClient) chanOpenInit(msg *chantypes.MsgChannelOpenInit) error {
 	_, err := cic.chanTx.ChannelOpenInit(
 		context.TODO(),
-		msg,
+		&cordatypes.ChannelOpenInitRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -114,7 +127,9 @@ func (cic *cordaIbcClient) chanOpenInit(msg *chantypes.MsgChannelOpenInit) error
 func (cic *cordaIbcClient) chanOpenTry(msg *chantypes.MsgChannelOpenTry) error {
 	_, err := cic.chanTx.ChannelOpenTry(
 		context.TODO(),
-		msg,
+		&cordatypes.ChannelOpenTryRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -122,7 +137,9 @@ func (cic *cordaIbcClient) chanOpenTry(msg *chantypes.MsgChannelOpenTry) error {
 func (cic *cordaIbcClient) chanOpenAck(msg *chantypes.MsgChannelOpenAck) error {
 	_, err := cic.chanTx.ChannelOpenAck(
 		context.TODO(),
-		msg,
+		&cordatypes.ChannelOpenAckRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -130,7 +147,9 @@ func (cic *cordaIbcClient) chanOpenAck(msg *chantypes.MsgChannelOpenAck) error {
 func (cic *cordaIbcClient) chanOpenConfirm(msg *chantypes.MsgChannelOpenConfirm) error {
 	_, err := cic.chanTx.ChannelOpenConfirm(
 		context.TODO(),
-		msg,
+		&cordatypes.ChannelOpenConfirmRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -138,7 +157,9 @@ func (cic *cordaIbcClient) chanOpenConfirm(msg *chantypes.MsgChannelOpenConfirm)
 func (cic *cordaIbcClient) recvPacket(msg *chantypes.MsgRecvPacket) error {
 	_, err := cic.chanTx.RecvPacket(
 		context.TODO(),
-		msg,
+		&cordatypes.RecvPacketRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -146,7 +167,9 @@ func (cic *cordaIbcClient) recvPacket(msg *chantypes.MsgRecvPacket) error {
 func (cic *cordaIbcClient) acknowledgement(msg *chantypes.MsgAcknowledgement) error {
 	_, err := cic.chanTx.Acknowledgement(
 		context.TODO(),
-		msg,
+		&cordatypes.AcknowledgementRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
@@ -154,7 +177,9 @@ func (cic *cordaIbcClient) acknowledgement(msg *chantypes.MsgAcknowledgement) er
 func (cic *cordaIbcClient) transfer(msg *transfertypes.MsgTransfer) error {
 	_, err := cic.transferTx.Transfer(
 		context.TODO(),
-		msg,
+		&cordatypes.TransferRequest{
+			Request: msg,
+		},
 	)
 	return err
 }
