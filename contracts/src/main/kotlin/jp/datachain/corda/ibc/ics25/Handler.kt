@@ -30,16 +30,16 @@ import jp.datachain.corda.ibc.types.Timestamp
 object Handler {
     fun createClient(ctx: Context, msg: ClientTx.MsgCreateClient) {
         val host = ctx.getInput<Host>()
-        val clientState: ClientState = when {
-            msg.clientState.`is`(Corda.ClientState::class.java) -> CordaClientState(msg.clientState, msg.consensusState)
-            msg.clientState.`is`(Fabric.ClientState::class.java) -> FabricClientState(msg.clientState, msg.consensusState)
+        val (clientState: ClientState, clientType: ClientType) = when {
+            msg.clientState.`is`(Corda.ClientState::class.java) -> Pair(CordaClientState(msg.clientState, msg.consensusState), ClientType.CordaClient)
+            msg.clientState.`is`(Fabric.ClientState::class.java) -> Pair(FabricClientState(msg.clientState, msg.consensusState), ClientType.FabricClient)
             msg.clientState.`is`(Tendermint.ClientState::class.java) -> throw NotImplementedError()
             msg.clientState.`is`(Solomachine.ClientState::class.java) -> throw NotImplementedError()
             msg.clientState.`is`(Localhost.ClientState::class.java) -> throw NotImplementedError()
             else -> throw IllegalArgumentException()
         }
 
-        val (nextHost, clientId) = host.generateClientIdentifier(ClientType.CordaClient)
+        val (nextHost, clientId) = host.generateClientIdentifier(clientType)
         val client = IbcClientState(host, clientId, clientState.anyClientState, clientState.anyConsensusStates)
         ctx.addOutput(nextHost)
         ctx.addOutput(client)
