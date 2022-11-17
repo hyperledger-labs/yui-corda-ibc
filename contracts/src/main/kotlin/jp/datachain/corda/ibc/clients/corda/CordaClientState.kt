@@ -7,42 +7,31 @@ import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.conversion.toCorda
+import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics20.toCommitment
 import jp.datachain.corda.ibc.ics23.CommitmentProof
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.StateRef
-import net.corda.core.identity.AbstractParty
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationFactory
 
 @BelongsToContract(Ibc::class)
 data class CordaClientState constructor(
-    override val participants: List<AbstractParty>,
-    override val baseId: StateRef,
-    val cordaClientState: Corda.ClientState,
-    val cordaConsensusState: Corda.ConsensusState
+        override val anyClientState: Any,
+        override val anyConsensusStates: Map<Client.Height, Any>
 ) : ClientState {
-    override val id get() = Identifier(cordaClientState.id)
-    override val clientState get() = Any.pack(Corda.ClientState.getDefaultInstance()!!, "")!!
-    override val consensusStates get() = mapOf(HEIGHT to CordaConsensusState(cordaConsensusState))
+    override val consensusStates = anyConsensusStates.mapValues{kv -> CordaConsensusState(kv.value)}
 
-    constructor(host: Host, id: Identifier, cordaClientState: Corda.ClientState, cordaConsensusState: Corda.ConsensusState) : this(
-        host.participants,
-        host.baseId,
-        cordaClientState,
-        cordaConsensusState
-    ) {
-        require(id.id == cordaClientState.id)
-    }
+    constructor(anyClientState: Any, anyConsensusState: Any) : this(anyClientState, mapOf(HEIGHT to anyConsensusState))
 
-    private val counterpartyBaseId get() = CordaConsensusState(cordaConsensusState).baseId
-    private val counterpartyNotaryKey get() = CordaConsensusState(cordaConsensusState).notaryKey
+    private val counterpartyBaseId = anyClientState.unpack<Corda.ClientState>().baseId.toCorda()
+    private val counterpartyNotaryKey = anyClientState.unpack<Corda.ClientState>().notaryKey.toCorda()
 
     override fun clientType() = ClientType.CordaClient
     override fun getLatestHeight() = HEIGHT
@@ -50,8 +39,7 @@ data class CordaClientState constructor(
     override fun getProofSpecs() = throw NotImplementedError()
 
     override fun initialize(consState: ConsensusState) {
-        require(consState is CordaConsensusState &&
-                consState.cordaConsensusState == cordaConsensusState)
+        require(consState == consensusStates[HEIGHT]!!)
     }
 
     override fun status() = Status.Active
@@ -120,7 +108,7 @@ data class CordaClientState constructor(
                 .withLenientCarpenter()
                 .withCustomSerializers(serializers)
         val outputs = SerializationFactory.defaultFactory.withCurrentContext(context) {
-            proof.toSignedTransaction().tx.outputsOfType<T>()
+            proof.toSignedTransaction().coreTransaction.outputsOfType<T>()
         }
         return outputs.single()
     }
@@ -135,10 +123,10 @@ data class CordaClientState constructor(
         verifyHeight(height)
         verifyNotaryKey(proof)
 
-        val includedState = extractState<ClientState>(proof)
+        val includedState = extractState<IbcClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched client base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched client id: ${includedState.id} != $counterpartyClientIdentifier"}
-        require(includedState.clientState == clientState){"unmatched client state: ${includedState.clientState} != $clientState"}
+        require(includedState.anyClientState == clientState){"unmatched client state: ${includedState.anyClientState} != $clientState"}
     }
 
     override fun verifyClientConsensusState(
@@ -152,10 +140,10 @@ data class CordaClientState constructor(
         verifyHeight(height)
         verifyNotaryKey(proof)
 
-        val includedState = extractState<ClientState>(proof)
+        val includedState = extractState<IbcClientState>(proof)
         require(includedState.baseId == counterpartyBaseId){"unmatched consensus base id: ${includedState.baseId} != $counterpartyBaseId"}
         require(includedState.id == counterpartyClientIdentifier){"unmatched consensus id: ${includedState.id} != $counterpartyClientIdentifier"}
-        require(includedState.consensusStates[consensusHeight]?.consensusState == consensusState){"unmatched consensus state: ${includedState.consensusStates[consensusHeight]?.consensusState} != $consensusState"}
+        require(includedState.anyConsensusStates[consensusHeight] == consensusState){"unmatched consensus state: ${includedState.anyConsensusStates[consensusHeight]} != $consensusState"}
     }
 
     override fun verifyConnectionState(

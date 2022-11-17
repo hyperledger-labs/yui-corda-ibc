@@ -51,7 +51,7 @@ class ModuleCallbacks: ModuleCallbacks {
             val denom = denom.addPath(Identifier(packet.destinationPort), Identifier(packet.destinationChannel))
 
             // mint voucher
-            val (bank, voucher) = bank.recordDenom(denom).mint(receiver, denom, Amount.fromLong(quantity))
+            val (bank, voucher) = bank.recordDenom(denom).mint(receiver, denom, Amount.fromString(quantity))
             ctx.addOutput(bank)
             ctx.addOutput(voucher)
         }
@@ -104,7 +104,7 @@ class ModuleCallbacks: ModuleCallbacks {
             require(denom.isVoucher())
 
             // re-mint voucher
-            val (bank, voucher) = bank.mint(sender, denom, Amount.fromLong(quantity))
+            val (bank, voucher) = bank.mint(sender, denom, Amount.fromString(quantity))
             ctx.addOutput(bank)
             ctx.addOutput(voucher)
         }

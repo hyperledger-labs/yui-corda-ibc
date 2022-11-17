@@ -1,0 +1,60 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+
+import "ibc/core/connection/v1/query.proto";
+import "ibc/lightclients/corda/v1/corda-types.proto";
+
+service ConnectionQuery {
+  rpc Connection(QueryConnectionRequest) returns (QueryConnectionResponse);
+  rpc Connections(QueryConnectionsRequest) returns (QueryConnectionsResponse);
+  rpc ClientConnections(QueryClientConnectionsRequest) returns (QueryClientConnectionsResponse);
+  rpc ConnectionClientState(QueryConnectionClientStateRequest) returns (QueryConnectionClientStateResponse);
+  rpc ConnectionConsensusState(QueryConnectionConsensusStateRequest) returns (QueryConnectionConsensusStateResponse);
+}
+
+message QueryConnectionRequest {
+  ibc.core.connection.v1.QueryConnectionRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryConnectionResponse {
+  ibc.core.connection.v1.QueryConnectionResponse response = 1;
+}
+
+message QueryConnectionsRequest {
+  ibc.core.connection.v1.QueryConnectionsRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryConnectionsResponse {
+  ibc.core.connection.v1.QueryConnectionsResponse response = 1;
+}
+
+message QueryClientConnectionsRequest {
+  ibc.core.connection.v1.QueryClientConnectionsRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryClientConnectionsResponse {
+  ibc.core.connection.v1.QueryClientConnectionsResponse response = 1;
+}
+
+message QueryConnectionClientStateRequest {
+  ibc.core.connection.v1.QueryConnectionClientStateRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryConnectionClientStateResponse {
+  ibc.core.connection.v1.QueryConnectionClientStateResponse response = 1;
+}
+
+message QueryConnectionConsensusStateRequest {
+  ibc.core.connection.v1.QueryConnectionConsensusStateRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryConnectionConsensusStateResponse {
+  ibc.core.connection.v1.QueryConnectionConsensusStateResponse response = 1;
+}

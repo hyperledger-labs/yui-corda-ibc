@@ -9,14 +9,26 @@ async fn connect(
     Ok(client)
 }
 
-pub async fn create_host(endpoint: String) -> Result<()> {
+pub async fn create_host(endpoint: String, base_id_hash: String) -> Result<()> {
     let mut client = connect(endpoint).await?;
-    client.create_host(()).await?;
+    let base_id = v1corda::StateRef {
+        txhash: Some(v1corda::SecureHash {
+            bytes: hex::decode(base_id_hash).unwrap(),
+        }),
+        index: 0,
+    };
+    client
+        .create_host(v1corda::CreateHostRequest {
+            base_id: Some(base_id),
+        })
+        .await?;
     Ok(())
 }
 
 pub async fn query_host(endpoint: String) -> Result<v1corda::Host> {
     let mut client = connect(endpoint).await?;
-    let host = client.query_host(()).await?;
-    Ok(host.into_inner())
+    let host = client
+        .query_host(v1corda::QueryHostRequest { base_id: None })
+        .await?;
+    Ok(host.into_inner().host.unwrap())
 }

@@ -1,0 +1,55 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+
+import "ibc/core/client/v1/tx.proto";
+import "ibc/lightclients/corda/v1/corda-types.proto";
+
+service ClientMsg {
+  rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+  rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse);
+  rpc UpgradeClient(UpgradeClientRequest) returns (UpgradeClientResponse);
+  rpc SubmitMisbehaviour(SubmitMisbehaviourRequest) returns (SubmitMisbehaviourResponse);
+}
+
+message CreateClientRequest {
+  ibc.core.client.v1.MsgCreateClient request = 1;
+  StateRef base_id = 2;
+}
+
+message CreateClientResponse {
+  ibc.core.client.v1.MsgCreateClientResponse response = 1;
+  bytes proof = 2;
+  string client_id = 3;
+}
+
+message UpdateClientRequest {
+  ibc.core.client.v1.MsgUpdateClient request = 1;
+  StateRef base_id = 2;
+}
+
+message UpdateClientResponse {
+  ibc.core.client.v1.MsgUpdateClientResponse response = 1;
+  bytes proof = 2;
+}
+
+message UpgradeClientRequest {
+  ibc.core.client.v1.MsgUpgradeClient request = 1;
+  StateRef base_id = 2;
+}
+
+message UpgradeClientResponse {
+  ibc.core.client.v1.MsgUpgradeClientResponse response = 1;
+  bytes proof = 2;
+}
+
+message SubmitMisbehaviourRequest {
+  ibc.core.client.v1.MsgSubmitMisbehaviour request = 1;
+  StateRef base_id = 2;
+}
+
+message SubmitMisbehaviourResponse {
+  ibc.core.client.v1.MsgSubmitMisbehaviourResponse response = 1;
+  bytes proof = 2;
+}

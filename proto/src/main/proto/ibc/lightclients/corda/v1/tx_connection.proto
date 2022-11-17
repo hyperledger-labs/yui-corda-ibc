@@ -1,0 +1,56 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+
+import "ibc/core/connection/v1/tx.proto";
+import "ibc/lightclients/corda/v1/corda-types.proto";
+
+service ConnectionMsg {
+  rpc ConnectionOpenInit(ConnectionOpenInitRequest) returns (ConnectionOpenInitResponse);
+  rpc ConnectionOpenTry(ConnectionOpenTryRequest) returns (ConnectionOpenTryResponse);
+  rpc ConnectionOpenAck(ConnectionOpenAckRequest) returns (ConnectionOpenAckResponse);
+  rpc ConnectionOpenConfirm(ConnectionOpenConfirmRequest) returns (ConnectionOpenConfirmResponse);
+}
+
+message ConnectionOpenInitRequest {
+  ibc.core.connection.v1.MsgConnectionOpenInit request = 1;
+  StateRef base_id = 2;
+}
+
+message ConnectionOpenInitResponse {
+  ibc.core.connection.v1.MsgConnectionOpenInitResponse response = 1;
+  bytes proof = 2;
+  string connection_id = 3;
+}
+
+message ConnectionOpenTryRequest {
+  ibc.core.connection.v1.MsgConnectionOpenTry request = 1;
+  StateRef base_id = 2;
+}
+
+message ConnectionOpenTryResponse {
+  ibc.core.connection.v1.MsgConnectionOpenTryResponse response = 1;
+  bytes proof = 2;
+  string connection_id = 3;
+}
+
+message ConnectionOpenAckRequest {
+  ibc.core.connection.v1.MsgConnectionOpenAck request = 1;
+  StateRef base_id = 2;
+}
+
+message ConnectionOpenAckResponse {
+  ibc.core.connection.v1.MsgConnectionOpenAckResponse response = 1;
+  bytes proof = 2;
+}
+
+message ConnectionOpenConfirmRequest {
+  ibc.core.connection.v1.MsgConnectionOpenConfirm request = 1;
+  StateRef base_id = 2;
+}
+
+message ConnectionOpenConfirmResponse {
+  ibc.core.connection.v1.MsgConnectionOpenConfirmResponse response = 1;
+  bytes proof = 2;
+}

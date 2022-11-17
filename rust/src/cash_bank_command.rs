@@ -44,7 +44,7 @@ pub async fn execute(opt: Opt) -> Result<()> {
         } => cash_bank::allocate_cash(endpoint, owner_address, currency, amount).await?,
         Opt::QueryCashBank { endpoint } => {
             let host = cash_bank::query_cash_bank(endpoint).await?;
-            println!("{:?}", host);
+            println!("{:#?}", host);
         }
     }
     Ok(())

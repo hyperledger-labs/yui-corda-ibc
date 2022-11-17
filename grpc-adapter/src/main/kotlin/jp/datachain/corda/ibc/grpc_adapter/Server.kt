@@ -2,8 +2,6 @@ package jp.datachain.corda.ibc.grpc_adapter
 
 import io.grpc.BindableService
 import io.grpc.ServerBuilder
-import net.corda.core.contracts.StateRef
-import net.corda.core.crypto.SecureHash
 
 object Server {
     @JvmStatic
@@ -13,30 +11,30 @@ object Server {
         val username = args[2]
         val password = args[3]
         val listenPort = args[4]
-        val baseId: StateRef? = if (args.size == 6) StateRef(SecureHash.parse(args[5]), 0) else null
 
         val serverBuilder = ServerBuilder.forPort(listenPort.toInt())
 
         val adminService = AdminService()
         serverBuilder.addService(adminService)
 
-        val opsReadyServices = mutableListOf<CordaRPCOpsReady>()
-        opsReadyServices += NodeService(hostname, port, username, password)
-        opsReadyServices += GenesisService(hostname, port, username, password)
-        baseId?.let{
-            opsReadyServices += HostService(hostname, port, username, password, it)
-            opsReadyServices += BankService(hostname, port, username, password, it)
-            opsReadyServices += CashBankService(hostname, port, username, password, it)
+        val opsReadyServices: List<CordaRPCOpsReady> = listOf(
+                NodeService(hostname, port, username, password),
 
-            opsReadyServices += ClientTxService(hostname, port, username, password, it)
-            opsReadyServices += ConnectionTxService(hostname, port, username, password, it)
-            opsReadyServices += ChannelTxService(hostname, port, username, password, it)
-            opsReadyServices += TransferTxService(hostname, port, username, password, it)
+                GenesisService(hostname, port, username, password),
+                HostService(hostname, port, username, password),
 
-            opsReadyServices += ClientQueryService(hostname, port, username, password, it)
-            opsReadyServices += ConnectionQueryService(hostname, port, username, password, it)
-            opsReadyServices += ChannelQueryService(hostname, port, username, password, it)
-        }
+                BankService(hostname, port, username, password),
+                CashBankService(hostname, port, username, password),
+
+                ClientTxService(hostname, port, username, password),
+                ConnectionTxService(hostname, port, username, password),
+                ChannelTxService(hostname, port, username, password),
+                TransferTxService(hostname, port, username, password),
+
+                ClientQueryService(hostname, port, username, password),
+                ConnectionQueryService(hostname, port, username, password),
+                ChannelQueryService(hostname, port, username, password)
+        )
         opsReadyServices.forEach{serverBuilder.addService(it as BindableService)}
 
         val server = serverBuilder.build()

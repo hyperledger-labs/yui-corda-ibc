@@ -5,14 +5,13 @@ option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-cl
 option java_outer_classname = "HostProto";
 
 import "ibc/lightclients/corda/v1/corda-types.proto";
-import "google/protobuf/empty.proto";
 
 service HostService {
   // transactions
-  rpc CreateHost (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc CreateHost (CreateHostRequest) returns (CreateHostResponse);
 
   // queries
-  rpc QueryHost (google.protobuf.Empty) returns (Host);
+  rpc QueryHost (QueryHostRequest) returns (QueryHostResponse);
 }
 
 message Host {
@@ -23,4 +22,20 @@ message Host {
   uint64 nextConnectionSequence = 5;
   uint64 nextChannelSequence = 6;
   repeated string bank_ids = 7;
+}
+
+message CreateHostRequest {
+  StateRef base_id = 1;
+}
+
+message CreateHostResponse {
+  bytes proof = 1;
+}
+
+message QueryHostRequest {
+  StateRef base_id = 1;
+}
+
+message QueryHostResponse {
+  Host host = 1;
 }

@@ -9,10 +9,11 @@ import ibc.core.connection.v1.Connection
 import ics23.Proofs
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.states.IbcState
 
-interface ClientState : IbcState {
-    val clientState: Any
+interface ClientState {
+    val anyClientState: Any
+    val anyConsensusStates : Map<Client.Height, Any>
+
     val consensusStates: Map<Client.Height, ConsensusState>
 
     fun clientType(): ClientType

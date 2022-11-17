@@ -1,6 +1,10 @@
 use super::channel;
 use super::Result;
+use bytes::{BufMut, BytesMut};
+use prost::Message;
+use std::path::PathBuf;
 use structopt::StructOpt;
+use tokio::fs;
 
 #[derive(StructOpt, Debug)]
 pub enum Opt {
@@ -38,6 +42,12 @@ pub enum Opt {
 
         #[structopt(short, long)]
         channel_id: String,
+
+        #[structopt(short, long)]
+        output_path: PathBuf,
+
+        #[structopt(short, long)]
+        save_whole_response: bool,
     },
 }
 
@@ -69,9 +79,17 @@ pub async fn execute(opt: Opt) -> Result<()> {
             endpoint,
             port_id,
             channel_id,
+            output_path,
+            save_whole_response,
         } => {
             let response = channel::query_channel(endpoint, port_id, channel_id).await?;
-            println!("{:?}", response);
+            let mut buf = BytesMut::new();
+            if save_whole_response {
+                response.encode(&mut buf)?;
+            } else {
+                buf.put(response.proof.as_slice());
+            }
+            fs::write(output_path, buf).await?;
         }
     }
     Ok(())

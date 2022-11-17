@@ -1,6 +1,6 @@
 package types
 
-import "github.com/cosmos/ibc-go/modules/core/exported"
+import "github.com/cosmos/ibc-go/v4/modules/core/exported"
 
 var _ exported.Header = (*Header)(nil)
 

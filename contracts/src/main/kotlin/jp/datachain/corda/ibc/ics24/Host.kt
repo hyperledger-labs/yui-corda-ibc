@@ -2,11 +2,13 @@ package jp.datachain.corda.ibc.ics24
 
 import ibc.core.client.v1.Client.Height
 import ibc.core.connection.v1.Connection
+import ibc.lightclients.corda.v1.Corda
 import jp.datachain.corda.ibc.clients.corda.CordaConsensusState
 import jp.datachain.corda.ibc.clients.corda.HEIGHT
 import jp.datachain.corda.ibc.clients.corda.PREFIX
 import jp.datachain.corda.ibc.clients.corda.VERSION
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.states.IbcState
 import jp.datachain.corda.ibc.types.Timestamp
@@ -42,7 +44,7 @@ data class Host constructor (
 
     fun getConsensusState(height: Height) : CordaConsensusState {
         require(height == getCurrentHeight())
-        return CordaConsensusState(baseId, notary.owningKey)
+        return CordaConsensusState(Corda.ConsensusState.getDefaultInstance().pack())
     }
 
     fun getCommitmentPrefix() = PREFIX

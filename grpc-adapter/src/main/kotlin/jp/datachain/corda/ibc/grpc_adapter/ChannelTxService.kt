@@ -1,58 +1,108 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
-import ibc.core.channel.v1.MsgGrpc
-import ibc.core.channel.v1.Tx
+import ibc.lightclients.corda.v1.ChannelMsgGrpc
+import ibc.lightclients.corda.v1.CordaTypes
+import ibc.lightclients.corda.v1.TxChannel
 import io.grpc.stub.StreamObserver
+import jp.datachain.corda.ibc.clients.corda.toProof
+import jp.datachain.corda.ibc.conversion.toCorda
 import jp.datachain.corda.ibc.flows.ics4.*
+import jp.datachain.corda.ibc.ics24.Host
+import jp.datachain.corda.ibc.states.IbcChannel
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
 
-class ChannelTxService(host: String, port: Int, username: String, password: String, private val baseId: StateRef): MsgGrpc.MsgImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
-    override fun channelOpenInit(request: Tx.MsgChannelOpenInit, responseObserver: StreamObserver<Tx.MsgChannelOpenInitResponse>) {
-        ops.startFlow(::IbcChanOpenInitFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgChannelOpenInitResponse.getDefaultInstance())
+class ChannelTxService(host: String, port: Int, username: String, password: String): ChannelMsgGrpc.ChannelMsgImplBase(), CordaRPCOpsReady by CordaRPCOpsReady.create(host, port, username, password) {
+
+    private fun resolveBaseId(baseId: CordaTypes.StateRef): StateRef {
+        return if (baseId == CordaTypes.StateRef.getDefaultInstance()) {
+            ops.vaultQuery(Host::class.java).states.single().state.data.baseId
+        } else {
+            baseId.toCorda()
+        }
+    }
+
+    override fun channelOpenInit(request: TxChannel.ChannelOpenInitRequest, responseObserver: StreamObserver<TxChannel.ChannelOpenInitResponse>) {
+        val stx = ops.startFlow(::IbcChanOpenInitFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val channelId = stx.tx.outputsOfType<IbcChannel>().single().id.id
+        val reply = TxChannel.ChannelOpenInitResponse.newBuilder()
+                .setProof(proof)
+                .setChannelId(channelId)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun channelOpenTry(request: Tx.MsgChannelOpenTry, responseObserver: StreamObserver<Tx.MsgChannelOpenTryResponse>) {
-        ops.startFlow(::IbcChanOpenTryFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgChannelOpenTryResponse.getDefaultInstance())
+    override fun channelOpenTry(request: TxChannel.ChannelOpenTryRequest, responseObserver: StreamObserver<TxChannel.ChannelOpenTryResponse>) {
+        val stx = ops.startFlow(::IbcChanOpenTryFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val channelId = stx.tx.outputsOfType<IbcChannel>().single().id.id
+        val reply = TxChannel.ChannelOpenTryResponse.newBuilder()
+                .setProof(proof)
+                .setChannelId(channelId)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun channelOpenAck(request: Tx.MsgChannelOpenAck, responseObserver: StreamObserver<Tx.MsgChannelOpenAckResponse>) {
-        ops.startFlow(::IbcChanOpenAckFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgChannelOpenAckResponse.getDefaultInstance())
+    override fun channelOpenAck(request: TxChannel.ChannelOpenAckRequest, responseObserver: StreamObserver<TxChannel.ChannelOpenAckResponse>) {
+        val stx = ops.startFlow(::IbcChanOpenAckFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val reply = TxChannel.ChannelOpenAckResponse.newBuilder()
+                .setProof(proof)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun channelOpenConfirm(request: Tx.MsgChannelOpenConfirm, responseObserver: StreamObserver<Tx.MsgChannelOpenConfirmResponse>) {
-        ops.startFlow(::IbcChanOpenConfirmFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgChannelOpenConfirmResponse.getDefaultInstance())
+    override fun channelOpenConfirm(request: TxChannel.ChannelOpenConfirmRequest, responseObserver: StreamObserver<TxChannel.ChannelOpenConfirmResponse>) {
+        val stx = ops.startFlow(::IbcChanOpenConfirmFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val reply = TxChannel.ChannelOpenConfirmResponse.newBuilder()
+                .setProof(proof)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun channelCloseInit(request: Tx.MsgChannelCloseInit, responseObserver: StreamObserver<Tx.MsgChannelCloseInitResponse>) {
-        ops.startFlow(::IbcChanCloseInitFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgChannelCloseInitResponse.getDefaultInstance())
+    override fun channelCloseInit(request: TxChannel.ChannelCloseInitRequest, responseObserver: StreamObserver<TxChannel.ChannelCloseInitResponse>) {
+        val stx = ops.startFlow(::IbcChanCloseInitFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val reply = TxChannel.ChannelCloseInitResponse.newBuilder()
+                .setProof(proof)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun channelCloseConfirm(request: Tx.MsgChannelCloseConfirm, responseObserver: StreamObserver<Tx.MsgChannelCloseConfirmResponse>) {
-        ops.startFlow(::IbcChanCloseConfirmFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgChannelCloseConfirmResponse.getDefaultInstance())
+    override fun channelCloseConfirm(request: TxChannel.ChannelCloseConfirmRequest, responseObserver: StreamObserver<TxChannel.ChannelCloseConfirmResponse>) {
+        val stx = ops.startFlow(::IbcChanCloseConfirmFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val reply = TxChannel.ChannelCloseConfirmResponse.newBuilder()
+                .setProof(proof)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun recvPacket(request: Tx.MsgRecvPacket, responseObserver: StreamObserver<Tx.MsgRecvPacketResponse>) {
-        ops.startFlow(::IbcRecvPacketFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgRecvPacketResponse.getDefaultInstance())
+    override fun recvPacket(request: TxChannel.RecvPacketRequest, responseObserver: StreamObserver<TxChannel.RecvPacketResponse>) {
+        val stx = ops.startFlow(::IbcRecvPacketFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val reply = TxChannel.RecvPacketResponse.newBuilder()
+                .setProof(proof)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 
-    override fun acknowledgement(request: Tx.MsgAcknowledgement, responseObserver: StreamObserver<Tx.MsgAcknowledgementResponse>) {
-        ops.startFlow(::IbcAcknowledgePacketFlow, baseId, request).returnValue.get()
-        responseObserver.onNext(Tx.MsgAcknowledgementResponse.getDefaultInstance())
+    override fun acknowledgement(request: TxChannel.AcknowledgementRequest, responseObserver: StreamObserver<TxChannel.AcknowledgementResponse>) {
+        val stx = ops.startFlow(::IbcAcknowledgePacketFlow, resolveBaseId(request.baseId), request.request).returnValue.get()
+        val proof = stx.toProof().toByteString()
+        val reply = TxChannel.AcknowledgementResponse.newBuilder()
+                .setProof(proof)
+                .build()
+        responseObserver.onNext(reply)
         responseObserver.onCompleted()
     }
 }

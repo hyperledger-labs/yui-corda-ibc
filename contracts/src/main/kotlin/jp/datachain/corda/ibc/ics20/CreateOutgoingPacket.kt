@@ -1,6 +1,6 @@
 package jp.datachain.corda.ibc.ics20
 
-import ibc.applications.transfer.v1.Transfer
+import ibc.applications.transfer.v2.Packet.FungibleTokenPacketData
 import ibc.applications.transfer.v1.Tx
 import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -31,9 +31,9 @@ data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
             ctx.addOutput(bank.burn(sender, denom, amount))
         }
 
-        val data = Transfer.FungibleTokenPacketData.newBuilder()
+        val data = FungibleTokenPacketData.newBuilder()
                 .setDenom(denom.toString())
-                .setAmount(msg.token.amount.toLong())
+                .setAmount(msg.token.amount)
                 .setSender(msg.sender)
                 .setReceiver(msg.receiver)
                 .build()

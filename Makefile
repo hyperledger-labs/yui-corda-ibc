@@ -57,10 +57,7 @@ prepareHost:
 	./gradlew :grpc-adapter:runServer --args 'localhost 10003 user1 test 9999' &
 	while ! nc -z localhost 9999; do sleep 1; done
 	$(CLIENT) genesis create-genesis -e http://localhost:9999 -p PartyA,Notary > base-hash.txt
-	$(CLIENT) admin shutdown         -e http://localhost:9999
-	./gradlew :grpc-adapter:runServer --args "localhost 10003 user1 test 9999 `cat base-hash.txt`" &
-	while ! nc -z localhost 9999; do sleep 1; done
-	$(CLIENT) host create-host           -e http://localhost:9999
+	$(CLIENT) host create-host           -e http://localhost:9999 -b `cat base-hash.txt`
 	$(CLIENT) cash-bank create-cash-bank -e http://localhost:9999 -b `$(CLIENT) node address-from-name -e http://localhost:9999 -n Notary`
 	$(CLIENT) cash-bank allocate-cash    -e http://localhost:9999 -o `$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA` -c USD -a 100
 	$(CLIENT) admin shutdown             -e http://localhost:9999
@@ -113,9 +110,7 @@ executeOldTest:
 
 .PHONY: executeTest
 executeTest:
-	$(CLIENT) client create-clients \
-		--client-id-a corda-ibc-0 \
-		--client-id-b corda-ibc-0
+	$(CLIENT) client create-clients
 	$(CLIENT) connection handshake \
 		--client-id-a corda-ibc-0 \
 		--client-id-b corda-ibc-0 \
@@ -144,3 +139,14 @@ testFlows:
 .PHONY: testRelayerBuild
 testRelayerBuild:
 	cd go/cmd/relayer && go build . && rm relayer
+
+.PHONY: dumpInfos
+dumpInfos:
+	$(CLIENT) node address-from-name -e http://localhost:9999 -n PartyA > party-a-addr.txt
+	$(CLIENT) node address-from-name -e http://localhost:9998 -n PartyA > party-b-addr.txt
+	$(CLIENT) host query-host > host.txt
+	$(CLIENT) cash-bank query-cash-bank > cash-bank.txt
+	$(CLIENT) client query-client-state -c corda-ibc-0 -o client.dat
+	$(CLIENT) client query-consensus-state -c corda-ibc-0 -n 0 -h 1 -o consensus.dat
+	$(CLIENT) connection query-connection -c connection-0 -o connection.dat
+	$(CLIENT) channel query-channel -c channel-0 -o channel.dat

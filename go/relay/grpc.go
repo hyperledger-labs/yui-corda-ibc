@@ -1,10 +1,6 @@
 package relay
 
 import (
-	transfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
-	conntypes "github.com/cosmos/ibc-go/modules/core/03-connection/types"
-	chantypes "github.com/cosmos/ibc-go/modules/core/04-channel/types"
 	cordatypes "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types"
 	"google.golang.org/grpc"
 )
@@ -17,15 +13,14 @@ type cordaIbcClient struct {
 	host cordatypes.HostServiceClient
 	bank cordatypes.BankServiceClient
 
-	clientQuery   clienttypes.QueryClient
-	connQuery     conntypes.QueryClient
-	chanQuery     chantypes.QueryClient
-	transferQuery transfertypes.QueryClient
+	clientQuery cordatypes.ClientQueryClient
+	connQuery   cordatypes.ConnectionQueryClient
+	chanQuery   cordatypes.ChannelQueryClient
 
-	clientTx   clienttypes.MsgClient
-	connTx     conntypes.MsgClient
-	chanTx     chantypes.MsgClient
-	transferTx transfertypes.MsgClient
+	clientTx   cordatypes.ClientMsgClient
+	connTx     cordatypes.ConnectionMsgClient
+	chanTx     cordatypes.ChannelMsgClient
+	transferTx cordatypes.TransferMsgClient
 }
 
 func createCordaIbcClient(addr string) (*cordaIbcClient, error) {
@@ -42,15 +37,14 @@ func createCordaIbcClient(addr string) (*cordaIbcClient, error) {
 		host: cordatypes.NewHostServiceClient(conn),
 		bank: cordatypes.NewBankServiceClient(conn),
 
-		clientQuery:   clienttypes.NewQueryClient(conn),
-		connQuery:     conntypes.NewQueryClient(conn),
-		chanQuery:     chantypes.NewQueryClient(conn),
-		transferQuery: transfertypes.NewQueryClient(conn),
+		clientQuery: cordatypes.NewClientQueryClient(conn),
+		connQuery:   cordatypes.NewConnectionQueryClient(conn),
+		chanQuery:   cordatypes.NewChannelQueryClient(conn),
 
-		clientTx:   clienttypes.NewMsgClient(conn),
-		connTx:     conntypes.NewMsgClient(conn),
-		chanTx:     chantypes.NewMsgClient(conn),
-		transferTx: transfertypes.NewMsgClient(conn),
+		clientTx:   cordatypes.NewClientMsgClient(conn),
+		connTx:     cordatypes.NewConnectionMsgClient(conn),
+		chanTx:     cordatypes.NewChannelMsgClient(conn),
+		transferTx: cordatypes.NewTransferMsgClient(conn),
 	}, nil
 }
 

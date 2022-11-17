@@ -3,13 +3,13 @@ package jp.datachain.corda.ibc.flows.ics4
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
 import jp.datachain.corda.ibc.flows.util.*
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toFungibleTokenPacketData
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandlePacketRecv
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
@@ -56,7 +56,7 @@ class IbcRecvPacketFlow(
                 if (source && !denom.removePrefix().isVoucher()) {
                     val denom = denom.removePrefix()
                     val issuer = serviceHub.identityService.partyFromKey(denom.issuerKey)!!
-                    val amount = AMOUNT(packet.amount, denom.currency).issuedBy(PartyAndReference(issuer, OpaqueBytes(ByteArray(1))))
+                    val amount = AMOUNT(packet.amount.toLong(), denom.currency).issuedBy(PartyAndReference(issuer, OpaqueBytes(ByteArray(1))))
                     val coins = serviceHub.vaultService.prepareCoins<Cash.State, Issued<Currency>>(
                             ownerKey = cashBank.state.data.owner.owningKey,
                             amount = amount)
@@ -83,7 +83,7 @@ class IbcRecvPacketFlow(
 
         // query client from vault
         val clientId = Identifier(conn.state.data.end.clientId)
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, clientId)!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
         refs.add(client)
 
         // create command and outputs

@@ -1,30 +1,20 @@
 package jp.datachain.corda.ibc.grpc_adapter
 
-import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import com.google.protobuf.Empty
 import cosmos.base.query.v1beta1.Pagination
-import ibc.applications.transfer.v1.Tx
-import ibc.core.client.v1.Tx.*
-import ibc.core.client.v1.Client.*
-import ibc.core.client.v1.QueryOuterClass.*
-import ibc.core.connection.v1.Tx.*
-import ibc.core.connection.v1.QueryOuterClass.*
-import ibc.core.channel.v1.Tx.*
-import ibc.core.channel.v1.QueryOuterClass.*
-import ibc.core.channel.v1.ChannelOuterClass.*
+import ibc.core.client.v1.Client.Height
+import ibc.core.channel.v1.ChannelOuterClass.Order
+import ibc.core.channel.v1.ChannelOuterClass.Packet
 import ibc.lightclients.corda.v1.*
-import ibc.core.client.v1.MsgGrpc as ClientMsgGrpc
-import ibc.core.client.v1.QueryGrpc as ClientQueryGrpc
-import ibc.core.connection.v1.MsgGrpc as ConnectionMsgGrpc
-import ibc.core.connection.v1.QueryGrpc as ConnectionQueryGrpc
-import ibc.core.channel.v1.MsgGrpc as ChannelMsgGrpc
-import ibc.core.channel.v1.QueryGrpc as ChannelQueryGrpc
-import ibc.applications.transfer.v1.MsgGrpc as TransferMsgGrpc
 import io.grpc.ManagedChannelBuilder
-import jp.datachain.corda.ibc.conversion.into
 import io.grpc.StatusRuntimeException
+import jp.datachain.corda.ibc.clients.corda.toSignedTransaction
+import jp.datachain.corda.ibc.conversion.pack
+import jp.datachain.corda.ibc.conversion.toCorda
+import jp.datachain.corda.ibc.conversion.toProto
 import jp.datachain.corda.ibc.ics20.Denom
+import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.utilities.toHex
 import java.io.File
@@ -81,23 +71,32 @@ object Client {
     private fun createHost(endpoint: String) {
         val channel = connectGrpc(endpoint)
         val hostService = HostServiceGrpc.newBlockingStub(channel)
-        hostService.createHost(Empty.getDefaultInstance())
+        val request = HostProto.CreateHostRequest.getDefaultInstance()
+        val response = hostService.createHost(request)
+        val stx = CommitmentProof(response.proof).toSignedTransaction()
+        stx.verifyRequiredSignatures()
     }
 
     private fun createBank(endpoint: String) {
         val channel = connectGrpc(endpoint)
         val bankService = BankServiceGrpc.newBlockingStub(channel)
-        bankService.createBank(Empty.getDefaultInstance())
+        val request = BankProto.CreateBankRequest.getDefaultInstance()
+        val response = bankService.createBank(request)
+        val stx = CommitmentProof(response.proof).toSignedTransaction()
+        stx.verifyRequiredSignatures()
     }
 
     private fun allocateFund(endpoint: String, partyName: String) {
         val channel = connectGrpc(endpoint)
         val bankService = BankServiceGrpc.newBlockingStub(channel)
-        bankService.allocateFund(BankProto.AllocateFundRequest.newBuilder()
+        val request = BankProto.AllocateFundRequest.newBuilder()
                 .setOwner(partyName)
                 .setDenom("USD")
                 .setAmount("100")
-                .build())
+                .build()
+        val response = bankService.allocateFund(request)
+        val stx = CommitmentProof(response.proof).toSignedTransaction()
+        stx.verifyRequiredSignatures()
     }
 
     private const val CLIENT_A = "corda-ibc-0"
@@ -138,151 +137,160 @@ object Client {
         val channelQueryServiceBankA = ChannelQueryGrpc.newBlockingStub(channelBankA)
         val channelTxServiceBankA = ChannelMsgGrpc.newBlockingStub(channelBankA)
 
-        val hostA = hostServiceA.queryHost(Empty.getDefaultInstance()).into()
+        val hostA = hostServiceA.queryHost(HostProto.QueryHostRequest.getDefaultInstance()).host.toCorda()
         val consensusStateA = hostA.getConsensusState(hostA.getCurrentHeight())
 
-        val hostB = hostServiceB.queryHost(Empty.getDefaultInstance()).into()
+        val hostB = hostServiceB.queryHost(HostProto.QueryHostRequest.getDefaultInstance()).host.toCorda()
         val consensusStateB = hostB.getConsensusState(hostB.getCurrentHeight())
 
         // createClient @ A
-        clientTxServiceA.createClient(MsgCreateClient.newBuilder()
-                .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_A).build(), ""))
-                .setConsensusState(consensusStateB.consensusState)
-                .build())
+        clientTxServiceA.createClient(TxClient.CreateClientRequest.newBuilder().apply {
+            requestBuilder.clientState = Corda.ClientState.newBuilder()
+                    .setBaseId(hostB.baseId.toProto())
+                    .setNotaryKey(hostB.notary.owningKey.toProto())
+                    .build()
+                    .pack()
+            requestBuilder.consensusState = consensusStateB.anyConsensusState
+        }.build())
         // createClient @ B
-        clientTxServiceB.createClient(MsgCreateClient.newBuilder()
-                .setClientState(Any.pack(Corda.ClientState.newBuilder().setId(CLIENT_B).build(), ""))
-                .setConsensusState(consensusStateA.consensusState)
-                .build())
+        clientTxServiceB.createClient(TxClient.CreateClientRequest.newBuilder().apply {
+            requestBuilder.clientState = Corda.ClientState.newBuilder()
+                    .setBaseId(hostA.baseId.toProto())
+                    .setNotaryKey(hostA.notary.owningKey.toProto())
+                    .build()
+                    .pack()
+            requestBuilder.consensusState = consensusStateA.anyConsensusState
+        }.build())
 
         // connOpenInit @ A
         val versionA = hostA.getCompatibleVersions().single()
-        connectionTxServiceA.connectionOpenInit(MsgConnectionOpenInit.newBuilder().apply {
-            clientId = CLIENT_A
-            counterpartyBuilder.clientId = CLIENT_B
-            counterpartyBuilder.connectionId = ""
-            counterpartyBuilder.prefix = hostB.getCommitmentPrefix()
-            version = versionA
-            delayPeriod = 0
+        connectionTxServiceA.connectionOpenInit(TxConnection.ConnectionOpenInitRequest.newBuilder().apply {
+            requestBuilder.clientId = CLIENT_A
+            requestBuilder.counterpartyBuilder.clientId = CLIENT_B
+            requestBuilder.counterpartyBuilder.connectionId = ""
+            requestBuilder.counterpartyBuilder.prefix = hostB.getCommitmentPrefix()
+            requestBuilder.version = versionA
+            requestBuilder.delayPeriod = 0
         }.build())
 
         // connOpenTry @ B
-        val connInit = connectionQueryServiceA.connection(QueryConnectionRequest.newBuilder()
-                .setConnectionId(CONNECTION_A)
-                .build())
-        val clientInit = clientQueryServiceA.clientState(QueryClientStateRequest.newBuilder()
-                .setClientId(CLIENT_A)
-                .build())
-        val consensusInit = clientQueryServiceA.consensusState(QueryConsensusStateRequest.newBuilder()
-                .setClientId(CLIENT_A)
-                .setLatestHeight(true)
-                .build())
-        assert(connInit.proofHeight == clientInit.proofHeight)
-        assert(connInit.proofHeight == consensusInit.proofHeight)
-        connectionTxServiceB.connectionOpenTry(MsgConnectionOpenTry.newBuilder().apply {
-            clientId = CLIENT_B
-            clientState = clientInit.clientState
-            counterpartyBuilder.clientId = CLIENT_A
-            counterpartyBuilder.connectionId = CONNECTION_A
-            counterpartyBuilder.prefix = hostA.getCommitmentPrefix()
-            delayPeriod = 0
-            addAllCounterpartyVersions(hostA.getCompatibleVersions())
-            proofHeight = connInit.proofHeight
-            proofInit = connInit.proof
-            proofClient = clientInit.proof
-            proofConsensus = consensusInit.proof
-            consensusHeight = hostB.getCurrentHeight()
+        val connInit = connectionQueryServiceA.connection(QueryConnection.QueryConnectionRequest.newBuilder().apply {
+            requestBuilder.connectionId = CONNECTION_A
+        }.build()).response
+        val clientInit = clientQueryServiceA.clientState(QueryClient.QueryClientStateRequest.newBuilder().apply {
+            requestBuilder.clientId = CLIENT_A
+        }.build()).response
+        val consensusInit = clientQueryServiceA.consensusState(QueryClient.QueryConsensusStateRequest.newBuilder().apply {
+            requestBuilder.clientId = CLIENT_A
+            requestBuilder.latestHeight = true
+        }.build()).response
+        require(connInit.proofHeight == clientInit.proofHeight)
+        require(connInit.proofHeight == consensusInit.proofHeight)
+        connectionTxServiceB.connectionOpenTry(TxConnection.ConnectionOpenTryRequest.newBuilder().apply {
+            requestBuilder.clientId = CLIENT_B
+            requestBuilder.clientState = clientInit.clientState
+            requestBuilder.counterpartyBuilder.clientId = CLIENT_A
+            requestBuilder.counterpartyBuilder.connectionId = CONNECTION_A
+            requestBuilder.counterpartyBuilder.prefix = hostA.getCommitmentPrefix()
+            requestBuilder.delayPeriod = 0
+            requestBuilder.addAllCounterpartyVersions(hostA.getCompatibleVersions())
+            requestBuilder.proofHeight = connInit.proofHeight
+            requestBuilder.proofInit = connInit.proof
+            requestBuilder.proofClient = clientInit.proof
+            requestBuilder.proofConsensus = consensusInit.proof
+            requestBuilder.consensusHeight = hostB.getCurrentHeight()
         }.build())
 
         // connOpenAck @ A
-        val connTry = connectionQueryServiceB.connection(QueryConnectionRequest.newBuilder()
-                .setConnectionId(CONNECTION_B)
-                .build())
-        val clientTry = clientQueryServiceB.clientState(QueryClientStateRequest.newBuilder()
-                .setClientId(CLIENT_B)
-                .build())
-        val consensusTry = clientQueryServiceB.consensusState(QueryConsensusStateRequest.newBuilder()
-                .setClientId(CLIENT_B)
-                .setLatestHeight(true)
-                .build())
-        assert(connTry.proofHeight == clientTry.proofHeight)
-        assert(connTry.proofHeight == consensusTry.proofHeight)
-        connectionTxServiceA.connectionOpenAck(MsgConnectionOpenAck.newBuilder().apply {
-            connectionId = CONNECTION_A
-            counterpartyConnectionId = CONNECTION_B
-            version = versionA
-            clientState = clientTry.clientState
-            proofHeight = connTry.proofHeight
-            proofTry = connTry.proof
-            proofClient = clientTry.proof
-            proofConsensus = consensusTry.proof
-            consensusHeight = hostA.getCurrentHeight()
+        val connTry = connectionQueryServiceB.connection(QueryConnection.QueryConnectionRequest.newBuilder().apply {
+            requestBuilder.connectionId = CONNECTION_B
+        }.build()).response
+        val clientTry = clientQueryServiceB.clientState(QueryClient.QueryClientStateRequest.newBuilder().apply {
+            requestBuilder.clientId = CLIENT_B
+        }.build()).response
+        val consensusTry = clientQueryServiceB.consensusState(QueryClient.QueryConsensusStateRequest.newBuilder().apply {
+            requestBuilder.clientId = CLIENT_B
+            requestBuilder.latestHeight = true
+        }.build()).response
+        require(connTry.proofHeight == clientTry.proofHeight)
+        require(connTry.proofHeight == consensusTry.proofHeight)
+        connectionTxServiceA.connectionOpenAck(TxConnection.ConnectionOpenAckRequest.newBuilder().apply {
+            requestBuilder.connectionId = CONNECTION_A
+            requestBuilder.counterpartyConnectionId = CONNECTION_B
+            requestBuilder.version = versionA
+            requestBuilder.clientState = clientTry.clientState
+            requestBuilder.proofHeight = connTry.proofHeight
+            requestBuilder.proofTry = connTry.proof
+            requestBuilder.proofClient = clientTry.proof
+            requestBuilder.proofConsensus = consensusTry.proof
+            requestBuilder.consensusHeight = hostA.getCurrentHeight()
         }.build())
 
         // connOpenConfirm @ B
-        val connAck = connectionQueryServiceA.connection(QueryConnectionRequest.newBuilder()
-                .setConnectionId(CONNECTION_A)
-                .build())
-        connectionTxServiceB.connectionOpenConfirm(MsgConnectionOpenConfirm.newBuilder().apply{
-            connectionId = CONNECTION_B
-            proofAck = connAck.proof
-            proofHeight = connAck.proofHeight
+        val connAck = connectionQueryServiceA.connection(QueryConnection.QueryConnectionRequest.newBuilder().apply {
+            requestBuilder.connectionId = CONNECTION_A
+        }.build()).response
+        connectionTxServiceB.connectionOpenConfirm(TxConnection.ConnectionOpenConfirmRequest.newBuilder().apply {
+            requestBuilder.connectionId = CONNECTION_B
+            requestBuilder.proofAck = connAck.proof
+            requestBuilder.proofHeight = connAck.proofHeight
         }.build())
 
         // chanOpenInit @ A
-        channelTxServiceA.channelOpenInit(MsgChannelOpenInit.newBuilder().apply{
-            portId = PORT_A
-            channelBuilder.ordering = Order.ORDER_ORDERED
-            channelBuilder.counterpartyBuilder.portId = PORT_B
-            channelBuilder.counterpartyBuilder.channelId = ""
-            channelBuilder.addAllConnectionHops(listOf(CONNECTION_A))
-            channelBuilder.version = CHANNEL_VERSION_A
+        channelTxServiceA.channelOpenInit(TxChannel.ChannelOpenInitRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelBuilder.ordering = Order.ORDER_UNORDERED
+            requestBuilder.channelBuilder.counterpartyBuilder.portId = PORT_B
+            requestBuilder.channelBuilder.counterpartyBuilder.channelId = ""
+            requestBuilder.channelBuilder.addAllConnectionHops(listOf(CONNECTION_A))
+            requestBuilder.channelBuilder.version = CHANNEL_VERSION_A
         }.build())
 
         // chanOpenTry @ B
-        val chanInit = channelQueryServiceA.channel(QueryChannelRequest.newBuilder()
-                .setPortId(PORT_A)
-                .setChannelId(CHANNEL_A)
-                .build())
-        channelTxServiceB.channelOpenTry(MsgChannelOpenTry.newBuilder().apply{
-            portId = PORT_B
-            channelBuilder.ordering = Order.ORDER_ORDERED
-            channelBuilder.counterpartyBuilder.portId = PORT_A
-            channelBuilder.counterpartyBuilder.channelId = CHANNEL_A
-            channelBuilder.addAllConnectionHops(listOf(CONNECTION_B))
-            channelBuilder.version = CHANNEL_VERSION_B
-            counterpartyVersion = CHANNEL_VERSION_A
-            proofInit = chanInit.proof
-            proofHeight = chanInit.proofHeight
+        val chanInit = channelQueryServiceA.channel(QueryChannel.QueryChannelRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelId = CHANNEL_A
+        }.build()).response
+        channelTxServiceB.channelOpenTry(TxChannel.ChannelOpenTryRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_B
+            requestBuilder.channelBuilder.ordering = Order.ORDER_UNORDERED
+            requestBuilder.channelBuilder.counterpartyBuilder.portId = PORT_A
+            requestBuilder.channelBuilder.counterpartyBuilder.channelId = CHANNEL_A
+            requestBuilder.channelBuilder.addAllConnectionHops(listOf(CONNECTION_B))
+            requestBuilder.channelBuilder.version = CHANNEL_VERSION_B
+            requestBuilder.counterpartyVersion = CHANNEL_VERSION_A
+            requestBuilder.proofInit = chanInit.proof
+            requestBuilder.proofHeight = chanInit.proofHeight
         }.build())
 
         // chanOpenAck @ A
-        val chanTry = channelQueryServiceB.channel(QueryChannelRequest.newBuilder()
-                .setPortId(PORT_B)
-                .setChannelId(CHANNEL_B)
-                .build())
-        channelTxServiceA.channelOpenAck(MsgChannelOpenAck.newBuilder().apply{
-            portId = PORT_A
-            channelId = CHANNEL_A
-            counterpartyChannelId = CHANNEL_B
-            counterpartyVersion = CHANNEL_VERSION_B
-            proofTry = chanTry.proof
-            proofHeight = chanTry.proofHeight
+        val chanTry = channelQueryServiceB.channel(QueryChannel.QueryChannelRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_B
+            requestBuilder.channelId = CHANNEL_B
+        }.build()).response
+        channelTxServiceA.channelOpenAck(TxChannel.ChannelOpenAckRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelId = CHANNEL_A
+            requestBuilder.counterpartyChannelId = CHANNEL_B
+            requestBuilder.counterpartyVersion = CHANNEL_VERSION_B
+            requestBuilder.proofTry = chanTry.proof
+            requestBuilder.proofHeight = chanTry.proofHeight
         }.build())
 
         // chanOpenConfirm @ B
-        val chanAck = channelQueryServiceA.channel(QueryChannelRequest.newBuilder()
-                .setPortId(PORT_A)
-                .setChannelId(CHANNEL_A)
-                .build())
-        channelTxServiceB.channelOpenConfirm(MsgChannelOpenConfirm.newBuilder().apply{
-            portId = PORT_B
-            channelId = CHANNEL_B
-            proofAck = chanAck.proof
-            proofHeight = chanAck.proofHeight
+        val chanAck = channelQueryServiceA.channel(QueryChannel.QueryChannelRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelId = CHANNEL_A
+        }.build()).response
+        channelTxServiceB.channelOpenConfirm(TxChannel.ChannelOpenConfirmRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_B
+            requestBuilder.channelId = CHANNEL_B
+            requestBuilder.proofAck = chanAck.proof
+            requestBuilder.proofHeight = chanAck.proofHeight
         }.build())
 
-        val baseDenom = "USD${cashBankServiceA.queryCashBank(Empty.getDefaultInstance()).owner.into().owningKey.encoded.toHex()}"
+        val cashBankKey = cashBankServiceA.queryCashBank(CashBankProto.QueryCashBankRequest.getDefaultInstance()).cashBank.owner.owningKey.toCorda().encoded.toHex()
+        val baseDenom = "USD$cashBankKey"
 
         val pageReq = Pagination.PageRequest.newBuilder().apply{
             key = ByteString.copyFrom("", Charsets.US_ASCII)
@@ -294,129 +302,129 @@ object Client {
         // transfer $10, $20 and $30 @ A
         listOf(10, 20, 30).forEach{
             val amount = it.toString()
-            transferTxServiceA.transfer(Tx.MsgTransfer.newBuilder().apply {
-                sourcePort = PORT_A
-                sourceChannel = CHANNEL_A
-                tokenBuilder.denom = baseDenom
-                tokenBuilder.amount = amount
-                sender = partyNameA
-                receiver = partyNameB
-                timeoutHeight = Height.getDefaultInstance()
-                timeoutTimestamp = 0
+            transferTxServiceA.transfer(TxTransfer.TransferRequest.newBuilder().apply {
+                requestBuilder.sourcePort = PORT_A
+                requestBuilder.sourceChannel = CHANNEL_A
+                requestBuilder.tokenBuilder.denom = baseDenom
+                requestBuilder.tokenBuilder.amount = amount
+                requestBuilder.sender = partyNameA
+                requestBuilder.receiver = partyNameB
+                requestBuilder.timeoutHeight = Height.getDefaultInstance()
+                requestBuilder.timeoutTimestamp = 0
             }.build())
         }
 
         // check packet commitments
-        channelQueryServiceA.packetCommitments(QueryPacketCommitmentsRequest.newBuilder().apply{
-            portId = PORT_A
-            channelId = CHANNEL_A
-            pagination = pageReq
-        }.build()).let { res ->
-            assert(res.pagination.total == 3L)
-            assert(res.commitmentsCount == 3)
+        channelQueryServiceA.packetCommitments(QueryChannel.QueryPacketCommitmentsRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelId = CHANNEL_A
+            requestBuilder.pagination = pageReq
+        }.build()).response.let { res ->
+            require(res.pagination.total == 3L)
+            require(res.commitmentsCount == 3)
             res.commitmentsList.forEach{ packetState ->
-                assert(packetState.portId == PORT_A)
-                assert(packetState.channelId == CHANNEL_A)
-                val commitment = channelQueryServiceA.packetCommitment(QueryPacketCommitmentRequest.newBuilder().apply {
-                    portId = packetState.portId
-                    channelId = packetState.channelId
-                    sequence = packetState.sequence
-                }.build())
-                assert(packetState.data == commitment.commitment)
+                require(packetState.portId == PORT_A)
+                require(packetState.channelId == CHANNEL_A)
+                val packetCommitment = channelQueryServiceA.packetCommitment(QueryChannel.QueryPacketCommitmentRequest.newBuilder().apply {
+                    requestBuilder.portId = packetState.portId
+                    requestBuilder.channelId = packetState.channelId
+                    requestBuilder.sequence = packetState.sequence
+                }.build()).response
+                require(packetState.data == packetCommitment.commitment)
             }
         }
 
         // check unreceived packets (before recv)
-        channelQueryServiceB.unreceivedPackets(QueryUnreceivedPacketsRequest.newBuilder().apply{
-            portId = PORT_B
-            channelId = CHANNEL_B
-            addAllPacketCommitmentSequences(listOf(1, 2, 3))
-        }.build()).let {
-            assert(it.sequencesCount == 3)
-            assert(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
+        channelQueryServiceB.unreceivedPackets(QueryChannel.QueryUnreceivedPacketsRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_B
+            requestBuilder.channelId = CHANNEL_B
+            requestBuilder.addAllPacketCommitmentSequences(listOf(1, 2, 3))
+        }.build()).response.let {
+            require(it.sequencesCount == 3)
+            require(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
         }
 
         // recv $10, $20 and $30 @ B
         repeat(3) {
             val seq = (it + 1).toLong()
-            val packetCommitment = channelQueryServiceA.packetCommitment(QueryPacketCommitmentRequest.newBuilder().apply {
-                portId = PORT_A
-                channelId = CHANNEL_A
-                sequence = seq
-            }.build())
-            channelTxServiceB.recvPacket(MsgRecvPacket.newBuilder().apply {
-                packet = Packet.parseFrom(packetCommitment.commitment)
-                proofCommitment = packetCommitment.proof
-                proofHeight = packetCommitment.proofHeight
+            val packetCommitment = channelQueryServiceA.packetCommitment(QueryChannel.QueryPacketCommitmentRequest.newBuilder().apply {
+                requestBuilder.portId = PORT_A
+                requestBuilder.channelId = CHANNEL_A
+                requestBuilder.sequence = seq
+            }.build()).response
+            channelTxServiceB.recvPacket(TxChannel.RecvPacketRequest.newBuilder().apply {
+                requestBuilder.packet = Packet.parseFrom(packetCommitment.commitment)
+                requestBuilder.proofCommitment = packetCommitment.proof
+                requestBuilder.proofHeight = packetCommitment.proofHeight
             }.build())
         }
 
         // check unreceived packets (after recv)
-        channelQueryServiceB.unreceivedPackets(QueryUnreceivedPacketsRequest.newBuilder().apply{
-            portId = PORT_B
-            channelId = CHANNEL_B
-            addAllPacketCommitmentSequences(listOf(1, 2, 3))
-        }.build()).let {
-            assert(it.sequencesCount == 0)
+        channelQueryServiceB.unreceivedPackets(QueryChannel.QueryUnreceivedPacketsRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_B
+            requestBuilder.channelId = CHANNEL_B
+            requestBuilder.addAllPacketCommitmentSequences(listOf(1, 2, 3))
+        }.build()).response.let {
+            require(it.sequencesCount == 0)
         }
 
         // check unreceived acknowledgements (before recv)
-        channelQueryServiceA.unreceivedAcks(QueryUnreceivedAcksRequest.newBuilder().apply{
-            portId = PORT_A
-            channelId = CHANNEL_A
-            addAllPacketAckSequences(listOf(1, 2, 3))
-        }.build()).let {
-            assert(it.sequencesCount == 3)
-            assert(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
+        channelQueryServiceA.unreceivedAcks(QueryChannel.QueryUnreceivedAcksRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelId = CHANNEL_A
+            requestBuilder.addAllPacketAckSequences(listOf(1, 2, 3))
+        }.build()).response.let {
+            require(it.sequencesCount == 3)
+            require(it.sequencesList.containsAll(listOf(1L, 2L, 3L)))
         }
 
         // recv acks for $10, $20 and $30 @ A
         repeat(3) {
             val seq = (it + 1).toLong()
-            val packetCommitment = channelQueryServiceA.packetCommitment(QueryPacketCommitmentRequest.newBuilder().apply {
-                portId = PORT_A
-                channelId = CHANNEL_A
-                sequence = seq
-            }.build())
-            val packetAcknowledgement = channelQueryServiceB.packetAcknowledgement(QueryPacketAcknowledgementRequest.newBuilder().apply {
-                portId = PORT_B
-                channelId = CHANNEL_B
-                sequence = seq
-            }.build())
-            channelTxServiceA.acknowledgement(MsgAcknowledgement.newBuilder().apply {
-                packet = Packet.parseFrom(packetCommitment.commitment)
-                acknowledgement = packetAcknowledgement.acknowledgement
-                proofAcked = packetAcknowledgement.proof
-                proofHeight = packetAcknowledgement.proofHeight
+            val packetCommitment = channelQueryServiceA.packetCommitment(QueryChannel.QueryPacketCommitmentRequest.newBuilder().apply {
+                requestBuilder.portId = PORT_A
+                requestBuilder.channelId = CHANNEL_A
+                requestBuilder.sequence = seq
+            }.build()).response
+            val packetAcknowledgement = channelQueryServiceB.packetAcknowledgement(QueryChannel.QueryPacketAcknowledgementRequest.newBuilder().apply {
+                requestBuilder.portId = PORT_B
+                requestBuilder.channelId = CHANNEL_B
+                requestBuilder.sequence = seq
+            }.build()).response
+            channelTxServiceA.acknowledgement(TxChannel.AcknowledgementRequest.newBuilder().apply {
+                requestBuilder.packet = Packet.parseFrom(packetCommitment.commitment)
+                requestBuilder.acknowledgement = packetAcknowledgement.acknowledgement
+                requestBuilder.proofAcked = packetAcknowledgement.proof
+                requestBuilder.proofHeight = packetAcknowledgement.proofHeight
             }.build())
         }
 
         // check unreceived acknowledgements (after recv)
-        channelQueryServiceA.unreceivedAcks(QueryUnreceivedAcksRequest.newBuilder().apply{
-            portId = PORT_A
-            channelId = CHANNEL_A
-            addAllPacketAckSequences(listOf(1, 2, 3))
-        }.build()).let {
-            assert(it.sequencesCount == 0)
+        channelQueryServiceA.unreceivedAcks(QueryChannel.QueryUnreceivedAcksRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_A
+            requestBuilder.channelId = CHANNEL_A
+            requestBuilder.addAllPacketAckSequences(listOf(1, 2, 3))
+        }.build()).response.let {
+            require(it.sequencesCount == 0)
         }
 
         // check acks
-        channelQueryServiceB.packetAcknowledgements(QueryPacketAcknowledgementsRequest.newBuilder().apply{
-            portId = PORT_B
-            channelId = CHANNEL_B
-            pagination = pageReq
-        }.build()).let { res ->
-            assert(res.pagination.total == 3L)
-            assert(res.acknowledgementsCount == 3)
+        channelQueryServiceB.packetAcknowledgements(QueryChannel.QueryPacketAcknowledgementsRequest.newBuilder().apply {
+            requestBuilder.portId = PORT_B
+            requestBuilder.channelId = CHANNEL_B
+            requestBuilder.pagination = pageReq
+        }.build()).response.let { res ->
+            require(res.pagination.total == 3L)
+            require(res.acknowledgementsCount == 3)
             res.acknowledgementsList.forEach{ packetState ->
-                assert(packetState.portId == PORT_B)
-                assert(packetState.channelId == CHANNEL_B)
-                val ack = channelQueryServiceB.packetAcknowledgement(QueryPacketAcknowledgementRequest.newBuilder().apply {
-                    portId = packetState.portId
-                    channelId = packetState.channelId
-                    sequence = packetState.sequence
-                }.build())
-                assert(packetState.data == ack.acknowledgement)
+                require(packetState.portId == PORT_B)
+                require(packetState.channelId == CHANNEL_B)
+                val ack = channelQueryServiceB.packetAcknowledgement(QueryChannel.QueryPacketAcknowledgementRequest.newBuilder().apply {
+                    requestBuilder.portId = packetState.portId
+                    requestBuilder.channelId = packetState.channelId
+                    requestBuilder.sequence = packetState.sequence
+                }.build()).response
+                require(packetState.data == ack.acknowledgement)
             }
         }
 
@@ -425,42 +433,42 @@ object Client {
             val amount = quantity.toString()
 
             // transfer back @ B
-            transferTxServiceB.transfer(Tx.MsgTransfer.newBuilder().apply {
-                sourcePort = PORT_B
-                sourceChannel = CHANNEL_B
-                tokenBuilder.denom = Denom.fromString(baseDenom)
+            transferTxServiceB.transfer(TxTransfer.TransferRequest.newBuilder().apply {
+                requestBuilder.sourcePort = PORT_B
+                requestBuilder.sourceChannel = CHANNEL_B
+                requestBuilder.tokenBuilder.denom = Denom.fromString(baseDenom)
                         .addPath(Identifier(PORT_B), Identifier(CHANNEL_B))
                         .toIbcDenom()
-                tokenBuilder.amount = amount
-                sender = partyNameB
-                receiver = partyNameA
-                timeoutHeight = Height.getDefaultInstance()
-                timeoutTimestamp = 0
+                requestBuilder.tokenBuilder.amount = amount
+                requestBuilder.sender = partyNameB
+                requestBuilder.receiver = partyNameA
+                requestBuilder.timeoutHeight = Height.getDefaultInstance()
+                requestBuilder.timeoutTimestamp = 0
             }.build())
 
             // recv  A
-            val packetCommitment = channelQueryServiceB.packetCommitment(QueryPacketCommitmentRequest.newBuilder().apply {
-                portId = PORT_B
-                channelId = CHANNEL_B
-                sequence = seq
-            }.build())
-            channelTxServiceBankA.recvPacket(MsgRecvPacket.newBuilder().apply {
-                packet = Packet.parseFrom(packetCommitment.commitment)
-                proofCommitment = packetCommitment.proof
-                proofHeight = packetCommitment.proofHeight
+            val packetCommitment = channelQueryServiceB.packetCommitment(QueryChannel.QueryPacketCommitmentRequest.newBuilder().apply {
+                requestBuilder.portId = PORT_B
+                requestBuilder.channelId = CHANNEL_B
+                requestBuilder.sequence = seq
+            }.build()).response
+            channelTxServiceBankA.recvPacket(TxChannel.RecvPacketRequest.newBuilder().apply {
+                requestBuilder.packet = Packet.parseFrom(packetCommitment.commitment)
+                requestBuilder.proofCommitment = packetCommitment.proof
+                requestBuilder.proofHeight = packetCommitment.proofHeight
             }.build())
 
             // recv ack @ B
-            val packetAcknowledgement = channelQueryServiceBankA.packetAcknowledgement(QueryPacketAcknowledgementRequest.newBuilder().apply {
-                portId = PORT_A
-                channelId = CHANNEL_A
-                sequence = seq
-            }.build())
-            channelTxServiceB.acknowledgement(MsgAcknowledgement.newBuilder().apply {
-                packet = Packet.parseFrom(packetCommitment.commitment)
-                acknowledgement = packetAcknowledgement.acknowledgement
-                proofAcked = packetAcknowledgement.proof
-                proofHeight = packetAcknowledgement.proofHeight
+            val packetAcknowledgement = channelQueryServiceBankA.packetAcknowledgement(QueryChannel.QueryPacketAcknowledgementRequest.newBuilder().apply {
+                requestBuilder.portId = PORT_A
+                requestBuilder.channelId = CHANNEL_A
+                requestBuilder.sequence = seq
+            }.build()).response
+            channelTxServiceB.acknowledgement(TxChannel.AcknowledgementRequest.newBuilder().apply {
+                requestBuilder.packet = Packet.parseFrom(packetCommitment.commitment)
+                requestBuilder.acknowledgement = packetAcknowledgement.acknowledgement
+                requestBuilder.proofAcked = packetAcknowledgement.proof
+                requestBuilder.proofHeight = packetAcknowledgement.proofHeight
             }.build())
         }
     }

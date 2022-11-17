@@ -4,10 +4,10 @@ import co.paralleluniverse.fibers.Suspendable
 import ibc.core.connection.v1.Tx
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleConnOpenConfirm
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateRef
@@ -32,7 +32,7 @@ class IbcConnOpenConfirmFlow(
         // query conn state
         val conn = serviceHub.vaultService.queryIbcState<IbcConnection>(baseId, Identifier(msg.connectionId))!!
         // query client state
-        val client = serviceHub.vaultService.queryIbcState<ClientState>(baseId, Identifier(conn.state.data.end.clientId))!!
+        val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, Identifier(conn.state.data.end.clientId))!!
 
         // create command and outputs
         val command = HandleConnOpenConfirm(msg)

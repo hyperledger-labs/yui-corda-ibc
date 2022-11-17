@@ -9,15 +9,14 @@ import "ibc/core/connection/v1/connection.proto";
 import "ibc/core/channel/v1/channel.proto";
 import "ibc/core/commitment/v1/commitment.proto";
 import "ibc/lightclients/fabric/v1/fabric.proto";
-import "confio/proofs.proto";
+import "proofs.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 
 // State
 message State {
-  string id = 1;
-  ibc.lightclients.fabric.v1.ClientState client_state = 2;
-  map<uint64, ibc.lightclients.fabric.v1.ConsensusState> consensus_states = 3;
+  ibc.lightclients.fabric.v1.ClientState client_state = 1;
+  map<uint64, ibc.lightclients.fabric.v1.ConsensusState> consensus_states = 2;
 }
 
 service LightClient {

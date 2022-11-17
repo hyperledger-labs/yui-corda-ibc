@@ -18,13 +18,13 @@ import jp.datachain.corda.ibc.flows.util.queryIbcBank
 import jp.datachain.corda.ibc.flows.util.queryIbcCashBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics20.*
 import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.states.IbcChannel
+import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
 import net.corda.core.contracts.StateRef
@@ -38,7 +38,7 @@ import net.corda.testing.node.StartedMockNode
 import java.util.*
 
 class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode: StartedMockNode) {
-    var maybeBaseId: StateRef? = null
+    private var maybeBaseId: StateRef? = null
     val baseId
         get() = maybeBaseId!!
     fun setBaseId(baseId: StateRef) {
@@ -59,8 +59,8 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         return Pair(state, stx.toProof())
     }
 
-    fun client(id: Identifier) = queryStateWithProof<ClientState>(id).first
-    fun clientProof(id: Identifier) = queryStateWithProof<ClientState>(id).second
+    fun client(id: Identifier) = queryStateWithProof<IbcClientState>(id).first
+    fun clientProof(id: Identifier) = queryStateWithProof<IbcClientState>(id).second
 
     fun conn(id: Identifier) = queryStateWithProof<IbcConnection>(id).first
     fun connProof(id: Identifier) = queryStateWithProof<IbcConnection>(id).second
@@ -132,7 +132,7 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
 
     fun createClient(msg: MsgCreateClient) : Identifier {
         val stx = executeFlow(IbcClientCreateFlow(baseId, msg))
-        val client = stx.tx.outputsOfType<ClientState>().single()
+        val client = stx.tx.outputsOfType<IbcClientState>().single()
         return client.id
     }
 
@@ -248,12 +248,12 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
         assert(packet.timeoutTimestamp == msg.timeoutTimestamp)
         val data = packet.data.toFungibleTokenPacketData()
         assert(data.denom == msg.token.denom)
-        assert(data.amount == msg.token.amount.toLong())
+        assert(data.amount == msg.token.amount)
         assert(data.sender == msg.sender)
         assert(data.receiver == msg.receiver)
         val bank = stx.tx.outputsOfType<Bank>().single()
         val denom = Denom.fromString(data.denom)
-        val amount = Amount.fromLong(data.amount)
+        val amount = Amount.fromString(data.amount)
         val sender = Address.fromBech32(msg.sender)
         if (denom.hasPrefix(Identifier(msg.sourcePort), Identifier(msg.sourceChannel))) {
             assert(prevBank.burn(sender, denom, amount) == bank)
@@ -280,7 +280,7 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
                 else
                     Denom.fromString(msg.token.denom)
         assert(data.denom == denom.toString())
-        assert(data.amount == msg.token.amount.toLong())
+        assert(data.amount == msg.token.amount)
         assert(data.sender == msg.sender)
         assert(data.receiver == msg.receiver)
     }

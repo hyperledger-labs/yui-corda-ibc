@@ -7,7 +7,7 @@ import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
 interface Misbehaviour {
-    val misbehaviour: Any
+    val anyMisbehaviour: Any
 
     fun clientType(): ClientType
     fun getClientID(): Identifier

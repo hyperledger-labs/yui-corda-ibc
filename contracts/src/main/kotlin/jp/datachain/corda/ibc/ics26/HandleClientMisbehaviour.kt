@@ -1,8 +1,8 @@
 package jp.datachain.corda.ibc.ics26
 
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.Misbehaviour
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.states.IbcClientState
 import java.security.PublicKey
 
 data class HandleClientMisbehaviour(
@@ -10,8 +10,9 @@ data class HandleClientMisbehaviour(
         val misbehaviour: Misbehaviour
 ): DatagramHandler {
     override fun execute(ctx: Context, signers: Collection<PublicKey>) {
-        val client = ctx.getInput<ClientState>()
+        val client = ctx.getInput<IbcClientState>()
         require(client.id == identifier)
-        ctx.addOutput(client.checkMisbehaviourAndUpdateState(misbehaviour))
+        val result = client.impl.checkMisbehaviourAndUpdateState(misbehaviour)
+        ctx.addOutput(client.update(result))
     }
 }

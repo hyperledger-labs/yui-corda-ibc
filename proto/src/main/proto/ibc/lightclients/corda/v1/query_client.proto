@@ -1,0 +1,90 @@
+syntax = "proto3";
+package ibc.lightclients.corda.v1;
+
+option go_package = "github.com/hyperledger-labs/yui-corda-ibc/go/x/ibc/light-clients/xx-corda/types";
+
+import "ibc/core/client/v1/query.proto";
+import "ibc/lightclients/corda/v1/corda-types.proto";
+
+service ClientQuery {
+  rpc ClientState(QueryClientStateRequest) returns (QueryClientStateResponse);
+  rpc ClientStates(QueryClientStatesRequest) returns (QueryClientStatesResponse);
+  rpc ConsensusState(QueryConsensusStateRequest) returns (QueryConsensusStateResponse);
+  rpc ConsensusStates(QueryConsensusStatesRequest) returns (QueryConsensusStatesResponse);
+  rpc ClientStatus(QueryClientStatusRequest) returns (QueryClientStatusResponse);
+  rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse);
+  rpc UpgradedClientState(QueryUpgradedClientStateRequest) returns (QueryUpgradedClientStateResponse);
+  rpc UpgradedConsensusState(QueryUpgradedConsensusStateRequest) returns (QueryUpgradedConsensusStateResponse);
+}
+
+message QueryClientStateRequest {
+  ibc.core.client.v1.QueryClientStateRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryClientStateResponse {
+  ibc.core.client.v1.QueryClientStateResponse response = 1;
+}
+
+message QueryClientStatesRequest {
+  ibc.core.client.v1.QueryClientStatesRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryClientStatesResponse {
+  ibc.core.client.v1.QueryClientStatesResponse response = 1;
+}
+
+message QueryConsensusStateRequest {
+  ibc.core.client.v1.QueryConsensusStateRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryConsensusStateResponse {
+  ibc.core.client.v1.QueryConsensusStateResponse response = 1;
+}
+
+message QueryConsensusStatesRequest {
+  ibc.core.client.v1.QueryConsensusStatesRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryConsensusStatesResponse {
+  ibc.core.client.v1.QueryConsensusStatesResponse response = 1;
+}
+
+message QueryClientStatusRequest {
+  ibc.core.client.v1.QueryClientStatusRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryClientStatusResponse {
+  ibc.core.client.v1.QueryClientStatusResponse response = 1;
+}
+
+message QueryClientParamsRequest {
+  ibc.core.client.v1.QueryClientParamsRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryClientParamsResponse {
+  ibc.core.client.v1.QueryClientParamsResponse response = 1;
+}
+
+message QueryUpgradedClientStateRequest {
+  ibc.core.client.v1.QueryUpgradedClientStateRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryUpgradedClientStateResponse {
+  ibc.core.client.v1.QueryUpgradedClientStateResponse response = 1;
+}
+
+message QueryUpgradedConsensusStateRequest {
+  ibc.core.client.v1.QueryUpgradedConsensusStateRequest request = 1;
+  StateRef base_id = 2;
+}
+
+message QueryUpgradedConsensusStateResponse {
+  ibc.core.client.v1.QueryUpgradedConsensusStateResponse response = 1;
+}

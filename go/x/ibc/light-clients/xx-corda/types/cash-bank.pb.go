@@ -6,12 +6,11 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -28,113 +27,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type CreateCashBankRequest struct {
-	BankAddress string `protobuf:"bytes,1,opt,name=bank_address,json=bankAddress,proto3" json:"bank_address,omitempty"`
-}
-
-func (m *CreateCashBankRequest) Reset()         { *m = CreateCashBankRequest{} }
-func (m *CreateCashBankRequest) String() string { return proto.CompactTextString(m) }
-func (*CreateCashBankRequest) ProtoMessage()    {}
-func (*CreateCashBankRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d87574cde4964577, []int{0}
-}
-func (m *CreateCashBankRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *CreateCashBankRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_CreateCashBankRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *CreateCashBankRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateCashBankRequest.Merge(m, src)
-}
-func (m *CreateCashBankRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *CreateCashBankRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CreateCashBankRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CreateCashBankRequest proto.InternalMessageInfo
-
-func (m *CreateCashBankRequest) GetBankAddress() string {
-	if m != nil {
-		return m.BankAddress
-	}
-	return ""
-}
-
-type AllocateCashRequest struct {
-	OwnerAddress string `protobuf:"bytes,1,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty"`
-	Currency     string `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`
-	Amount       string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (m *AllocateCashRequest) Reset()         { *m = AllocateCashRequest{} }
-func (m *AllocateCashRequest) String() string { return proto.CompactTextString(m) }
-func (*AllocateCashRequest) ProtoMessage()    {}
-func (*AllocateCashRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d87574cde4964577, []int{1}
-}
-func (m *AllocateCashRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *AllocateCashRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_AllocateCashRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *AllocateCashRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AllocateCashRequest.Merge(m, src)
-}
-func (m *AllocateCashRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *AllocateCashRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_AllocateCashRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AllocateCashRequest proto.InternalMessageInfo
-
-func (m *AllocateCashRequest) GetOwnerAddress() string {
-	if m != nil {
-		return m.OwnerAddress
-	}
-	return ""
-}
-
-func (m *AllocateCashRequest) GetCurrency() string {
-	if m != nil {
-		return m.Currency
-	}
-	return ""
-}
-
-func (m *AllocateCashRequest) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
 type CashBank struct {
 	Participants []*Party              `protobuf:"bytes,1,rep,name=participants,proto3" json:"participants,omitempty"`
-	BaseId       *StateRef             `protobuf:"bytes,2,opt,name=baseId,proto3" json:"baseId,omitempty"`
+	BaseId       *StateRef             `protobuf:"bytes,2,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
 	Owner        *Party                `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 	Supply       *CashBank_SupplyMap   `protobuf:"bytes,4,opt,name=supply,proto3" json:"supply,omitempty"`
 	Denoms       *CashBank_IbcDenomMap `protobuf:"bytes,5,opt,name=denoms,proto3" json:"denoms,omitempty"`
@@ -144,7 +39,7 @@ func (m *CashBank) Reset()         { *m = CashBank{} }
 func (m *CashBank) String() string { return proto.CompactTextString(m) }
 func (*CashBank) ProtoMessage()    {}
 func (*CashBank) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d87574cde4964577, []int{2}
+	return fileDescriptor_d87574cde4964577, []int{0}
 }
 func (m *CashBank) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -209,14 +104,14 @@ func (m *CashBank) GetDenoms() *CashBank_IbcDenomMap {
 }
 
 type CashBank_SupplyMap struct {
-	DenomToAmount map[string]string `protobuf:"bytes,1,rep,name=denomToAmount,proto3" json:"denomToAmount,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	DenomToAmount map[string]string `protobuf:"bytes,1,rep,name=denom_to_amount,json=denomToAmount,proto3" json:"denom_to_amount,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *CashBank_SupplyMap) Reset()         { *m = CashBank_SupplyMap{} }
 func (m *CashBank_SupplyMap) String() string { return proto.CompactTextString(m) }
 func (*CashBank_SupplyMap) ProtoMessage()    {}
 func (*CashBank_SupplyMap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d87574cde4964577, []int{2, 0}
+	return fileDescriptor_d87574cde4964577, []int{0, 0}
 }
 func (m *CashBank_SupplyMap) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -253,14 +148,14 @@ func (m *CashBank_SupplyMap) GetDenomToAmount() map[string]string {
 }
 
 type CashBank_IbcDenomMap struct {
-	IbcDenomToDenom map[string]string `protobuf:"bytes,1,rep,name=ibcDenomToDenom,proto3" json:"ibcDenomToDenom,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	IbcDenomToDenom map[string]string `protobuf:"bytes,1,rep,name=ibc_denom_to_denom,json=ibcDenomToDenom,proto3" json:"ibc_denom_to_denom,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *CashBank_IbcDenomMap) Reset()         { *m = CashBank_IbcDenomMap{} }
 func (m *CashBank_IbcDenomMap) String() string { return proto.CompactTextString(m) }
 func (*CashBank_IbcDenomMap) ProtoMessage()    {}
 func (*CashBank_IbcDenomMap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d87574cde4964577, []int{2, 1}
+	return fileDescriptor_d87574cde4964577, []int{0, 1}
 }
 func (m *CashBank_IbcDenomMap) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -296,14 +191,314 @@ func (m *CashBank_IbcDenomMap) GetIbcDenomToDenom() map[string]string {
 	return nil
 }
 
+type CreateCashBankRequest struct {
+	BaseId      *StateRef `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+	BankAddress string    `protobuf:"bytes,2,opt,name=bank_address,json=bankAddress,proto3" json:"bank_address,omitempty"`
+}
+
+func (m *CreateCashBankRequest) Reset()         { *m = CreateCashBankRequest{} }
+func (m *CreateCashBankRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateCashBankRequest) ProtoMessage()    {}
+func (*CreateCashBankRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d87574cde4964577, []int{1}
+}
+func (m *CreateCashBankRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateCashBankRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateCashBankRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CreateCashBankRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateCashBankRequest.Merge(m, src)
+}
+func (m *CreateCashBankRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateCashBankRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateCashBankRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateCashBankRequest proto.InternalMessageInfo
+
+func (m *CreateCashBankRequest) GetBaseId() *StateRef {
+	if m != nil {
+		return m.BaseId
+	}
+	return nil
+}
+
+func (m *CreateCashBankRequest) GetBankAddress() string {
+	if m != nil {
+		return m.BankAddress
+	}
+	return ""
+}
+
+type CreateCashBankResponse struct {
+	Proof []byte `protobuf:"bytes,1,opt,name=proof,proto3" json:"proof,omitempty"`
+}
+
+func (m *CreateCashBankResponse) Reset()         { *m = CreateCashBankResponse{} }
+func (m *CreateCashBankResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateCashBankResponse) ProtoMessage()    {}
+func (*CreateCashBankResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d87574cde4964577, []int{2}
+}
+func (m *CreateCashBankResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateCashBankResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateCashBankResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CreateCashBankResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateCashBankResponse.Merge(m, src)
+}
+func (m *CreateCashBankResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateCashBankResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateCashBankResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateCashBankResponse proto.InternalMessageInfo
+
+func (m *CreateCashBankResponse) GetProof() []byte {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+type AllocateCashRequest struct {
+	BaseId       *StateRef `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+	OwnerAddress string    `protobuf:"bytes,2,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty"`
+	Currency     string    `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`
+	Amount       string    `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *AllocateCashRequest) Reset()         { *m = AllocateCashRequest{} }
+func (m *AllocateCashRequest) String() string { return proto.CompactTextString(m) }
+func (*AllocateCashRequest) ProtoMessage()    {}
+func (*AllocateCashRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d87574cde4964577, []int{3}
+}
+func (m *AllocateCashRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllocateCashRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllocateCashRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllocateCashRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllocateCashRequest.Merge(m, src)
+}
+func (m *AllocateCashRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllocateCashRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllocateCashRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllocateCashRequest proto.InternalMessageInfo
+
+func (m *AllocateCashRequest) GetBaseId() *StateRef {
+	if m != nil {
+		return m.BaseId
+	}
+	return nil
+}
+
+func (m *AllocateCashRequest) GetOwnerAddress() string {
+	if m != nil {
+		return m.OwnerAddress
+	}
+	return ""
+}
+
+func (m *AllocateCashRequest) GetCurrency() string {
+	if m != nil {
+		return m.Currency
+	}
+	return ""
+}
+
+func (m *AllocateCashRequest) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+type AllocateCashResponse struct {
+	Proof []byte `protobuf:"bytes,1,opt,name=proof,proto3" json:"proof,omitempty"`
+}
+
+func (m *AllocateCashResponse) Reset()         { *m = AllocateCashResponse{} }
+func (m *AllocateCashResponse) String() string { return proto.CompactTextString(m) }
+func (*AllocateCashResponse) ProtoMessage()    {}
+func (*AllocateCashResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d87574cde4964577, []int{4}
+}
+func (m *AllocateCashResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AllocateCashResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AllocateCashResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AllocateCashResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllocateCashResponse.Merge(m, src)
+}
+func (m *AllocateCashResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *AllocateCashResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllocateCashResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AllocateCashResponse proto.InternalMessageInfo
+
+func (m *AllocateCashResponse) GetProof() []byte {
+	if m != nil {
+		return m.Proof
+	}
+	return nil
+}
+
+type QueryCashBankRequest struct {
+	BaseId *StateRef `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+}
+
+func (m *QueryCashBankRequest) Reset()         { *m = QueryCashBankRequest{} }
+func (m *QueryCashBankRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryCashBankRequest) ProtoMessage()    {}
+func (*QueryCashBankRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d87574cde4964577, []int{5}
+}
+func (m *QueryCashBankRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCashBankRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCashBankRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCashBankRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCashBankRequest.Merge(m, src)
+}
+func (m *QueryCashBankRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCashBankRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCashBankRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCashBankRequest proto.InternalMessageInfo
+
+func (m *QueryCashBankRequest) GetBaseId() *StateRef {
+	if m != nil {
+		return m.BaseId
+	}
+	return nil
+}
+
+type QueryCashBankResponse struct {
+	CashBank *CashBank `protobuf:"bytes,1,opt,name=cash_bank,json=cashBank,proto3" json:"cash_bank,omitempty"`
+}
+
+func (m *QueryCashBankResponse) Reset()         { *m = QueryCashBankResponse{} }
+func (m *QueryCashBankResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryCashBankResponse) ProtoMessage()    {}
+func (*QueryCashBankResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d87574cde4964577, []int{6}
+}
+func (m *QueryCashBankResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCashBankResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCashBankResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCashBankResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCashBankResponse.Merge(m, src)
+}
+func (m *QueryCashBankResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCashBankResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCashBankResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCashBankResponse proto.InternalMessageInfo
+
+func (m *QueryCashBankResponse) GetCashBank() *CashBank {
+	if m != nil {
+		return m.CashBank
+	}
+	return nil
+}
+
 func init() {
-	proto.RegisterType((*CreateCashBankRequest)(nil), "ibc.lightclients.corda.v1.CreateCashBankRequest")
-	proto.RegisterType((*AllocateCashRequest)(nil), "ibc.lightclients.corda.v1.AllocateCashRequest")
 	proto.RegisterType((*CashBank)(nil), "ibc.lightclients.corda.v1.CashBank")
 	proto.RegisterType((*CashBank_SupplyMap)(nil), "ibc.lightclients.corda.v1.CashBank.SupplyMap")
 	proto.RegisterMapType((map[string]string)(nil), "ibc.lightclients.corda.v1.CashBank.SupplyMap.DenomToAmountEntry")
 	proto.RegisterType((*CashBank_IbcDenomMap)(nil), "ibc.lightclients.corda.v1.CashBank.IbcDenomMap")
 	proto.RegisterMapType((map[string]string)(nil), "ibc.lightclients.corda.v1.CashBank.IbcDenomMap.IbcDenomToDenomEntry")
+	proto.RegisterType((*CreateCashBankRequest)(nil), "ibc.lightclients.corda.v1.CreateCashBankRequest")
+	proto.RegisterType((*CreateCashBankResponse)(nil), "ibc.lightclients.corda.v1.CreateCashBankResponse")
+	proto.RegisterType((*AllocateCashRequest)(nil), "ibc.lightclients.corda.v1.AllocateCashRequest")
+	proto.RegisterType((*AllocateCashResponse)(nil), "ibc.lightclients.corda.v1.AllocateCashResponse")
+	proto.RegisterType((*QueryCashBankRequest)(nil), "ibc.lightclients.corda.v1.QueryCashBankRequest")
+	proto.RegisterType((*QueryCashBankResponse)(nil), "ibc.lightclients.corda.v1.QueryCashBankResponse")
 }
 
 func init() {
@@ -311,46 +506,50 @@ func init() {
 }
 
 var fileDescriptor_d87574cde4964577 = []byte{
-	// 615 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x41, 0x4f, 0xd4, 0x40,
-	0x14, 0xa6, 0xe0, 0x6e, 0xe0, 0xed, 0xae, 0x98, 0x11, 0xc9, 0x5a, 0x93, 0x0d, 0xc2, 0x05, 0x63,
-	0x3a, 0x23, 0x98, 0x18, 0x83, 0x17, 0x58, 0x96, 0x18, 0x12, 0x8d, 0x58, 0x88, 0x07, 0x2e, 0x66,
-	0x3a, 0x1d, 0xba, 0x0d, 0xdd, 0x4e, 0x9d, 0x4e, 0xd7, 0xed, 0xbf, 0x30, 0xf1, 0xb7, 0xf8, 0x03,
-	0xbc, 0x79, 0xc4, 0x9b, 0x47, 0x03, 0x7f, 0xc4, 0x74, 0xa6, 0xdd, 0x2c, 0x08, 0x1b, 0x38, 0x75,
-	0xde, 0x9b, 0xef, 0xfb, 0xfa, 0xbd, 0x99, 0x79, 0x0f, 0x9e, 0x85, 0x1e, 0x23, 0x51, 0x18, 0xf4,
-	0x15, 0x8b, 0x42, 0x1e, 0xab, 0x94, 0x30, 0x21, 0x7d, 0x4a, 0x86, 0x1b, 0x84, 0xd1, 0xb4, 0xef,
-	0x78, 0x34, 0x3e, 0xc5, 0x89, 0x14, 0x4a, 0xa0, 0xc7, 0xa1, 0xc7, 0xf0, 0x24, 0x14, 0x6b, 0x28,
-	0x1e, 0x6e, 0xd8, 0xcf, 0xa7, 0xa8, 0x14, 0x0b, 0x47, 0xe5, 0x09, 0x4f, 0x8d, 0x8e, 0xfd, 0x24,
-	0x10, 0x22, 0x88, 0x38, 0xd1, 0x91, 0x97, 0x9d, 0x10, 0x3e, 0x48, 0x54, 0x6e, 0x36, 0x57, 0xb7,
-	0xe0, 0xd1, 0xae, 0xe4, 0x54, 0xf1, 0x5d, 0x9a, 0xf6, 0xbb, 0x34, 0x3e, 0x75, 0xf9, 0x97, 0x8c,
-	0xa7, 0x0a, 0x3d, 0x85, 0x66, 0xe1, 0xe5, 0x33, 0xf5, 0x7d, 0xc9, 0xd3, 0xb4, 0x6d, 0xad, 0x58,
-	0xeb, 0x0b, 0x6e, 0xa3, 0xc8, 0xed, 0x98, 0xd4, 0x6a, 0x0c, 0x0f, 0x77, 0xa2, 0x48, 0xb0, 0x92,
-	0x5d, 0x31, 0xd7, 0xa0, 0x25, 0xbe, 0xc6, 0x5c, 0x5e, 0xa1, 0x36, 0x75, 0xb2, 0xe4, 0x22, 0x1b,
-	0xe6, 0x59, 0x26, 0x25, 0x8f, 0x59, 0xde, 0x9e, 0xd5, 0xfb, 0xe3, 0x18, 0x2d, 0x43, 0x9d, 0x0e,
-	0x44, 0x16, 0xab, 0xf6, 0x9c, 0xde, 0x29, 0xa3, 0xd5, 0xdf, 0x35, 0x98, 0xaf, 0x6c, 0xa2, 0x1e,
-	0x34, 0x13, 0x2a, 0x55, 0xc8, 0xc2, 0x84, 0xc6, 0xaa, 0xf8, 0xc9, 0xdc, 0x7a, 0x63, 0x73, 0x05,
-	0xdf, 0x78, 0x68, 0xf8, 0x80, 0x4a, 0x95, 0xbb, 0x97, 0x58, 0xe8, 0x0d, 0xd4, 0x3d, 0x9a, 0xf2,
-	0x7d, 0x5f, 0x9b, 0x68, 0x6c, 0xae, 0x4d, 0xe1, 0x1f, 0x2a, 0xaa, 0xb8, 0xcb, 0x4f, 0xdc, 0x92,
-	0x82, 0x5e, 0x41, 0x4d, 0xd7, 0xa4, 0x6d, 0xde, 0xe6, 0xdf, 0x06, 0x8e, 0xf6, 0xa0, 0x9e, 0x66,
-	0x49, 0x12, 0xe5, 0xed, 0x7b, 0x9a, 0xe8, 0x4c, 0x21, 0x56, 0xf5, 0xe2, 0x43, 0xcd, 0x78, 0x4f,
-	0x13, 0xb7, 0x24, 0xa3, 0xb7, 0x50, 0xf7, 0x79, 0x2c, 0x06, 0x69, 0xbb, 0xa6, 0x65, 0xc8, 0x6d,
-	0x64, 0xf6, 0x3d, 0xd6, 0x2b, 0x48, 0x5a, 0xc8, 0xd0, 0xed, 0x1f, 0x16, 0x2c, 0x8c, 0xe5, 0xd1,
-	0x09, 0xb4, 0x74, 0xfe, 0x48, 0xec, 0x98, 0x4b, 0x30, 0x27, 0xbb, 0x7d, 0x27, 0x93, 0xb8, 0x37,
-	0x29, 0xb1, 0x17, 0x2b, 0x99, 0xbb, 0x97, 0x65, 0xed, 0x6d, 0x40, 0xff, 0x83, 0xd0, 0x03, 0x98,
-	0x3b, 0xe5, 0x79, 0xf9, 0x64, 0x8a, 0x25, 0x5a, 0x82, 0xda, 0x90, 0x46, 0x19, 0x2f, 0x9f, 0x89,
-	0x09, 0xb6, 0x66, 0x5f, 0x5b, 0xf6, 0x4f, 0x0b, 0x1a, 0x13, 0xf5, 0xa0, 0x18, 0x16, 0xc3, 0x32,
-	0x3c, 0x12, 0xfa, 0x53, 0x7a, 0xef, 0xdd, 0xf1, 0x64, 0xc6, 0xeb, 0x52, 0xc6, 0xf8, 0xbf, 0x2a,
-	0x6e, 0x77, 0x61, 0xe9, 0x3a, 0xe0, 0x5d, 0x6a, 0xd8, 0xfc, 0x3e, 0x0b, 0x8b, 0x95, 0x85, 0x43,
-	0x2e, 0x87, 0x21, 0xe3, 0xe8, 0x18, 0xee, 0x5f, 0xee, 0x49, 0xf4, 0x62, 0x5a, 0x01, 0xd7, 0xb5,
-	0xaf, 0xbd, 0x8c, 0x4d, 0xd7, 0xe3, 0xaa, 0xeb, 0xf1, 0x5e, 0xd1, 0xf5, 0xe8, 0x13, 0x34, 0x27,
-	0x7b, 0x16, 0xe1, 0x29, 0xca, 0xd7, 0x34, 0xf7, 0x8d, 0xba, 0xef, 0xa0, 0xf5, 0x31, 0xe3, 0x32,
-	0x1f, 0x5b, 0xbe, 0x01, 0x68, 0xaf, 0xdd, 0xe2, 0x2e, 0xba, 0xa3, 0x5f, 0xe7, 0x1d, 0xeb, 0xec,
-	0xbc, 0x63, 0xfd, 0x3d, 0xef, 0x58, 0xdf, 0x2e, 0x3a, 0x33, 0x67, 0x17, 0x9d, 0x99, 0x3f, 0x17,
-	0x9d, 0x99, 0x6e, 0xab, 0xc2, 0x1c, 0x14, 0xb2, 0xc7, 0x1f, 0x82, 0x50, 0xf5, 0x33, 0x0f, 0x33,
-	0x31, 0x20, 0xfd, 0x3c, 0xe1, 0x32, 0xe2, 0x7e, 0xc0, 0xa5, 0x13, 0x51, 0x2f, 0x25, 0x79, 0x16,
-	0x3a, 0x66, 0x1c, 0x16, 0xe3, 0x32, 0x10, 0x64, 0x44, 0xc6, 0x73, 0xd3, 0xa9, 0x06, 0xe7, 0x68,
-	0x64, 0x30, 0x44, 0x8f, 0x4c, 0xaf, 0xae, 0xed, 0xbe, 0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0xbb,
-	0x93, 0x68, 0x6c, 0xa8, 0x05, 0x00, 0x00,
+	// 687 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xad, 0xdb, 0x26, 0x34, 0x93, 0x84, 0xa2, 0x25, 0xad, 0x82, 0x0f, 0x51, 0x48, 0x2f, 0x45,
+	0x10, 0xbb, 0x2d, 0x12, 0x42, 0x88, 0x43, 0x9b, 0xb6, 0x42, 0x3d, 0x20, 0x8a, 0xdb, 0x0b, 0x5c,
+	0xa2, 0xf5, 0x7a, 0x9b, 0x58, 0x75, 0xbd, 0xee, 0xee, 0x3a, 0xc4, 0x7f, 0xc1, 0x87, 0x70, 0xe7,
+	0x07, 0x38, 0x70, 0xec, 0x0d, 0x8e, 0xa8, 0x3d, 0xf3, 0x0f, 0xc8, 0x6b, 0xc7, 0x4a, 0x4a, 0x30,
+	0x89, 0xd4, 0x53, 0x66, 0x27, 0xf3, 0xde, 0xbc, 0xd9, 0x99, 0xf5, 0xc0, 0x13, 0xd7, 0x26, 0xa6,
+	0xe7, 0xf6, 0xfa, 0x92, 0x78, 0x2e, 0xf5, 0xa5, 0x30, 0x09, 0xe3, 0x0e, 0x36, 0x07, 0xdb, 0x26,
+	0xc1, 0xa2, 0xdf, 0xb6, 0xb1, 0x7f, 0x6e, 0x04, 0x9c, 0x49, 0x86, 0x1e, 0xb9, 0x36, 0x31, 0xc6,
+	0x43, 0x0d, 0x15, 0x6a, 0x0c, 0xb6, 0xf5, 0xa7, 0x39, 0x2c, 0xb1, 0xd1, 0x96, 0x51, 0x40, 0x45,
+	0xc2, 0xd3, 0xfa, 0x51, 0x80, 0x95, 0x7d, 0x2c, 0xfa, 0x1d, 0xec, 0x9f, 0xa3, 0x03, 0xa8, 0x04,
+	0x98, 0x4b, 0x97, 0xb8, 0x01, 0xf6, 0xa5, 0xa8, 0x6b, 0xcd, 0xa5, 0xcd, 0xf2, 0x4e, 0xd3, 0xf8,
+	0x67, 0x2e, 0xe3, 0x18, 0x73, 0x19, 0x59, 0x13, 0x28, 0xf4, 0x1a, 0xee, 0xd9, 0x58, 0xd0, 0xae,
+	0xeb, 0xd4, 0x17, 0x9b, 0xda, 0x66, 0x79, 0x67, 0x23, 0x87, 0xe0, 0x44, 0x62, 0x49, 0x2d, 0x7a,
+	0x66, 0x15, 0x63, 0xcc, 0x91, 0x83, 0x5e, 0x40, 0x81, 0x7d, 0xf2, 0x29, 0xaf, 0x2f, 0x29, 0xec,
+	0xff, 0x93, 0x27, 0xe1, 0xe8, 0x10, 0x8a, 0x22, 0x0c, 0x02, 0x2f, 0xaa, 0x2f, 0x2b, 0x60, 0x3b,
+	0x07, 0x38, 0x2a, 0xd8, 0x38, 0x51, 0x88, 0xb7, 0x38, 0xb0, 0x52, 0x30, 0x7a, 0x03, 0x45, 0x87,
+	0xfa, 0xec, 0x42, 0xd4, 0x0b, 0x8a, 0xc6, 0x9c, 0x85, 0xe6, 0xc8, 0x26, 0x07, 0x31, 0x48, 0x11,
+	0x25, 0x70, 0xfd, 0xab, 0x06, 0xa5, 0x8c, 0x1e, 0xf5, 0x61, 0x55, 0xf9, 0xbb, 0x92, 0x75, 0xf1,
+	0x05, 0x0b, 0x7d, 0x99, 0x5e, 0xee, 0xee, 0x5c, 0x32, 0x0d, 0x95, 0xe6, 0x94, 0xed, 0x29, 0x8a,
+	0x43, 0x5f, 0xf2, 0xc8, 0xaa, 0x3a, 0xe3, 0x3e, 0x7d, 0x17, 0xd0, 0xdf, 0x41, 0xe8, 0x01, 0x2c,
+	0x9d, 0xd3, 0xa8, 0xae, 0x35, 0xb5, 0xcd, 0x92, 0x15, 0x9b, 0xa8, 0x06, 0x85, 0x01, 0xf6, 0x42,
+	0xaa, 0x7a, 0x54, 0xb2, 0x92, 0xc3, 0xab, 0xc5, 0x97, 0x9a, 0xfe, 0x4d, 0x83, 0xf2, 0x58, 0x45,
+	0xe8, 0x12, 0x90, 0x6b, 0x93, 0x6e, 0xa6, 0x5f, 0x19, 0xa9, 0xfc, 0x83, 0x39, 0xaf, 0x27, 0xb3,
+	0x4f, 0x99, 0xfa, 0x49, 0x4a, 0x58, 0x75, 0x27, 0xbd, 0x7a, 0x07, 0x6a, 0xd3, 0x02, 0xe7, 0x29,
+	0xa3, 0x35, 0x84, 0xb5, 0x7d, 0x4e, 0xb1, 0xa4, 0x23, 0x1d, 0x16, 0xbd, 0x0c, 0xa9, 0x90, 0xe3,
+	0xf3, 0xa9, 0xcd, 0x3f, 0x9f, 0x8f, 0xa1, 0x12, 0x3f, 0xc3, 0x2e, 0x76, 0x1c, 0x4e, 0x85, 0x48,
+	0xf3, 0x96, 0x63, 0xdf, 0x5e, 0xe2, 0x6a, 0x19, 0xb0, 0x7e, 0x3b, 0xb3, 0x08, 0x98, 0x2f, 0x68,
+	0xac, 0x36, 0xe0, 0x8c, 0x9d, 0xa9, 0xc4, 0x15, 0x2b, 0x39, 0xb4, 0xbe, 0x68, 0xf0, 0x70, 0xcf,
+	0xf3, 0x18, 0x49, 0x21, 0x77, 0x23, 0x74, 0x03, 0xaa, 0xea, 0x65, 0xdc, 0x52, 0x5a, 0x51, 0xce,
+	0x54, 0x2a, 0xd2, 0x61, 0x85, 0x84, 0x9c, 0x53, 0x9f, 0x44, 0xea, 0xc1, 0x95, 0xac, 0xec, 0x8c,
+	0xd6, 0xa1, 0x98, 0x8e, 0xea, 0xb2, 0xfa, 0x27, 0x3d, 0xb5, 0x9e, 0x41, 0x6d, 0x52, 0x6d, 0x6e,
+	0x71, 0xa7, 0x50, 0x7b, 0x1f, 0x52, 0x1e, 0xdd, 0x69, 0x17, 0x5a, 0x1f, 0x60, 0xed, 0x16, 0x6b,
+	0x2a, 0x62, 0x17, 0x4a, 0xf1, 0xa7, 0xb2, 0x1b, 0xf7, 0x63, 0x06, 0xe2, 0x0c, 0xbf, 0x42, 0x52,
+	0x6b, 0xe7, 0xf7, 0x22, 0xac, 0x8e, 0xdc, 0x27, 0x94, 0x0f, 0x5c, 0x42, 0x51, 0x08, 0xf7, 0x27,
+	0x3b, 0x8a, 0xb6, 0xf2, 0x48, 0xa7, 0x8d, 0x9d, 0xbe, 0x3d, 0x07, 0x22, 0x2d, 0x86, 0x41, 0x65,
+	0xfc, 0xa6, 0x91, 0x91, 0x43, 0x31, 0x65, 0x80, 0x74, 0x73, 0xe6, 0xf8, 0x34, 0x21, 0x87, 0xea,
+	0xc4, 0xb5, 0xa2, 0x3c, 0x86, 0x69, 0x6d, 0xd5, 0xb7, 0x66, 0x07, 0x24, 0x39, 0x3b, 0xc3, 0xef,
+	0xd7, 0x0d, 0xed, 0xea, 0xba, 0xa1, 0xfd, 0xba, 0x6e, 0x68, 0x9f, 0x6f, 0x1a, 0x0b, 0x57, 0x37,
+	0x8d, 0x85, 0x9f, 0x37, 0x8d, 0x85, 0x4e, 0x75, 0x14, 0x7b, 0x1c, 0xaf, 0xaa, 0x8f, 0xef, 0x7a,
+	0xae, 0xec, 0x87, 0xb6, 0x41, 0xd8, 0x85, 0xd9, 0x8f, 0x02, 0xca, 0x3d, 0xea, 0xf4, 0x28, 0x6f,
+	0x7b, 0xd8, 0x16, 0x66, 0x14, 0xba, 0xed, 0x64, 0xbb, 0xc5, 0xdb, 0xaf, 0xc7, 0xcc, 0xa1, 0x99,
+	0xad, 0xc1, 0xf6, 0x68, 0x0f, 0x0e, 0x87, 0x49, 0x8c, 0xa9, 0x36, 0xa0, 0x5d, 0x54, 0x2b, 0xf0,
+	0xf9, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd0, 0xe7, 0x45, 0xe2, 0x77, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -366,10 +565,10 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CashBankServiceClient interface {
 	// transactions
-	CreateCashBank(ctx context.Context, in *CreateCashBankRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AllocateCash(ctx context.Context, in *AllocateCashRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateCashBank(ctx context.Context, in *CreateCashBankRequest, opts ...grpc.CallOption) (*CreateCashBankResponse, error)
+	AllocateCash(ctx context.Context, in *AllocateCashRequest, opts ...grpc.CallOption) (*AllocateCashResponse, error)
 	// queries
-	QueryCashBank(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CashBank, error)
+	QueryCashBank(ctx context.Context, in *QueryCashBankRequest, opts ...grpc.CallOption) (*QueryCashBankResponse, error)
 }
 
 type cashBankServiceClient struct {
@@ -380,8 +579,8 @@ func NewCashBankServiceClient(cc grpc1.ClientConn) CashBankServiceClient {
 	return &cashBankServiceClient{cc}
 }
 
-func (c *cashBankServiceClient) CreateCashBank(ctx context.Context, in *CreateCashBankRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *cashBankServiceClient) CreateCashBank(ctx context.Context, in *CreateCashBankRequest, opts ...grpc.CallOption) (*CreateCashBankResponse, error) {
+	out := new(CreateCashBankResponse)
 	err := c.cc.Invoke(ctx, "/ibc.lightclients.corda.v1.CashBankService/CreateCashBank", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -389,8 +588,8 @@ func (c *cashBankServiceClient) CreateCashBank(ctx context.Context, in *CreateCa
 	return out, nil
 }
 
-func (c *cashBankServiceClient) AllocateCash(ctx context.Context, in *AllocateCashRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *cashBankServiceClient) AllocateCash(ctx context.Context, in *AllocateCashRequest, opts ...grpc.CallOption) (*AllocateCashResponse, error) {
+	out := new(AllocateCashResponse)
 	err := c.cc.Invoke(ctx, "/ibc.lightclients.corda.v1.CashBankService/AllocateCash", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -398,8 +597,8 @@ func (c *cashBankServiceClient) AllocateCash(ctx context.Context, in *AllocateCa
 	return out, nil
 }
 
-func (c *cashBankServiceClient) QueryCashBank(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CashBank, error) {
-	out := new(CashBank)
+func (c *cashBankServiceClient) QueryCashBank(ctx context.Context, in *QueryCashBankRequest, opts ...grpc.CallOption) (*QueryCashBankResponse, error) {
+	out := new(QueryCashBankResponse)
 	err := c.cc.Invoke(ctx, "/ibc.lightclients.corda.v1.CashBankService/QueryCashBank", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -410,23 +609,23 @@ func (c *cashBankServiceClient) QueryCashBank(ctx context.Context, in *emptypb.E
 // CashBankServiceServer is the server API for CashBankService service.
 type CashBankServiceServer interface {
 	// transactions
-	CreateCashBank(context.Context, *CreateCashBankRequest) (*emptypb.Empty, error)
-	AllocateCash(context.Context, *AllocateCashRequest) (*emptypb.Empty, error)
+	CreateCashBank(context.Context, *CreateCashBankRequest) (*CreateCashBankResponse, error)
+	AllocateCash(context.Context, *AllocateCashRequest) (*AllocateCashResponse, error)
 	// queries
-	QueryCashBank(context.Context, *emptypb.Empty) (*CashBank, error)
+	QueryCashBank(context.Context, *QueryCashBankRequest) (*QueryCashBankResponse, error)
 }
 
 // UnimplementedCashBankServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedCashBankServiceServer struct {
 }
 
-func (*UnimplementedCashBankServiceServer) CreateCashBank(ctx context.Context, req *CreateCashBankRequest) (*emptypb.Empty, error) {
+func (*UnimplementedCashBankServiceServer) CreateCashBank(ctx context.Context, req *CreateCashBankRequest) (*CreateCashBankResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCashBank not implemented")
 }
-func (*UnimplementedCashBankServiceServer) AllocateCash(ctx context.Context, req *AllocateCashRequest) (*emptypb.Empty, error) {
+func (*UnimplementedCashBankServiceServer) AllocateCash(ctx context.Context, req *AllocateCashRequest) (*AllocateCashResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllocateCash not implemented")
 }
-func (*UnimplementedCashBankServiceServer) QueryCashBank(ctx context.Context, req *emptypb.Empty) (*CashBank, error) {
+func (*UnimplementedCashBankServiceServer) QueryCashBank(ctx context.Context, req *QueryCashBankRequest) (*QueryCashBankResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryCashBank not implemented")
 }
 
@@ -471,7 +670,7 @@ func _CashBankService_AllocateCash_Handler(srv interface{}, ctx context.Context,
 }
 
 func _CashBankService_QueryCashBank_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(QueryCashBankRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -483,7 +682,7 @@ func _CashBankService_QueryCashBank_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/ibc.lightclients.corda.v1.CashBankService/QueryCashBank",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CashBankServiceServer).QueryCashBank(ctx, req.(*emptypb.Empty))
+		return srv.(CashBankServiceServer).QueryCashBank(ctx, req.(*QueryCashBankRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -507,80 +706,6 @@ var _CashBankService_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "ibc/lightclients/corda/v1/cash-bank.proto",
-}
-
-func (m *CreateCashBankRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *CreateCashBankRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *CreateCashBankRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.BankAddress) > 0 {
-		i -= len(m.BankAddress)
-		copy(dAtA[i:], m.BankAddress)
-		i = encodeVarintCashBank(dAtA, i, uint64(len(m.BankAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *AllocateCashRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AllocateCashRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *AllocateCashRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		i -= len(m.Amount)
-		copy(dAtA[i:], m.Amount)
-		i = encodeVarintCashBank(dAtA, i, uint64(len(m.Amount)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Currency) > 0 {
-		i -= len(m.Currency)
-		copy(dAtA[i:], m.Currency)
-		i = encodeVarintCashBank(dAtA, i, uint64(len(m.Currency)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.OwnerAddress) > 0 {
-		i -= len(m.OwnerAddress)
-		copy(dAtA[i:], m.OwnerAddress)
-		i = encodeVarintCashBank(dAtA, i, uint64(len(m.OwnerAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *CashBank) Marshal() (dAtA []byte, err error) {
@@ -752,6 +877,234 @@ func (m *CashBank_IbcDenomMap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *CreateCashBankRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateCashBankRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CreateCashBankRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BankAddress) > 0 {
+		i -= len(m.BankAddress)
+		copy(dAtA[i:], m.BankAddress)
+		i = encodeVarintCashBank(dAtA, i, uint64(len(m.BankAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.BaseId != nil {
+		{
+			size, err := m.BaseId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCashBank(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CreateCashBankResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateCashBankResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CreateCashBankResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Proof) > 0 {
+		i -= len(m.Proof)
+		copy(dAtA[i:], m.Proof)
+		i = encodeVarintCashBank(dAtA, i, uint64(len(m.Proof)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AllocateCashRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllocateCashRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllocateCashRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintCashBank(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Currency) > 0 {
+		i -= len(m.Currency)
+		copy(dAtA[i:], m.Currency)
+		i = encodeVarintCashBank(dAtA, i, uint64(len(m.Currency)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.OwnerAddress) > 0 {
+		i -= len(m.OwnerAddress)
+		copy(dAtA[i:], m.OwnerAddress)
+		i = encodeVarintCashBank(dAtA, i, uint64(len(m.OwnerAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.BaseId != nil {
+		{
+			size, err := m.BaseId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCashBank(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AllocateCashResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AllocateCashResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AllocateCashResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Proof) > 0 {
+		i -= len(m.Proof)
+		copy(dAtA[i:], m.Proof)
+		i = encodeVarintCashBank(dAtA, i, uint64(len(m.Proof)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCashBankRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCashBankRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCashBankRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		{
+			size, err := m.BaseId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCashBank(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCashBankResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCashBankResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCashBankResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CashBank != nil {
+		{
+			size, err := m.CashBank.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintCashBank(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintCashBank(dAtA []byte, offset int, v uint64) int {
 	offset -= sovCashBank(v)
 	base := offset
@@ -763,40 +1116,6 @@ func encodeVarintCashBank(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *CreateCashBankRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.BankAddress)
-	if l > 0 {
-		n += 1 + l + sovCashBank(uint64(l))
-	}
-	return n
-}
-
-func (m *AllocateCashRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.OwnerAddress)
-	if l > 0 {
-		n += 1 + l + sovCashBank(uint64(l))
-	}
-	l = len(m.Currency)
-	if l > 0 {
-		n += 1 + l + sovCashBank(uint64(l))
-	}
-	l = len(m.Amount)
-	if l > 0 {
-		n += 1 + l + sovCashBank(uint64(l))
-	}
-	return n
-}
-
 func (m *CashBank) Size() (n int) {
 	if m == nil {
 		return 0
@@ -862,245 +1181,105 @@ func (m *CashBank_IbcDenomMap) Size() (n int) {
 	return n
 }
 
+func (m *CreateCashBankRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		l = m.BaseId.Size()
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	l = len(m.BankAddress)
+	if l > 0 {
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	return n
+}
+
+func (m *CreateCashBankResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Proof)
+	if l > 0 {
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	return n
+}
+
+func (m *AllocateCashRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		l = m.BaseId.Size()
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	l = len(m.OwnerAddress)
+	if l > 0 {
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	l = len(m.Currency)
+	if l > 0 {
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	return n
+}
+
+func (m *AllocateCashResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Proof)
+	if l > 0 {
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryCashBankRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BaseId != nil {
+		l = m.BaseId.Size()
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryCashBankResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CashBank != nil {
+		l = m.CashBank.Size()
+		n += 1 + l + sovCashBank(uint64(l))
+	}
+	return n
+}
+
 func sovCashBank(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozCashBank(x uint64) (n int) {
 	return sovCashBank(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *CreateCashBankRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCashBank
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: CreateCashBankRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CreateCashBankRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BankAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCashBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BankAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCashBank(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AllocateCashRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowCashBank
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AllocateCashRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AllocateCashRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OwnerAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCashBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.OwnerAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Currency", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCashBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Currency = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCashBank
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipCashBank(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *CashBank) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1315,10 +1494,7 @@ func (m *CashBank) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCashBank
 			}
 			if (iNdEx + skippy) > l {
@@ -1478,7 +1654,7 @@ func (m *CashBank_SupplyMap) Unmarshal(dAtA []byte) error {
 					if err != nil {
 						return err
 					}
-					if skippy < 0 {
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
 						return ErrInvalidLengthCashBank
 					}
 					if (iNdEx + skippy) > postIndex {
@@ -1495,10 +1671,7 @@ func (m *CashBank_SupplyMap) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCashBank
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCashBank
 			}
 			if (iNdEx + skippy) > l {
@@ -1658,7 +1831,7 @@ func (m *CashBank_IbcDenomMap) Unmarshal(dAtA []byte) error {
 					if err != nil {
 						return err
 					}
-					if skippy < 0 {
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
 						return ErrInvalidLengthCashBank
 					}
 					if (iNdEx + skippy) > postIndex {
@@ -1675,10 +1848,647 @@ func (m *CashBank_IbcDenomMap) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCashBank
 			}
-			if (iNdEx + skippy) < 0 {
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CreateCashBankRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCashBank
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateCashBankRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateCashBankRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BaseId == nil {
+				m.BaseId = &StateRef{}
+			}
+			if err := m.BaseId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BankAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BankAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCashBank(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CreateCashBankResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCashBank
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateCashBankResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateCashBankResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proof = append(m.Proof[:0], dAtA[iNdEx:postIndex]...)
+			if m.Proof == nil {
+				m.Proof = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCashBank(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllocateCashRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCashBank
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllocateCashRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllocateCashRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BaseId == nil {
+				m.BaseId = &StateRef{}
+			}
+			if err := m.BaseId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Currency", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Currency = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCashBank(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AllocateCashResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCashBank
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AllocateCashResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AllocateCashResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proof", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proof = append(m.Proof[:0], dAtA[iNdEx:postIndex]...)
+			if m.Proof == nil {
+				m.Proof = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCashBank(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCashBankRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCashBank
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCashBankRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCashBankRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BaseId == nil {
+				m.BaseId = &StateRef{}
+			}
+			if err := m.BaseId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCashBank(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCashBankResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCashBank
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCashBankResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCashBankResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CashBank", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCashBank
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthCashBank
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.CashBank == nil {
+				m.CashBank = &CashBank{}
+			}
+			if err := m.CashBank.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCashBank(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCashBank
 			}
 			if (iNdEx + skippy) > l {
