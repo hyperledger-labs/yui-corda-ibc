@@ -17,8 +17,6 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java-util
     compile group: 'com.google.protobuf', name: 'protobuf-java-util', version: "$protobuf_version"
 
-    compile group: 'io.grpc', name: 'grpc-netty-shaded', version: "$grpc_version"
-
     // https://mvnrepository.com/artifact/org.bitcoinj/bitcoinj-core
     compile group: 'org.bitcoinj', name: 'bitcoinj-core', version: "$bitcoinj_version"
 
