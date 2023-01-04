@@ -14,10 +14,6 @@ cordapp {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    cordaCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.3'
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-kotlin
-    cordaCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.11.3'
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java-util
     compile group: 'com.google.protobuf', name: 'protobuf-java-util', version: "$protobuf_version"
 
