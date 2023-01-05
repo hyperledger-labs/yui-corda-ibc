@@ -62,6 +62,7 @@ data class FabricClientState constructor(
         }
         .build()
 
+    // TODO: これどういう意味？
     override fun clientType() = withLightClientStub {
         val req = Lightclientd.ClientTypeRequest
             .newBuilder()

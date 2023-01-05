@@ -4,3 +4,6 @@
 [submodule "external/ibc-go"]
 	path = external/ibc-go
 	url = git@github.com:cosmos/ibc-go.git
+[submodule "external/lcp"]
+	path = external/lcp
+	url = https://github.com/datachainlab/lcp

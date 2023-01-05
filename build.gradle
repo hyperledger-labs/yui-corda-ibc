@@ -25,6 +25,10 @@ buildscript {
         protobuf_version = constants.getProperty('protobufVersion')
         protoc_version = constants.getProperty('protocVersion')
         bitcoinj_version = constants.getProperty('bitcoinjVersion')
+
+        conclave_version = constants.getProperty('conclaveVersion')
+        web3j_version = constants.getProperty('web3jVersion')
+
     }
 
     repositories {

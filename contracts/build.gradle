@@ -33,5 +33,9 @@ dependencies {
     // Classes auto-generated from IBC protocol buffer definition
     compile project(":proto")
 
+    // LCP Client dependencies.
+    implementation group: 'com.r3.conclave', name: 'conclave-common', version: "$conclave_version"
+    implementation group: 'org.web3j', name: 'crypto', version: "$web3j_version"
+
     testCompile "$corda_release_group:corda-node-driver:$corda_release_version"
 }

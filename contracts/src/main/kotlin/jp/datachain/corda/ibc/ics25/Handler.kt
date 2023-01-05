@@ -1,31 +1,33 @@
 package jp.datachain.corda.ibc.ics25
 
 import ibc.core.channel.v1.ChannelOuterClass
-import ibc.core.channel.v1.Tx as ChannelTx
-import ibc.core.client.v1.Tx as ClientTx
 import ibc.core.client.v1.Client.Height
 import ibc.core.client.v1.compareTo
 import ibc.core.client.v1.isZero
 import ibc.core.connection.v1.Connection
-import ibc.core.connection.v1.Tx as ConnectionTx
 import ibc.lightclients.corda.v1.Corda
 import ibc.lightclients.fabric.v1.Fabric
+import ibc.lightclients.lcp.v1.Lcp
 import ibc.lightclients.localhost.v1.Localhost
 import ibc.lightclients.solomachine.v1.Solomachine
 import ibc.lightclients.tendermint.v1.Tendermint
-import jp.datachain.corda.ibc.ics2.ClientState
-import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.clients.corda.CordaClientState
 import jp.datachain.corda.ibc.clients.fabric.FabricClientState
+import jp.datachain.corda.ibc.clients.lcp.LcpClientState
+import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toCommitment
 import jp.datachain.corda.ibc.ics23.CommitmentProof
+import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.types.Timestamp
+import ibc.core.channel.v1.Tx as ChannelTx
+import ibc.core.client.v1.Tx as ClientTx
+import ibc.core.connection.v1.Tx as ConnectionTx
 
 object Handler {
     fun createClient(ctx: Context, msg: ClientTx.MsgCreateClient) {
@@ -33,6 +35,7 @@ object Handler {
         val (clientState: ClientState, clientType: ClientType) = when {
             msg.clientState.`is`(Corda.ClientState::class.java) -> Pair(CordaClientState(msg.clientState, msg.consensusState), ClientType.CordaClient)
             msg.clientState.`is`(Fabric.ClientState::class.java) -> Pair(FabricClientState(msg.clientState, msg.consensusState), ClientType.FabricClient)
+            msg.clientState.`is`(Lcp.ClientState::class.java) -> Pair(LcpClientState(msg.clientState, msg.consensusState), ClientType.LcpClient)
             msg.clientState.`is`(Tendermint.ClientState::class.java) -> throw NotImplementedError()
             msg.clientState.`is`(Solomachine.ClientState::class.java) -> throw NotImplementedError()
             msg.clientState.`is`(Localhost.ClientState::class.java) -> throw NotImplementedError()

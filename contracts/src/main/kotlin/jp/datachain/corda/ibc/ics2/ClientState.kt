@@ -10,6 +10,7 @@ import ics23.Proofs
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 
+// TODO: これを実装したLcpClientStateが必要
 interface ClientState {
     val anyClientState: Any
     val anyConsensusStates : Map<Client.Height, Any>

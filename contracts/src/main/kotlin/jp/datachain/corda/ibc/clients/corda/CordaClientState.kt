@@ -82,6 +82,8 @@ data class CordaClientState constructor(
                 "DenomTraceSerializer",
                 "FabricClientStateSerializer",
                 "FabricConsensusStateSerializer",
+                "LcpClientStateSerializer",
+                "LcpConsensusStateSerializer",
                 "HeightSerializer",
                 "MsgAcknowledgementSerializer",
                 "MsgChannelCloseInitSerializer",
