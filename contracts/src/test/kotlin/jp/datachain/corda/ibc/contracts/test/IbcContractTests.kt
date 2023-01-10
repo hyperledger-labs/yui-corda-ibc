@@ -138,7 +138,7 @@ class IbcContractTests {
 
     private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createHost(participants: List<Party>, chain: ChainType) {
         transactionOn(chain) {
-            command(relayer.publicKey, Ibc.Commands.GenesisCreate())
+            command(relayer.publicKey, Ibc.MiscCommands.GenesisCreate())
             output(Ibc::class.qualifiedName!!, newLabel(GENESIS, chain), Genesis(participants))
             verifies()
         }
@@ -146,7 +146,7 @@ class IbcContractTests {
         val genesis = label(GENESIS, chain).outputStateAndRef<Genesis>()
 
         transactionOn(chain) {
-            command(relayer.publicKey, Ibc.Commands.HostCreate())
+            command(relayer.publicKey, Ibc.MiscCommands.HostCreate())
             input(genesis.ref)
             output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), Host(genesis))
             verifies()
@@ -438,7 +438,7 @@ class IbcContractTests {
         val host = label(HOST, chain).outputStateAndRef<Host>()
 
         transactionOn(chain) {
-            val handler = Ibc.Commands.CashBankCreate(bankIdentity.party)
+            val handler = Ibc.MiscCommands.CashBankCreate(bankIdentity.party)
             val expectedBank = CashBank(host.state.data, bankIdentity.party)
             val expectedHost = host.state.data.addBank(expectedBank.id)
 

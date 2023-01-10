@@ -22,7 +22,7 @@ class Ibc : Contract {
             val command = commandSigners.value
             val signers = commandSigners.signers
             when (command) {
-                is Commands -> {
+                is MiscCommands -> {
                     command.verify(tx)
                 }
                 is DatagramHandler -> {
@@ -34,10 +34,12 @@ class Ibc : Contract {
         }
     }
 
-    interface Commands : CommandData {
-        fun verify(tx: LedgerTransaction)
+    sealed class MiscCommands : CommandData {
+        abstract fun verify(tx: LedgerTransaction)
+        override fun equals(other: Any?) = other?.javaClass == javaClass
+        override fun hashCode() = javaClass.name.hashCode()
 
-        class GenesisCreate : TypeOnlyCommandData(), Commands {
+        class GenesisCreate : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "No state should be consumed" using (tx.inputs.isEmpty())
                 "Exactly one state should be created" using (tx.outputs.size == 1)
@@ -45,7 +47,7 @@ class Ibc : Contract {
             }
         }
 
-        class HostCreate : TypeOnlyCommandData(), Commands {
+        class HostCreate : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
@@ -56,7 +58,7 @@ class Ibc : Contract {
             }
         }
 
-        class BankCreate : TypeOnlyCommandData(), Commands {
+        class BankCreate : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly two states should be created" using (tx.outputs.size == 2)
@@ -69,7 +71,7 @@ class Ibc : Contract {
             }
         }
 
-        data class CashBankCreate(val owner: Party) :  Commands {
+        data class CashBankCreate(val owner: Party) : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly two states should be created" using (tx.outputs.size == 2)
@@ -84,7 +86,7 @@ class Ibc : Contract {
             }
         }
 
-        data class FundAllocate(val owner: Address, val denom: Denom, val amount: Amount): Commands {
+        data class FundAllocate(val owner: Address, val denom: Denom, val amount: Amount): MiscCommands() {
             override fun verify(tx: LedgerTransaction) {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
@@ -95,7 +97,7 @@ class Ibc : Contract {
             }
         }
 
-        data class SendPacket(val packet: ChannelOuterClass.Packet) : Commands {
+        data class SendPacket(val packet: ChannelOuterClass.Packet) : MiscCommands() {
             override fun verify(tx: LedgerTransaction) {
                 val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
                 Handler.sendPacket(ctx, packet)

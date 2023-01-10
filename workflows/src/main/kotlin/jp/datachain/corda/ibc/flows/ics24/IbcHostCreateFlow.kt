@@ -24,7 +24,7 @@ class IbcHostCreateFlow(private val baseId: StateRef) : FlowLogic<SignedTransact
         require(participants.contains(ourIdentity))
         val host = Host(genesis)
 
-        builder.addCommand(Ibc.Commands.HostCreate(), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.HostCreate(), ourIdentity.owningKey)
                 .addInputState(genesis)
                 .addOutputState(host)
 

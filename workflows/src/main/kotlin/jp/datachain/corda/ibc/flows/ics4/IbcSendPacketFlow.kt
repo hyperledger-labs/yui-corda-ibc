@@ -50,7 +50,7 @@ class IbcSendPacketFlow(
         val ctx = Context(setOf(chan.state.data), setOf(host.state.data, client.state.data, conn.state.data))
         Handler.sendPacket(ctx, packet)
 
-        builder.addCommand(Ibc.Commands.SendPacket(packet), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.SendPacket(packet), ourIdentity.owningKey)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))

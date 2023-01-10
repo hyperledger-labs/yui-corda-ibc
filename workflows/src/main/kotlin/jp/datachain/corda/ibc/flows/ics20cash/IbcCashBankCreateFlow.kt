@@ -30,7 +30,7 @@ class IbcCashBankCreateFlow(
         val newBank = CashBank(host.state.data, bank)
         val newHost = host.state.data.addBank(newBank.id)
 
-        builder.addCommand(Ibc.Commands.CashBankCreate(bank), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.CashBankCreate(bank), ourIdentity.owningKey)
                 .addInputState(host)
                 .addOutputState(newHost)
                 .addOutputState(newBank)
