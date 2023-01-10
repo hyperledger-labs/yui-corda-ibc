@@ -18,19 +18,20 @@ import net.corda.core.transactions.LedgerTransaction
 
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) {
-        for (commandSigners in tx.commands) {
-            val command = commandSigners.value
-            val signers = commandSigners.signers
-            when (command) {
-                is MiscCommands -> {
-                    command.verify(tx)
-                }
-                is DatagramHandler -> {
-                    val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
-                    command.execute(ctx, signers)
-                    ctx.verifyResults(tx.outputsOfType())
-                }
+        val miscCommands = tx.commandsOfType<MiscCommands>()
+        val datagramHandlers = tx.commandsOfType<DatagramHandler>()
+
+        when (Pair(miscCommands.size, datagramHandlers.size)) {
+            Pair(1, 0) -> {
+                miscCommands.single().value.verify(tx)
             }
+            Pair(0, 1) -> {
+                val command = datagramHandlers.single()
+                val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
+                command.value.execute(ctx, command.signers)
+                ctx.verifyResults(tx.outputsOfType())
+            }
+            else -> throw IllegalArgumentException("unacceptable number of commands")
         }
     }
 
