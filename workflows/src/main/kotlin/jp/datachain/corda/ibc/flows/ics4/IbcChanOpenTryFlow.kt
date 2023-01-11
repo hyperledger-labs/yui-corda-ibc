@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -46,7 +47,7 @@ class IbcChanOpenTryFlow(
         }
 
         // create command and outputs
-        val command = HandleChanOpenTry(msg)
+        val handler = HandleChanOpenTry(msg)
         val inStates =
                 if(chanOrNull == null)
                     setOf(host.state.data)
@@ -54,11 +55,11 @@ class IbcChanOpenTryFlow(
                     setOf(host.state.data, chanOrNull.state.data)
         val ctx = Context(inStates, setOf(client, conn).map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
-        command.execute(ctx, signers)
+        handler.execute(ctx, signers)
 
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-                .addCommand(command, signers)
+                .addCommand(Ibc.DatagramHandlerCommand.HandleChanOpenTry(handler), signers)
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))
                 .addInputState(host)

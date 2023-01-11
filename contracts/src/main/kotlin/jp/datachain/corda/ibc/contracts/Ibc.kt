@@ -19,16 +19,16 @@ import net.corda.core.transactions.LedgerTransaction
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) {
         val miscCommands = tx.commandsOfType<MiscCommands>()
-        val datagramHandlers = tx.commandsOfType<DatagramHandler>()
+        val datagramHandlerCommands = tx.commandsOfType<DatagramHandlerCommand>()
 
-        when (Pair(miscCommands.size, datagramHandlers.size)) {
+        when (Pair(miscCommands.size, datagramHandlerCommands.size)) {
             Pair(1, 0) -> {
                 miscCommands.single().value.verify(tx)
             }
             Pair(0, 1) -> {
-                val command = datagramHandlers.single()
+                val command = datagramHandlerCommands.single()
                 val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
-                command.value.execute(ctx, command.signers)
+                command.value.handler.execute(ctx, command.signers)
                 ctx.verifyResults(tx.outputsOfType())
             }
             else -> throw IllegalArgumentException("unacceptable number of commands")
@@ -105,5 +105,27 @@ class Ibc : Contract {
                 ctx.verifyResults(tx.outputsOfType())
             }
         }
+    }
+
+    sealed class DatagramHandlerCommand : CommandData {
+        abstract val handler : DatagramHandler
+
+        data class HandleClientCreate(override val handler: jp.datachain.corda.ibc.ics26.HandleClientCreate) : DatagramHandlerCommand()
+        data class HandleClientUpdate(override val handler: jp.datachain.corda.ibc.ics26.HandleClientUpdate) : DatagramHandlerCommand()
+        data class HandleClientMisbehaviour(override val handler: jp.datachain.corda.ibc.ics26.HandleClientMisbehaviour) : DatagramHandlerCommand()
+        data class HandleConnOpenInit(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenInit) : DatagramHandlerCommand()
+        data class HandleConnOpenTry(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenTry) : DatagramHandlerCommand()
+        data class HandleConnOpenAck(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenAck) : DatagramHandlerCommand()
+        data class HandleConnOpenConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenConfirm) : DatagramHandlerCommand()
+        data class HandleChanOpenInit(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenInit) : DatagramHandlerCommand()
+        data class HandleChanOpenTry(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenTry) : DatagramHandlerCommand()
+        data class HandleChanOpenAck(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenAck) : DatagramHandlerCommand()
+        data class HandleChanOpenConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenConfirm) : DatagramHandlerCommand()
+        data class HandleChanCloseInit(override val handler: jp.datachain.corda.ibc.ics26.HandleChanCloseInit) : DatagramHandlerCommand()
+        data class HandleChanCloseConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleChanCloseConfirm) : DatagramHandlerCommand()
+        data class HandlePacketRecv(override val handler: jp.datachain.corda.ibc.ics26.HandlePacketRecv) : DatagramHandlerCommand()
+        data class HandlePacketAcknowledgement(override val handler: jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement) : DatagramHandlerCommand()
+        data class CreateOutgoingPacket(override val handler: jp.datachain.corda.ibc.ics20.CreateOutgoingPacket) : DatagramHandlerCommand()
+        data class HandleTransfer(override val handler: jp.datachain.corda.ibc.ics20cash.HandleTransfer) : DatagramHandlerCommand()
     }
 }

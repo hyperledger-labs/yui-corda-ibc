@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows.ics2
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.client.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.HandleClientCreate
@@ -23,14 +24,14 @@ class IbcClientCreateFlow(
         val participants = host.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
 
-        val command = HandleClientCreate(msg)
+        val handler = HandleClientCreate(msg)
         val ctx = Context(setOf(host.state.data), setOf())
         val signers = listOf(ourIdentity.owningKey)
-        command.execute(ctx, signers)
+        handler.execute(ctx, signers)
 
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-                .addCommand(command, signers)
+                .addCommand(Ibc.DatagramHandlerCommand.HandleClientCreate(handler), signers)
                 .addInputState(host)
         ctx.outStates.forEach{builder.addOutputState(it)}
 

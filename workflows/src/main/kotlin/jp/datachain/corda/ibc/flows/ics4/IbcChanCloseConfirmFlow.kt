@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -42,15 +43,15 @@ class IbcChanCloseConfirmFlow(
         val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
 
         // create command and outputs
-        val command = HandleChanCloseConfirm(msg)
+        val handler = HandleChanCloseConfirm(msg)
         val ctx = Context(setOf(chan.state.data), setOf(host, client, conn).map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
-        command.execute(ctx, signers)
+        handler.execute(ctx, signers)
 
         // build tx
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-                .addCommand(command, signers)
+                .addCommand(Ibc.DatagramHandlerCommand.HandleChanCloseConfirm(handler), signers)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))

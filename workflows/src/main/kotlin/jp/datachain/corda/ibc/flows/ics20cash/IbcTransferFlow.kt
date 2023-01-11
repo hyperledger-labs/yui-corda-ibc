@@ -3,6 +3,7 @@ package jp.datachain.corda.ibc.flows.ics20cash
 import co.paralleluniverse.fibers.Suspendable
 import ibc.applications.transfer.v1.Transfer
 import ibc.applications.transfer.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.*
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.hasPrefixes
@@ -89,11 +90,11 @@ class IbcTransferFlow(
                 refs.map{it.state.data}
         )
         val signers = listOf(ourIdentity.owningKey)
-        val command = HandleTransfer(msg)
-        command.execute(ctx, signers)
+        val handler = HandleTransfer(msg)
+        handler.execute(ctx, signers)
 
         // build transaction
-        builder.addCommand(command, signers)
+        builder.addCommand(Ibc.DatagramHandlerCommand.HandleTransfer(handler), signers)
         refs.forEach { builder.addReferenceState(ReferencedStateAndRef(it)) }
         inputs.forEach { builder.addInputState(it) }
         ctx.outStates.forEach { builder.addOutputState(it) }

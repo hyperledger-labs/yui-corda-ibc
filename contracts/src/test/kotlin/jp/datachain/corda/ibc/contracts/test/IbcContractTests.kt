@@ -170,7 +170,7 @@ class IbcContractTests {
         assertEquals(ctx.outStates.size, 2)
 
         return transactionOn(self) {
-            command(relayer.publicKey, HandleClientCreate(msg))
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleClientCreate(HandleClientCreate(msg)))
             input(host.ref)
             ctx.outStates.forEach{
                 when(it) {
@@ -208,7 +208,7 @@ class IbcContractTests {
             }.outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenInit(handler))
             input(hostA.ref)
             reference(clientA.ref)
             outputs.forEach{
@@ -245,7 +245,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenTry(handler))
             input(hostB.ref)
             reference(clientB.ref)
             outputs.forEach{
@@ -278,7 +278,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenAck(handler))
             input(connA.ref)
             reference(hostA.ref)
             reference(clientA.ref)
@@ -300,7 +300,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenConfirm(handler))
             input(connB.ref)
             reference(hostB.ref)
             reference(clientB.ref)
@@ -329,7 +329,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenInit(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -367,7 +367,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenTry(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -400,7 +400,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenAck(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), outputs.single())
@@ -425,7 +425,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenConfirm(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, B), outputs.single())
@@ -501,7 +501,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 3, actual = outputs.size)
 
-            command(senderIdentity.publicKey, handler)
+            command(senderIdentity.publicKey, Ibc.DatagramHandlerCommand.HandleTransfer(handler))
             command(senderIdentity.publicKey, Cash.Commands.Move())
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
@@ -541,7 +541,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 3, actual = outputs.size)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandlePacketRecv(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach {
@@ -573,7 +573,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 2, actual = outputs.size)
 
-            command(listOf(relayer.publicKey), handler)
+            command(listOf(relayer.publicKey), Ibc.DatagramHandlerCommand.HandlePacketAcknowledgement(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -620,7 +620,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 2, actual = outputs.size)
 
-            command(senderIdentity.publicKey, handler)
+            command(senderIdentity.publicKey, Ibc.DatagramHandlerCommand.HandleTransfer(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach {
@@ -658,7 +658,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 3, actual = outputs.size)
 
-            command(receiverBankIdentity.publicKey, handler)
+            command(receiverBankIdentity.publicKey, Ibc.DatagramHandlerCommand.HandlePacketRecv(handler))
             command(receiverBankIdentity.publicKey, Cash.Commands.Move())
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
@@ -692,7 +692,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 2, actual = outputs.size)
 
-            command(listOf(relayer.publicKey), handler)
+            command(listOf(relayer.publicKey), Ibc.DatagramHandlerCommand.HandlePacketAcknowledgement(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
