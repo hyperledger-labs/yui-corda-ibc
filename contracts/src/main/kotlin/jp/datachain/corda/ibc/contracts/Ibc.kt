@@ -1,6 +1,5 @@
 package jp.datachain.corda.ibc.contracts
 
-import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
@@ -8,7 +7,7 @@ import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Genesis
-import jp.datachain.corda.ibc.ics25.Handler
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import net.corda.core.contracts.*
@@ -48,13 +47,13 @@ class Ibc : Contract {
             }
         }
 
-        class HostCreate : MiscCommands() {
+        data class HostCreate(val moduleNames: Map<Identifier, String>) : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
                 val genesis = tx.inRefsOfType<Genesis>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expectedHost = Host(genesis)
+                val expectedHost = Host(genesis, moduleNames)
                 "Output should be expected states" using (newHost == expectedHost)
             }
         }
@@ -97,14 +96,6 @@ class Ibc : Contract {
                 "Output should be expected state" using (newBank == expectedBank)
             }
         }
-
-        data class SendPacket(val packet: ChannelOuterClass.Packet) : MiscCommands() {
-            override fun verify(tx: LedgerTransaction) {
-                val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
-                Handler.sendPacket(ctx, packet)
-                ctx.verifyResults(tx.outputsOfType())
-            }
-        }
     }
 
     sealed class DatagramHandlerCommand : CommandData {
@@ -125,7 +116,6 @@ class Ibc : Contract {
         data class HandleChanCloseConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleChanCloseConfirm) : DatagramHandlerCommand()
         data class HandlePacketRecv(override val handler: jp.datachain.corda.ibc.ics26.HandlePacketRecv) : DatagramHandlerCommand()
         data class HandlePacketAcknowledgement(override val handler: jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement) : DatagramHandlerCommand()
-        data class CreateOutgoingPacket(override val handler: jp.datachain.corda.ibc.ics20.CreateOutgoingPacket) : DatagramHandlerCommand()
-        data class HandleTransfer(override val handler: jp.datachain.corda.ibc.ics20cash.HandleTransfer) : DatagramHandlerCommand()
+        data class CreateOutgoingPacket(override val handler: jp.datachain.corda.ibc.ics26.CreateOutgoingPacket) : DatagramHandlerCommand()
     }
 }

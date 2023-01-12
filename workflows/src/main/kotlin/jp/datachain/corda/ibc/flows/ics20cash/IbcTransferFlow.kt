@@ -4,13 +4,14 @@ import co.paralleluniverse.fibers.Suspendable
 import ibc.applications.transfer.v1.Transfer
 import ibc.applications.transfer.v1.Tx
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.flows.util.*
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.hasPrefixes
-import jp.datachain.corda.ibc.ics20cash.HandleTransfer
 import jp.datachain.corda.ibc.ics20cash.Voucher
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.CreateOutgoingPacket
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
@@ -90,11 +91,11 @@ class IbcTransferFlow(
                 refs.map{it.state.data}
         )
         val signers = listOf(ourIdentity.owningKey)
-        val handler = HandleTransfer(msg)
+        val handler = CreateOutgoingPacket(msg.pack())
         handler.execute(ctx, signers)
 
         // build transaction
-        builder.addCommand(Ibc.DatagramHandlerCommand.HandleTransfer(handler), signers)
+        builder.addCommand(Ibc.DatagramHandlerCommand.CreateOutgoingPacket(handler), signers)
         refs.forEach { builder.addReferenceState(ReferencedStateAndRef(it)) }
         inputs.forEach { builder.addInputState(it) }
         ctx.outStates.forEach { builder.addOutputState(it) }

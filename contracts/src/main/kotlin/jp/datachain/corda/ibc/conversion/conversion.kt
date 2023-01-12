@@ -68,6 +68,7 @@ fun Host.toProto(): HostProto.Host = HostProto.Host.newBuilder()
         .setNextClientSequence(nextClientSequence)
         .setNextConnectionSequence(nextConnectionSequence)
         .setNextChannelSequence(nextChannelSequence)
+        .putAllModuleNames(modules.mapKeys{it.key.id}.mapValues{it.value::class.qualifiedName})
         .addAllBankIds(bankIds.map{it.id})
         .build()
 fun HostProto.Host.toCorda() = Host(
@@ -77,6 +78,7 @@ fun HostProto.Host.toCorda() = Host(
         nextClientSequence = nextClientSequence,
         nextConnectionSequence = nextConnectionSequence,
         nextChannelSequence = nextChannelSequence,
+        modules = moduleNamesMap.mapKeys{Identifier(it.key)}.mapValues{Host.loadModule(it.value)},
         bankIds = bankIdsList.map(::Identifier)
 )
 

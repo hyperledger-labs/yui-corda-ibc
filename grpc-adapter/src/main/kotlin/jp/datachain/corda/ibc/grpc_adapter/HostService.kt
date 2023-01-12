@@ -9,6 +9,7 @@ import jp.datachain.corda.ibc.conversion.toCorda
 import jp.datachain.corda.ibc.conversion.toProto
 import jp.datachain.corda.ibc.flows.ics24.IbcHostCreateFlow
 import jp.datachain.corda.ibc.ics24.Host
+import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.contracts.StateRef
 import net.corda.core.messaging.startFlow
 import net.corda.core.messaging.vaultQueryBy
@@ -26,7 +27,8 @@ class HostService(host: String, port: Int, username: String, password: String): 
 
     override fun createHost(request: HostProto.CreateHostRequest, responseObserver: StreamObserver<HostProto.CreateHostResponse>) {
         val baseId = request.baseId.toCorda() // baseId must be specified when creating a new host
-        val stx = ops.startFlow(::IbcHostCreateFlow, baseId).returnValue.get()
+        val moduleNames = request.moduleNamesMap.mapKeys{ Identifier(it.key)}
+        val stx = ops.startFlow(::IbcHostCreateFlow, baseId, moduleNames).returnValue.get()
         val proof = stx.toProof().toByteString()
         val reply = HostProto.CreateHostResponse.newBuilder()
                 .setProof(proof)

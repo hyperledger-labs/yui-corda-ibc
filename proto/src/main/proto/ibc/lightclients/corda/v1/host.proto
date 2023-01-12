@@ -18,14 +18,16 @@ message Host {
   repeated Party participants = 1;
   StateRef base_id = 2;
   Party notary = 3;
-  uint64 nextClientSequence = 4;
-  uint64 nextConnectionSequence = 5;
-  uint64 nextChannelSequence = 6;
-  repeated string bank_ids = 7;
+  uint64 next_client_sequence = 4;
+  uint64 next_connection_sequence = 5;
+  uint64 next_channel_sequence = 6;
+  map<string, string> module_names = 7;
+  repeated string bank_ids = 8;
 }
 
 message CreateHostRequest {
   StateRef base_id = 1;
+  map<string, string> module_names = 2;
 }
 
 message CreateHostResponse {

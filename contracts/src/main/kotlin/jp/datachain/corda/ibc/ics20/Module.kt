@@ -1,17 +1,22 @@
 package jp.datachain.corda.ibc.ics20
 
-import ibc.applications.transfer.v2.Packet.FungibleTokenPacketData
+import com.google.protobuf.Any
 import ibc.applications.transfer.v1.Tx
+import ibc.applications.transfer.v2.Packet
 import ibc.core.channel.v1.ChannelOuterClass
+import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler
-import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.Module
 import jp.datachain.corda.ibc.states.IbcChannel
 import java.security.PublicKey
 
-data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
-    override fun execute(ctx: Context, signers: Collection<PublicKey>) {
+class Module : Module() {
+    override val callbacks = ModuleCallbacks()
+    override fun createOutgoingPacket(ctx: Context, signers: Collection<PublicKey>, anyMsg: Any) {
+        val msg = anyMsg.unpack<Tx.MsgTransfer>()
+
         val amount = Amount.fromString(msg.token.amount)
         val sender = Address.fromBech32(msg.sender)
         val sourcePort = Identifier(msg.sourcePort)
@@ -31,7 +36,7 @@ data class CreateOutgoingPacket(val msg: Tx.MsgTransfer): DatagramHandler {
             ctx.addOutput(bank.burn(sender, denom, amount))
         }
 
-        val data = FungibleTokenPacketData.newBuilder()
+        val data = Packet.FungibleTokenPacketData.newBuilder()
                 .setDenom(denom.toString())
                 .setAmount(msg.token.amount)
                 .setSender(msg.sender)
