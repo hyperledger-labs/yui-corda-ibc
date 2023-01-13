@@ -21,7 +21,6 @@ import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.contracts.BelongsToContract
 
-@BelongsToContract(Ibc::class)
 data class FabricClientState constructor(
         override val anyClientState: Any,
         override val anyConsensusStates: Map<Client.Height, Any>
