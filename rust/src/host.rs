@@ -1,6 +1,7 @@
 use super::generated::ibc;
 use super::Result;
 use ibc::lightclients::corda::v1 as v1corda;
+use std::collections::HashMap;
 
 async fn connect(
     endpoint: String,
@@ -9,7 +10,11 @@ async fn connect(
     Ok(client)
 }
 
-pub async fn create_host(endpoint: String, base_id_hash: String) -> Result<()> {
+pub async fn create_host(
+    endpoint: String,
+    base_id_hash: String,
+    module_names: HashMap<String, String>,
+) -> Result<()> {
     let mut client = connect(endpoint).await?;
     let base_id = v1corda::StateRef {
         txhash: Some(v1corda::SecureHash {
@@ -20,6 +25,7 @@ pub async fn create_host(endpoint: String, base_id_hash: String) -> Result<()> {
     client
         .create_host(v1corda::CreateHostRequest {
             base_id: Some(base_id),
+            module_names,
         })
         .await?;
     Ok(())
