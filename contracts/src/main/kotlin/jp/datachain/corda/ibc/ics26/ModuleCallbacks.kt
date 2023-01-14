@@ -3,18 +3,10 @@ package jp.datachain.corda.ibc.ics26
 import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
+import net.corda.core.serialization.CordaSerializable
 
+@CordaSerializable
 interface ModuleCallbacks {
-    companion object {
-        fun lookupModule(portIdentifier: Identifier): ModuleCallbacks {
-            return when(portIdentifier.id) {
-                "transfer" -> jp.datachain.corda.ibc.ics20cash.ModuleCallbacks()
-                "transfer-old" -> jp.datachain.corda.ibc.ics20.ModuleCallbacks()
-                else -> NullModuleCallbacks()
-            }
-        }
-    }
-
     fun onChanOpenInit(
             ctx: Context,
             order: ChannelOuterClass.Order,

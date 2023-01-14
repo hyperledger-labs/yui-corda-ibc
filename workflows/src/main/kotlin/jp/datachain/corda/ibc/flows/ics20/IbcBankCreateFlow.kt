@@ -26,7 +26,7 @@ class IbcBankCreateFlow(private val baseId: StateRef) : FlowLogic<SignedTransact
         val newBank = Bank(host.state.data)
         val newHost = host.state.data.addBank(newBank.id)
 
-        builder.addCommand(Ibc.Commands.BankCreate(), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.BankCreate(), ourIdentity.owningKey)
                 .addInputState(host)
                 .addOutputState(newHost)
                 .addOutputState(newBank)

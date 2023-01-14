@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows.ics3
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.connection.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics24.Identifier
@@ -29,14 +30,14 @@ class IbcConnOpenInitFlow(
 
         val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, Identifier(msg.clientId))!!
 
-        val command = HandleConnOpenInit(msg)
+        val handler = HandleConnOpenInit(msg)
         val ctx = Context(setOf(host.state.data), setOf(client.state.data))
         val signers = listOf(ourIdentity.owningKey)
-        command.execute(ctx, signers)
+        handler.execute(ctx, signers)
 
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-        builder.addCommand(command, ourIdentity.owningKey)
+        builder.addCommand(Ibc.DatagramHandlerCommand.HandleConnOpenInit(handler), ourIdentity.owningKey)
                 .addInputState(host)
                 .addReferenceState(ReferencedStateAndRef(client))
         ctx.outStates.forEach{builder.addOutputState(it)}

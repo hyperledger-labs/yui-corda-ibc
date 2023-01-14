@@ -3,11 +3,12 @@ package jp.datachain.corda.ibc.flows.ics4
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics24.Identifier
-import jp.datachain.corda.ibc.ics25.Handler
 import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.CreateOutgoingPacket
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
@@ -48,9 +49,11 @@ class IbcSendPacketFlow(
         val client = serviceHub.vaultService.queryIbcState<IbcClientState>(baseId, clientId)!!
 
         val ctx = Context(setOf(chan.state.data), setOf(host.state.data, client.state.data, conn.state.data))
-        Handler.sendPacket(ctx, packet)
+        val signers = listOf(ourIdentity.owningKey)
+        val handler = CreateOutgoingPacket(packet.pack())
+        handler.execute(ctx, signers)
 
-        builder.addCommand(Ibc.Commands.SendPacket(packet), ourIdentity.owningKey)
+        builder.addCommand(Ibc.DatagramHandlerCommand.CreateOutgoingPacket(handler), ourIdentity.owningKey)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))

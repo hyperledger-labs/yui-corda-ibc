@@ -1,6 +1,5 @@
 package jp.datachain.corda.ibc.contracts
 
-import ibc.core.channel.v1.ChannelOuterClass
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
@@ -8,7 +7,7 @@ import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Genesis
-import jp.datachain.corda.ibc.ics25.Handler
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.ics26.DatagramHandler
 import net.corda.core.contracts.*
@@ -18,26 +17,29 @@ import net.corda.core.transactions.LedgerTransaction
 
 class Ibc : Contract {
     override fun verify(tx: LedgerTransaction) {
-        for (commandSigners in tx.commands) {
-            val command = commandSigners.value
-            val signers = commandSigners.signers
-            when (command) {
-                is Commands -> {
-                    command.verify(tx)
-                }
-                is DatagramHandler -> {
-                    val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
-                    command.execute(ctx, signers)
-                    ctx.verifyResults(tx.outputsOfType())
-                }
+        val miscCommands = tx.commandsOfType<MiscCommands>()
+        val datagramHandlerCommands = tx.commandsOfType<DatagramHandlerCommand>()
+
+        when (Pair(miscCommands.size, datagramHandlerCommands.size)) {
+            Pair(1, 0) -> {
+                miscCommands.single().value.verify(tx)
             }
+            Pair(0, 1) -> {
+                val command = datagramHandlerCommands.single()
+                val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
+                command.value.handler.execute(ctx, command.signers)
+                ctx.verifyResults(tx.outputsOfType())
+            }
+            else -> throw IllegalArgumentException("unacceptable number of commands")
         }
     }
 
-    interface Commands : CommandData {
-        fun verify(tx: LedgerTransaction)
+    sealed class MiscCommands : CommandData {
+        abstract fun verify(tx: LedgerTransaction)
+        override fun equals(other: Any?) = other?.javaClass == javaClass
+        override fun hashCode() = javaClass.name.hashCode()
 
-        class GenesisCreate : TypeOnlyCommandData(), Commands {
+        class GenesisCreate : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "No state should be consumed" using (tx.inputs.isEmpty())
                 "Exactly one state should be created" using (tx.outputs.size == 1)
@@ -45,18 +47,18 @@ class Ibc : Contract {
             }
         }
 
-        class HostCreate : TypeOnlyCommandData(), Commands {
+        data class HostCreate(val moduleNames: Map<Identifier, String>) : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
                 val genesis = tx.inRefsOfType<Genesis>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expectedHost = Host(genesis)
+                val expectedHost = Host(genesis, moduleNames)
                 "Output should be expected states" using (newHost == expectedHost)
             }
         }
 
-        class BankCreate : TypeOnlyCommandData(), Commands {
+        class BankCreate : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly two states should be created" using (tx.outputs.size == 2)
@@ -69,7 +71,7 @@ class Ibc : Contract {
             }
         }
 
-        data class CashBankCreate(val owner: Party) :  Commands {
+        data class CashBankCreate(val owner: Party) : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly two states should be created" using (tx.outputs.size == 2)
@@ -84,7 +86,7 @@ class Ibc : Contract {
             }
         }
 
-        data class FundAllocate(val owner: Address, val denom: Denom, val amount: Amount): Commands {
+        data class FundAllocate(val owner: Address, val denom: Denom, val amount: Amount): MiscCommands() {
             override fun verify(tx: LedgerTransaction) {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
@@ -94,13 +96,26 @@ class Ibc : Contract {
                 "Output should be expected state" using (newBank == expectedBank)
             }
         }
+    }
 
-        data class SendPacket(val packet: ChannelOuterClass.Packet) : Commands {
-            override fun verify(tx: LedgerTransaction) {
-                val ctx = Context(tx.inputsOfType(), tx.referenceInputsOfType())
-                Handler.sendPacket(ctx, packet)
-                ctx.verifyResults(tx.outputsOfType())
-            }
-        }
+    sealed class DatagramHandlerCommand : CommandData {
+        abstract val handler : DatagramHandler
+
+        data class HandleClientCreate(override val handler: jp.datachain.corda.ibc.ics26.HandleClientCreate) : DatagramHandlerCommand()
+        data class HandleClientUpdate(override val handler: jp.datachain.corda.ibc.ics26.HandleClientUpdate) : DatagramHandlerCommand()
+        data class HandleClientMisbehaviour(override val handler: jp.datachain.corda.ibc.ics26.HandleClientMisbehaviour) : DatagramHandlerCommand()
+        data class HandleConnOpenInit(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenInit) : DatagramHandlerCommand()
+        data class HandleConnOpenTry(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenTry) : DatagramHandlerCommand()
+        data class HandleConnOpenAck(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenAck) : DatagramHandlerCommand()
+        data class HandleConnOpenConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleConnOpenConfirm) : DatagramHandlerCommand()
+        data class HandleChanOpenInit(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenInit) : DatagramHandlerCommand()
+        data class HandleChanOpenTry(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenTry) : DatagramHandlerCommand()
+        data class HandleChanOpenAck(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenAck) : DatagramHandlerCommand()
+        data class HandleChanOpenConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleChanOpenConfirm) : DatagramHandlerCommand()
+        data class HandleChanCloseInit(override val handler: jp.datachain.corda.ibc.ics26.HandleChanCloseInit) : DatagramHandlerCommand()
+        data class HandleChanCloseConfirm(override val handler: jp.datachain.corda.ibc.ics26.HandleChanCloseConfirm) : DatagramHandlerCommand()
+        data class HandlePacketRecv(override val handler: jp.datachain.corda.ibc.ics26.HandlePacketRecv) : DatagramHandlerCommand()
+        data class HandlePacketAcknowledgement(override val handler: jp.datachain.corda.ibc.ics26.HandlePacketAcknowledgement) : DatagramHandlerCommand()
+        data class CreateOutgoingPacket(override val handler: jp.datachain.corda.ibc.ics26.CreateOutgoingPacket) : DatagramHandlerCommand()
     }
 }

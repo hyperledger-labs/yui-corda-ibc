@@ -15,10 +15,10 @@ import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toJson
 import jp.datachain.corda.ibc.ics20cash.CashBank
-import jp.datachain.corda.ibc.ics20cash.HandleTransfer
 import jp.datachain.corda.ibc.ics20cash.Voucher
 import jp.datachain.corda.ibc.ics24.Genesis
 import jp.datachain.corda.ibc.ics24.Host
+import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.*
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcClientState
@@ -138,17 +138,22 @@ class IbcContractTests {
 
     private fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createHost(participants: List<Party>, chain: ChainType) {
         transactionOn(chain) {
-            command(relayer.publicKey, Ibc.Commands.GenesisCreate())
+            command(relayer.publicKey, Ibc.MiscCommands.GenesisCreate())
             output(Ibc::class.qualifiedName!!, newLabel(GENESIS, chain), Genesis(participants))
             verifies()
         }
 
         val genesis = label(GENESIS, chain).outputStateAndRef<Genesis>()
+        val moduleNames = mapOf(
+                Identifier("nop") to NopModule::class.qualifiedName!!,
+                Identifier("transfer") to jp.datachain.corda.ibc.ics20cash.Module::class.qualifiedName!!,
+                Identifier("transfer-old") to jp.datachain.corda.ibc.ics20.Module::class.qualifiedName!!
+        )
 
         transactionOn(chain) {
-            command(relayer.publicKey, Ibc.Commands.HostCreate())
+            command(relayer.publicKey, Ibc.MiscCommands.HostCreate(moduleNames))
             input(genesis.ref)
-            output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), Host(genesis))
+            output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), Host(genesis, moduleNames))
             verifies()
         }
     }
@@ -170,7 +175,7 @@ class IbcContractTests {
         assertEquals(ctx.outStates.size, 2)
 
         return transactionOn(self) {
-            command(relayer.publicKey, HandleClientCreate(msg))
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleClientCreate(HandleClientCreate(msg)))
             input(host.ref)
             ctx.outStates.forEach{
                 when(it) {
@@ -208,7 +213,7 @@ class IbcContractTests {
             }.outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenInit(handler))
             input(hostA.ref)
             reference(clientA.ref)
             outputs.forEach{
@@ -245,7 +250,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenTry(handler))
             input(hostB.ref)
             reference(clientB.ref)
             outputs.forEach{
@@ -278,7 +283,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenAck(handler))
             input(connA.ref)
             reference(hostA.ref)
             reference(clientA.ref)
@@ -300,7 +305,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleConnOpenConfirm(handler))
             input(connB.ref)
             reference(hostB.ref)
             reference(clientB.ref)
@@ -329,7 +334,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenInit(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -367,7 +372,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 2)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenTry(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -400,7 +405,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenAck(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, A), outputs.single())
@@ -425,7 +430,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(outputs.size, 1)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandleChanOpenConfirm(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             output(Ibc::class.qualifiedName!!, newLabel(CHANNEL, B), outputs.single())
@@ -438,7 +443,7 @@ class IbcContractTests {
         val host = label(HOST, chain).outputStateAndRef<Host>()
 
         transactionOn(chain) {
-            val handler = Ibc.Commands.CashBankCreate(bankIdentity.party)
+            val handler = Ibc.MiscCommands.CashBankCreate(bankIdentity.party)
             val expectedBank = CashBank(host.state.data, bankIdentity.party)
             val expectedHost = host.state.data.addBank(expectedBank.id)
 
@@ -484,7 +489,7 @@ class IbcContractTests {
         val amount = cashS.state.data.amount.toDecimal().longValueExact()
 
         val stxTransfer = transactionOn(chain = senderChain, initiator = senderIdentity) {
-            val handler = HandleTransfer(MsgTransfer.newBuilder().apply{
+            val handler = CreateOutgoingPacket(MsgTransfer.newBuilder().apply{
                 sourcePort = PORT_ID
                 sourceChannel = CHANNEL_ID
                 tokenBuilder.denom = denom.toString()
@@ -493,7 +498,7 @@ class IbcContractTests {
                 receiver = Address.fromPublicKey(receiverIdentity.publicKey).toBech32()
                 timeoutHeight = Client.Height.getDefaultInstance()
                 timeoutTimestamp = 0
-            }.build())
+            }.build().pack())
             val inputs = listOf(chanS, cashBankS, cashS)
             val references = listOf(hostS, clientS, connS)
             val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
@@ -501,7 +506,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 3, actual = outputs.size)
 
-            command(senderIdentity.publicKey, handler)
+            command(senderIdentity.publicKey, Ibc.DatagramHandlerCommand.CreateOutgoingPacket(handler))
             command(senderIdentity.publicKey, Cash.Commands.Move())
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
@@ -541,7 +546,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 3, actual = outputs.size)
 
-            command(relayer.publicKey, handler)
+            command(relayer.publicKey, Ibc.DatagramHandlerCommand.HandlePacketRecv(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach {
@@ -573,7 +578,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 2, actual = outputs.size)
 
-            command(listOf(relayer.publicKey), handler)
+            command(listOf(relayer.publicKey), Ibc.DatagramHandlerCommand.HandlePacketAcknowledgement(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{
@@ -603,7 +608,7 @@ class IbcContractTests {
         val amount = voucherS.state.data.amount.toDecimal().longValueExact()
 
         val stxTransfer = transactionOn(chain = senderChain, initiator = senderIdentity) {
-            val handler = HandleTransfer(MsgTransfer.newBuilder().apply{
+            val handler = CreateOutgoingPacket(MsgTransfer.newBuilder().apply{
                 sourcePort = PORT_ID
                 sourceChannel = CHANNEL_ID
                 tokenBuilder.denom = denom.toIbcDenom()
@@ -612,7 +617,7 @@ class IbcContractTests {
                 receiver = Address.fromPublicKey(receiverIdentity.publicKey).toBech32()
                 timeoutHeight = Client.Height.getDefaultInstance()
                 timeoutTimestamp = 0
-            }.build())
+            }.build().pack())
             val inputs = listOf(chanS, cashBankS, voucherS)
             val references = listOf(hostS, clientS, connS)
             val outputs = Context(inputs.map{it.state.data}, references.map{it.state.data})
@@ -620,7 +625,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 2, actual = outputs.size)
 
-            command(senderIdentity.publicKey, handler)
+            command(senderIdentity.publicKey, Ibc.DatagramHandlerCommand.CreateOutgoingPacket(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach {
@@ -658,7 +663,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 3, actual = outputs.size)
 
-            command(receiverBankIdentity.publicKey, handler)
+            command(receiverBankIdentity.publicKey, Ibc.DatagramHandlerCommand.HandlePacketRecv(handler))
             command(receiverBankIdentity.publicKey, Cash.Commands.Move())
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
@@ -692,7 +697,7 @@ class IbcContractTests {
                     .outStates
             assertEquals(expected = 2, actual = outputs.size)
 
-            command(listOf(relayer.publicKey), handler)
+            command(listOf(relayer.publicKey), Ibc.DatagramHandlerCommand.HandlePacketAcknowledgement(handler))
             inputs.forEach{input(it.ref)}
             references.forEach{reference(it.ref)}
             outputs.forEach{

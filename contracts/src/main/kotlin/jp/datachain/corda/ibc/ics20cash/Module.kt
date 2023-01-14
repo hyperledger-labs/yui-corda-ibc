@@ -1,20 +1,25 @@
 package jp.datachain.corda.ibc.ics20cash
 
-import ibc.applications.transfer.v2.Packet.FungibleTokenPacketData
+import com.google.protobuf.Any
 import ibc.applications.transfer.v1.Tx
+import ibc.applications.transfer.v2.Packet
 import ibc.core.channel.v1.ChannelOuterClass
+import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics20.*
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics25.Handler
-import jp.datachain.corda.ibc.ics26.DatagramHandler
 import jp.datachain.corda.ibc.ics26.Context
+import jp.datachain.corda.ibc.ics26.Module
 import jp.datachain.corda.ibc.states.IbcChannel
 import net.corda.core.contracts.Amount.Companion.sumOrThrow
 import net.corda.finance.contracts.asset.Cash
 import java.security.PublicKey
 
-data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
-    override fun execute(ctx: Context, signers: Collection<PublicKey>) {
+class Module : Module() {
+    override val callbacks = ModuleCallbacks()
+    override fun createOutgoingPacket(ctx: Context, signers: Collection<PublicKey>, anyMsg: Any) {
+        val msg = anyMsg.unpack<Tx.MsgTransfer>()
+
         val quantity = msg.token.amount.toLong()
         val sender = Address.fromBech32(msg.sender)
         val sourcePort = Identifier(msg.sourcePort)
@@ -69,7 +74,7 @@ data class HandleTransfer(val msg: Tx.MsgTransfer): DatagramHandler {
             }
         }
 
-        val data = FungibleTokenPacketData.newBuilder()
+        val data = Packet.FungibleTokenPacketData.newBuilder()
                 .setDenom(denom.toString())
                 .setAmount(msg.token.amount)
                 .setSender(msg.sender)

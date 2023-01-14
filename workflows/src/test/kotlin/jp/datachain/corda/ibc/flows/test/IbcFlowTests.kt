@@ -135,8 +135,8 @@ class IbcFlowTests {
             proofHeight = ibcA.host().getCurrentHeight()
         }.build())
 
-        val portAid = Identifier("portA")
-        val portBid = Identifier("portB")
+        val portAid = Identifier("nop")
+        val portBid = Identifier("nop")
         val channelVersionA = "CHANNEL_VERSION_A" // arbitrary string is ok
         val channelVersionB = "CHANNEL_VERSION_B" // arbitrary string is ok
         val ordering = ChannelOuterClass.Order.ORDER_ORDERED

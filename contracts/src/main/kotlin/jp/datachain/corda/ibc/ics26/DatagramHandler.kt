@@ -1,8 +1,9 @@
 package jp.datachain.corda.ibc.ics26
 
-import net.corda.core.contracts.CommandData
+import net.corda.core.serialization.CordaSerializable
 import java.security.PublicKey
 
-interface DatagramHandler: CommandData {
+@CordaSerializable
+interface DatagramHandler {
     fun execute(ctx: Context, signers: Collection<PublicKey>)
 }

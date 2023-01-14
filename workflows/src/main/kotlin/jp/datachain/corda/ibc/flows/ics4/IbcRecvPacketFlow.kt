@@ -2,6 +2,7 @@ package jp.datachain.corda.ibc.flows.ics4
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.core.channel.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.*
 import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20.toFungibleTokenPacketData
@@ -87,13 +88,13 @@ class IbcRecvPacketFlow(
         refs.add(client)
 
         // create command and outputs
-        val command = HandlePacketRecv(msg)
+        val handler = HandlePacketRecv(msg)
         val ctx = Context(inputs.map{it.state.data}, refs.map{it.state.data})
         val signers = listOf(ourIdentity.owningKey)
-        command.execute(ctx, signers)
+        handler.execute(ctx, signers)
 
         // build tx
-        builder.addCommand(command, signers)
+        builder.addCommand(Ibc.DatagramHandlerCommand.HandlePacketRecv(handler), signers)
         refs.forEach{builder.addReferenceState(ReferencedStateAndRef(it))}
         inputs.forEach{builder.addInputState(it)}
         ctx.outStates.forEach{builder.addOutputState(it)}

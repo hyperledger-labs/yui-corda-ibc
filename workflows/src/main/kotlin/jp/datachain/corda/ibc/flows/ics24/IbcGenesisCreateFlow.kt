@@ -19,7 +19,7 @@ class IbcGenesisCreateFlow(private val participants: List<Party>) : FlowLogic<Si
 
         val builder = TransactionBuilder(notary)
 
-        builder.addCommand(Ibc.Commands.GenesisCreate(), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.GenesisCreate(), ourIdentity.owningKey)
                 .addOutputState(Genesis(participants))
 
         val tx = serviceHub.signInitialTransaction(builder)

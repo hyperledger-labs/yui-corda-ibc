@@ -2,10 +2,12 @@ package jp.datachain.corda.ibc.flows.ics20
 
 import co.paralleluniverse.fibers.Suspendable
 import ibc.applications.transfer.v1.Tx
+import jp.datachain.corda.ibc.contracts.Ibc
+import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.flows.util.queryIbcBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
-import jp.datachain.corda.ibc.ics20.CreateOutgoingPacket
+import jp.datachain.corda.ibc.ics26.CreateOutgoingPacket
 import jp.datachain.corda.ibc.ics24.Identifier
 import jp.datachain.corda.ibc.ics26.Context
 import jp.datachain.corda.ibc.states.IbcChannel
@@ -51,13 +53,13 @@ class IbcSendTransferFlow(
                 setOf(host, client, conn).map{it.state.data}
         )
         val signers = listOf(ourIdentity.owningKey)
-        val command = CreateOutgoingPacket(msg)
-        command.execute(ctx, signers)
+        val handler = CreateOutgoingPacket(msg.pack())
+        handler.execute(ctx, signers)
 
         // build transaction
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
         val builder = TransactionBuilder(notary)
-        builder.addCommand(command, signers)
+        builder.addCommand(Ibc.DatagramHandlerCommand.CreateOutgoingPacket(handler), signers)
                 .addReferenceState(ReferencedStateAndRef(host))
                 .addReferenceState(ReferencedStateAndRef(client))
                 .addReferenceState(ReferencedStateAndRef(conn))

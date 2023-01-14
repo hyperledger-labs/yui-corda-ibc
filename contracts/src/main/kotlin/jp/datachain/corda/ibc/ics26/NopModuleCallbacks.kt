@@ -4,7 +4,7 @@ import ibc.core.channel.v1.ChannelOuterClass
 import ibc.core.connection.v1.Connection
 import jp.datachain.corda.ibc.ics24.Identifier
 
-class NullModuleCallbacks: ModuleCallbacks {
+class NopModuleCallbacks: ModuleCallbacks {
     override fun onChanOpenInit(
             ctx: Context,
             order: ChannelOuterClass.Order,

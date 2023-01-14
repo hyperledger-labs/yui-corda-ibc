@@ -9,8 +9,7 @@ import ibc.core.connection.v1.Tx.*
 import jp.datachain.corda.ibc.clients.corda.toProof
 import jp.datachain.corda.ibc.flows.ics2.*
 import jp.datachain.corda.ibc.flows.ics20.*
-import jp.datachain.corda.ibc.flows.ics20cash.IbcCashBankCreateFlow
-import jp.datachain.corda.ibc.flows.ics20cash.IbcTransferFlow
+import jp.datachain.corda.ibc.flows.ics20cash.*
 import jp.datachain.corda.ibc.flows.ics24.*
 import jp.datachain.corda.ibc.flows.ics3.*
 import jp.datachain.corda.ibc.flows.ics4.*
@@ -19,10 +18,13 @@ import jp.datachain.corda.ibc.flows.util.queryIbcCashBank
 import jp.datachain.corda.ibc.flows.util.queryIbcHost
 import jp.datachain.corda.ibc.flows.util.queryIbcState
 import jp.datachain.corda.ibc.ics20.*
+import jp.datachain.corda.ibc.ics20.Module as OldIcs20Module
 import jp.datachain.corda.ibc.ics20cash.CashBank
+import jp.datachain.corda.ibc.ics20cash.Module as NewIcs20Module
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics26.NopModule
 import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
@@ -82,7 +84,12 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
     }
 
     fun createHost() {
-        val stx = executeFlow(IbcHostCreateFlow(baseId))
+        val moduleNames = mapOf(
+                Identifier("nop") to NopModule::class.qualifiedName!!,
+                Identifier("transfer") to NewIcs20Module::class.qualifiedName!!,
+                Identifier("transfer-old") to OldIcs20Module::class.qualifiedName!!
+        )
+        val stx = executeFlow(IbcHostCreateFlow(baseId, moduleNames))
         val host = stx.tx.outputsOfType<Host>().single()
         assert(host.baseId == baseId)
     }

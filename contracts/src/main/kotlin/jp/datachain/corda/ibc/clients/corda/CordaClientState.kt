@@ -21,7 +21,6 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationFactory
 
-@BelongsToContract(Ibc::class)
 data class CordaClientState constructor(
         override val anyClientState: Any,
         override val anyConsensusStates: Map<Client.Height, Any>

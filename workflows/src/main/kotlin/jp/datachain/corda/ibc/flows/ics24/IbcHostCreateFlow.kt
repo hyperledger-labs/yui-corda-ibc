@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.flows.util.queryIbcGenesis
 import jp.datachain.corda.ibc.ics24.Host
+import jp.datachain.corda.ibc.ics24.Identifier
 import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
@@ -12,7 +13,7 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcHostCreateFlow(private val baseId: StateRef) : FlowLogic<SignedTransaction>() {
+class IbcHostCreateFlow(private val baseId: StateRef, private val moduleNames: Map<Identifier, String>) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -22,9 +23,9 @@ class IbcHostCreateFlow(private val baseId: StateRef) : FlowLogic<SignedTransact
         val genesis = serviceHub.vaultService.queryIbcGenesis(baseId)!!
         val participants = genesis.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
-        val host = Host(genesis)
+        val host = Host(genesis, moduleNames)
 
-        builder.addCommand(Ibc.Commands.HostCreate(), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.HostCreate(moduleNames), ourIdentity.owningKey)
                 .addInputState(genesis)
                 .addOutputState(host)
 
