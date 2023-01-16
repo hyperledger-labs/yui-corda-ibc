@@ -47,13 +47,13 @@ class Ibc : Contract {
             }
         }
 
-        data class HostCreate(val moduleNames: Map<Identifier, String>) : MiscCommands() {
+        data class HostCreate(val moduleNames: Map<Identifier, String>, val clientStateFactoryNames: Map<String, String>) : MiscCommands() {
             override fun verify(tx: LedgerTransaction) = requireThat {
                 "Exactly one state should be consumed" using (tx.inputs.size == 1)
                 "Exactly one state should be created" using (tx.outputs.size == 1)
                 val genesis = tx.inRefsOfType<Genesis>().single()
                 val newHost = tx.outputsOfType<Host>().single()
-                val expectedHost = Host(genesis, moduleNames)
+                val expectedHost = Host(genesis, moduleNames, clientStateFactoryNames)
                 "Output should be expected states" using (newHost == expectedHost)
             }
         }

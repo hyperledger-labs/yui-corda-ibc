@@ -6,7 +6,6 @@ import ibc.core.client.v1.Client
 import ibc.core.commitment.v1.Commitment
 import ibc.core.connection.v1.Connection
 import ibc.lightclients.corda.v1.Corda
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.conversion.toCorda
 import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics2.*
@@ -17,7 +16,6 @@ import jp.datachain.corda.ibc.states.IbcChannel
 import jp.datachain.corda.ibc.states.IbcClientState
 import jp.datachain.corda.ibc.states.IbcConnection
 import jp.datachain.corda.ibc.states.IbcState
-import net.corda.core.contracts.BelongsToContract
 import net.corda.core.serialization.SerializationCustomSerializer
 import net.corda.core.serialization.SerializationFactory
 

@@ -6,7 +6,11 @@ import ibc.core.channel.v1.Tx.*
 import ibc.core.client.v1.Tx.*
 import ibc.core.connection.v1.Connection
 import ibc.core.connection.v1.Tx.*
+import ibc.lightclients.corda.v1.Corda
+import ibc.lightclients.fabric.v1.Fabric
+import jp.datachain.corda.ibc.clients.corda.CordaClientStateFactory
 import jp.datachain.corda.ibc.clients.corda.toProof
+import jp.datachain.corda.ibc.clients.fabric.FabricClientStateFactory
 import jp.datachain.corda.ibc.flows.ics2.*
 import jp.datachain.corda.ibc.flows.ics20.*
 import jp.datachain.corda.ibc.flows.ics20cash.*
@@ -89,7 +93,11 @@ class TestCordaIbcClient(private val mockNet: MockNetwork, private val mockNode:
                 Identifier("transfer") to NewIcs20Module::class.qualifiedName!!,
                 Identifier("transfer-old") to OldIcs20Module::class.qualifiedName!!
         )
-        val stx = executeFlow(IbcHostCreateFlow(baseId, moduleNames))
+        val clientStateFactoryNames = mapOf(
+                Corda.ClientState.getDescriptor().fullName to CordaClientStateFactory::class.qualifiedName!!,
+                Fabric.ClientState.getDescriptor().fullName to FabricClientStateFactory::class.qualifiedName!!
+        )
+        val stx = executeFlow(IbcHostCreateFlow(baseId, moduleNames, clientStateFactoryNames))
         val host = stx.tx.outputsOfType<Host>().single()
         assert(host.baseId == baseId)
     }

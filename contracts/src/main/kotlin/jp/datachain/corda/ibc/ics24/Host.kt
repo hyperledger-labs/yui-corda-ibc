@@ -1,5 +1,6 @@
 package jp.datachain.corda.ibc.ics24
 
+import com.google.protobuf.Any
 import ibc.core.client.v1.Client.Height
 import ibc.core.connection.v1.Connection
 import ibc.lightclients.corda.v1.Corda
@@ -9,6 +10,8 @@ import jp.datachain.corda.ibc.clients.corda.PREFIX
 import jp.datachain.corda.ibc.clients.corda.VERSION
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.conversion.pack
+import jp.datachain.corda.ibc.ics2.ClientState
+import jp.datachain.corda.ibc.ics2.ClientStateFactory
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics26.Module
 import jp.datachain.corda.ibc.states.IbcState
@@ -28,24 +31,26 @@ data class Host constructor (
         val nextConnectionSequence: Long,
         val nextChannelSequence: Long,
         val modules: Map<Identifier, Module>,
+        val clientStateFactories: Map<String, ClientStateFactory>,
         val bankIds: List<Identifier>
 ) : IbcState {
     override val id = Identifier("host")
 
     companion object {
-        fun loadModule(className: String) : Module {
-            return this::class.java.classLoader.loadClass(className).newInstance() as Module
+        inline fun <reified T> createInstance(className: String) : T {
+            return this::class.java.classLoader.loadClass(className).newInstance() as T
         }
     }
 
-    constructor(genesisAndRef: StateAndRef<Genesis>, moduleNames: Map<Identifier, String>) : this(
+    constructor(genesisAndRef: StateAndRef<Genesis>, moduleNames: Map<Identifier, String>, clientStateFactoryNames: Map<String, String>) : this(
             genesisAndRef.state.data.participants,
             genesisAndRef.ref,
             genesisAndRef.state.notary,
             0,
             0,
             0,
-            moduleNames.mapValues{loadModule(it.value)},
+            moduleNames.mapValues{createInstance<Module>(it.value)},
+            clientStateFactoryNames.mapValues{createInstance<ClientStateFactory>(it.value)},
             emptyList()
     )
 
@@ -90,6 +95,12 @@ data class Host constructor (
     )
 
     fun lookupModule(portIdentifier: Identifier) : Module = modules[portIdentifier]!!
+
+    fun createClientState(anyClientState: Any, anyConsensusState: Any) : ClientState {
+        val typeName = anyClientState.typeUrl.substringAfterLast('/')
+        val factory = clientStateFactories[typeName]!!
+        return factory.createClientState(anyClientState, anyConsensusState)
+    }
 
     fun addBank(id: Identifier) : Host {
         require(!bankIds.contains(id))

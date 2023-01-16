@@ -12,14 +12,12 @@ import ibc.lightclientd.fabric.v1.Lightclientd
 import ibc.lightclients.fabric.v1.Fabric
 import ics23.Proofs
 import io.grpc.ManagedChannelBuilder
-import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.conversion.unpack
 import jp.datachain.corda.ibc.ics2.*
 import jp.datachain.corda.ibc.ics20.toJson
 import jp.datachain.corda.ibc.ics23.CommitmentProof
 import jp.datachain.corda.ibc.ics24.Identifier
-import net.corda.core.contracts.BelongsToContract
 
 data class FabricClientState constructor(
         override val anyClientState: Any,

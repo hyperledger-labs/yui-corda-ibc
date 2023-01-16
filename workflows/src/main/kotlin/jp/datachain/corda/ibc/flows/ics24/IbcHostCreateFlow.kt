@@ -13,7 +13,7 @@ import net.corda.core.transactions.TransactionBuilder
 
 @StartableByRPC
 @InitiatingFlow
-class IbcHostCreateFlow(private val baseId: StateRef, private val moduleNames: Map<Identifier, String>) : FlowLogic<SignedTransaction>() {
+class IbcHostCreateFlow(private val baseId: StateRef, private val moduleNames: Map<Identifier, String>, private val clientStateFactoryNames: Map<String, String>) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call() : SignedTransaction {
         val notary = serviceHub.networkMapCache.notaryIdentities.single()
@@ -23,9 +23,9 @@ class IbcHostCreateFlow(private val baseId: StateRef, private val moduleNames: M
         val genesis = serviceHub.vaultService.queryIbcGenesis(baseId)!!
         val participants = genesis.state.data.participants.map{it as Party}
         require(participants.contains(ourIdentity))
-        val host = Host(genesis, moduleNames)
+        val host = Host(genesis, moduleNames, clientStateFactoryNames)
 
-        builder.addCommand(Ibc.MiscCommands.HostCreate(moduleNames), ourIdentity.owningKey)
+        builder.addCommand(Ibc.MiscCommands.HostCreate(moduleNames, clientStateFactoryNames), ourIdentity.owningKey)
                 .addInputState(genesis)
                 .addOutputState(host)
 

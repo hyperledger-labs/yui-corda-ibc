@@ -14,6 +14,9 @@ pub enum Opt {
 
         #[structopt(short, long)]
         module_names: Vec<String>,
+
+        #[structopt(short, long)]
+        client_state_factory_names: Vec<String>,
     },
     QueryHost {
         #[structopt(short, long, default_value = "http://localhost:9999")]
@@ -27,7 +30,16 @@ pub async fn execute(opt: Opt) -> Result<()> {
             endpoint,
             base_id_hash,
             module_names,
-        } => host::create_host(endpoint, base_id_hash, util::vec_to_map(&module_names)).await?,
+            client_state_factory_names,
+        } => {
+            host::create_host(
+                endpoint,
+                base_id_hash,
+                util::vec_to_map(&module_names),
+                util::vec_to_map(&client_state_factory_names),
+            )
+            .await?
+        }
         Opt::QueryHost { endpoint } => {
             let host = host::query_host(endpoint).await?;
             println!("{:#?}", host);

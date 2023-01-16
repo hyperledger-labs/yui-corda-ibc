@@ -8,15 +8,7 @@ import ibc.core.client.v1.compareTo
 import ibc.core.client.v1.isZero
 import ibc.core.connection.v1.Connection
 import ibc.core.connection.v1.Tx as ConnectionTx
-import ibc.lightclients.corda.v1.Corda
-import ibc.lightclients.fabric.v1.Fabric
-import ibc.lightclients.localhost.v1.Localhost
-import ibc.lightclients.solomachine.v1.Solomachine
-import ibc.lightclients.tendermint.v1.Tendermint
-import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Host
-import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.clients.fabric.FabricClientState
 import jp.datachain.corda.ibc.ics2.ClientType
 import jp.datachain.corda.ibc.ics20.toCommitment
 import jp.datachain.corda.ibc.ics23.CommitmentProof
@@ -30,17 +22,9 @@ import jp.datachain.corda.ibc.types.Timestamp
 object Handler {
     fun createClient(ctx: Context, msg: ClientTx.MsgCreateClient) {
         val host = ctx.getInput<Host>()
-        val (clientState: ClientState, clientType: ClientType) = when {
-            msg.clientState.`is`(Corda.ClientState::class.java) -> Pair(CordaClientState(msg.clientState, msg.consensusState), ClientType.CordaClient)
-            msg.clientState.`is`(Fabric.ClientState::class.java) -> Pair(FabricClientState(msg.clientState, msg.consensusState), ClientType.FabricClient)
-            msg.clientState.`is`(Tendermint.ClientState::class.java) -> throw NotImplementedError()
-            msg.clientState.`is`(Solomachine.ClientState::class.java) -> throw NotImplementedError()
-            msg.clientState.`is`(Localhost.ClientState::class.java) -> throw NotImplementedError()
-            else -> throw IllegalArgumentException()
-        }
-
-        val (nextHost, clientId) = host.generateClientIdentifier(clientType)
-        val client = IbcClientState(host, clientId, clientState.anyClientState, clientState.anyConsensusStates)
+        val clientState = host.createClientState(msg.clientState, msg.consensusState)
+        val (nextHost, clientId) = host.generateClientIdentifier(clientState.clientType())
+        val client = IbcClientState(host, clientId, clientState)
         ctx.addOutput(nextHost)
         ctx.addOutput(client)
     }

@@ -7,7 +7,10 @@ import ibc.core.client.v1.Client
 import ibc.core.client.v1.Tx.MsgCreateClient
 import ibc.core.connection.v1.Tx.*
 import ibc.lightclients.corda.v1.Corda
+import ibc.lightclients.fabric.v1.Fabric
+import jp.datachain.corda.ibc.clients.corda.CordaClientStateFactory
 import jp.datachain.corda.ibc.clients.corda.toProof
+import jp.datachain.corda.ibc.clients.fabric.FabricClientStateFactory
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.conversion.pack
 import jp.datachain.corda.ibc.conversion.toProto
@@ -149,11 +152,15 @@ class IbcContractTests {
                 Identifier("transfer") to jp.datachain.corda.ibc.ics20cash.Module::class.qualifiedName!!,
                 Identifier("transfer-old") to jp.datachain.corda.ibc.ics20.Module::class.qualifiedName!!
         )
+        val clientStateFactoryNames = mapOf(
+                Corda.ClientState.getDescriptor().fullName to CordaClientStateFactory::class.qualifiedName!!,
+                Fabric.ClientState.getDescriptor().fullName to FabricClientStateFactory::class.qualifiedName!!
+        )
 
         transactionOn(chain) {
-            command(relayer.publicKey, Ibc.MiscCommands.HostCreate(moduleNames))
+            command(relayer.publicKey, Ibc.MiscCommands.HostCreate(moduleNames, clientStateFactoryNames))
             input(genesis.ref)
-            output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), Host(genesis, moduleNames))
+            output(Ibc::class.qualifiedName!!, newLabel(HOST, chain), Host(genesis, moduleNames, clientStateFactoryNames))
             verifies()
         }
     }
