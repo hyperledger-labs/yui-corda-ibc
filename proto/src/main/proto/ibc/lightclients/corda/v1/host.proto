@@ -22,12 +22,14 @@ message Host {
   uint64 next_connection_sequence = 5;
   uint64 next_channel_sequence = 6;
   map<string, string> module_names = 7;
-  repeated string bank_ids = 8;
+  map<string, string> client_state_factory_names = 8;
+  repeated string bank_ids = 9;
 }
 
 message CreateHostRequest {
   StateRef base_id = 1;
   map<string, string> module_names = 2;
+  map<string, string> client_state_factory_names = 3;
 }
 
 message CreateHostResponse {

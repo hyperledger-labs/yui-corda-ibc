@@ -2,13 +2,6 @@ package jp.datachain.corda.ibc.states
 
 import com.google.protobuf.Any
 import ibc.core.client.v1.Client
-import ibc.lightclients.corda.v1.Corda
-import ibc.lightclients.fabric.v1.Fabric
-import ibc.lightclients.localhost.v1.Localhost
-import ibc.lightclients.solomachine.v1.Solomachine
-import ibc.lightclients.tendermint.v1.Tendermint
-import jp.datachain.corda.ibc.clients.corda.CordaClientState
-import jp.datachain.corda.ibc.clients.fabric.FabricClientState
 import jp.datachain.corda.ibc.contracts.Ibc
 import jp.datachain.corda.ibc.ics2.ClientState
 import jp.datachain.corda.ibc.ics24.Host
@@ -23,22 +16,15 @@ data class IbcClientState private constructor (
         override val baseId: StateRef,
         override val id: Identifier,
         val anyClientState: Any,
-        val anyConsensusStates: Map<Client.Height, Any>
+        val anyConsensusStates: Map<Client.Height, Any>,
+        val impl: ClientState
 ) : IbcState {
-    constructor(host: Host, id: Identifier, anyClientState: Any, anyConsensusStates: Map<Client.Height, Any>)
-            : this(host.participants, host.baseId, id, anyClientState, anyConsensusStates)
-
-    val impl : ClientState = when {
-        anyClientState.`is`(Corda.ClientState::class.java) -> CordaClientState(anyClientState, anyConsensusStates)
-        anyClientState.`is`(Fabric.ClientState::class.java) -> FabricClientState(anyClientState, anyConsensusStates)
-        anyClientState.`is`(Tendermint.ClientState::class.java) -> throw NotImplementedError()
-        anyClientState.`is`(Solomachine.ClientState::class.java) -> throw NotImplementedError()
-        anyClientState.`is`(Localhost.ClientState::class.java) -> throw NotImplementedError()
-        else -> throw IllegalArgumentException()
-    }
+    constructor(host: Host, id: Identifier, clientState: ClientState)
+            : this(host.participants, host.baseId, id, clientState.anyClientState, clientState.anyConsensusStates, clientState)
 
     fun update(newClientState: ClientState) = copy(
             anyClientState = newClientState.anyClientState,
-            anyConsensusStates = newClientState.anyConsensusStates
+            anyConsensusStates = newClientState.anyConsensusStates,
+            impl = newClientState
     )
 }

@@ -14,6 +14,7 @@ pub async fn create_host(
     endpoint: String,
     base_id_hash: String,
     module_names: HashMap<String, String>,
+    client_state_factory_names: HashMap<String, String>,
 ) -> Result<()> {
     let mut client = connect(endpoint).await?;
     let base_id = v1corda::StateRef {
@@ -26,6 +27,7 @@ pub async fn create_host(
         .create_host(v1corda::CreateHostRequest {
             base_id: Some(base_id),
             module_names,
+            client_state_factory_names,
         })
         .await?;
     Ok(())

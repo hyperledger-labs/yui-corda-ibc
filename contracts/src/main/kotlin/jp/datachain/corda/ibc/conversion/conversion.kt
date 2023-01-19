@@ -7,6 +7,7 @@ import ibc.lightclients.corda.v1.BankProto
 import ibc.lightclients.corda.v1.CashBankProto
 import ibc.lightclients.corda.v1.CordaTypes
 import ibc.lightclients.corda.v1.HostProto
+import jp.datachain.corda.ibc.ics2.ClientStateFactory
 import jp.datachain.corda.ibc.ics20.Address
 import jp.datachain.corda.ibc.ics20.Amount
 import jp.datachain.corda.ibc.ics20.Bank
@@ -14,6 +15,7 @@ import jp.datachain.corda.ibc.ics20.Denom
 import jp.datachain.corda.ibc.ics20cash.CashBank
 import jp.datachain.corda.ibc.ics24.Host
 import jp.datachain.corda.ibc.ics24.Identifier
+import jp.datachain.corda.ibc.ics26.Module
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
@@ -69,6 +71,7 @@ fun Host.toProto(): HostProto.Host = HostProto.Host.newBuilder()
         .setNextConnectionSequence(nextConnectionSequence)
         .setNextChannelSequence(nextChannelSequence)
         .putAllModuleNames(modules.mapKeys{it.key.id}.mapValues{it.value::class.qualifiedName})
+        .putAllClientStateFactoryNames(clientStateFactories.mapValues{it.value::class.qualifiedName})
         .addAllBankIds(bankIds.map{it.id})
         .build()
 fun HostProto.Host.toCorda() = Host(
@@ -78,7 +81,8 @@ fun HostProto.Host.toCorda() = Host(
         nextClientSequence = nextClientSequence,
         nextConnectionSequence = nextConnectionSequence,
         nextChannelSequence = nextChannelSequence,
-        modules = moduleNamesMap.mapKeys{Identifier(it.key)}.mapValues{Host.loadModule(it.value)},
+        modules = moduleNamesMap.mapKeys{Identifier(it.key)}.mapValues{Host.createInstance<Module>(it.value)},
+        clientStateFactories = clientStateFactoryNamesMap.mapValues{Host.createInstance<ClientStateFactory>(it.value)},
         bankIds = bankIdsList.map(::Identifier)
 )
 

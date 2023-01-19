@@ -27,8 +27,9 @@ class HostService(host: String, port: Int, username: String, password: String): 
 
     override fun createHost(request: HostProto.CreateHostRequest, responseObserver: StreamObserver<HostProto.CreateHostResponse>) {
         val baseId = request.baseId.toCorda() // baseId must be specified when creating a new host
-        val moduleNames = request.moduleNamesMap.mapKeys{ Identifier(it.key)}
-        val stx = ops.startFlow(::IbcHostCreateFlow, baseId, moduleNames).returnValue.get()
+        val moduleNames = request.moduleNamesMap.mapKeys{Identifier(it.key)}
+        val clientStateFactoryNames = request.clientStateFactoryNamesMap
+        val stx = ops.startFlow(::IbcHostCreateFlow, baseId, moduleNames, clientStateFactoryNames).returnValue.get()
         val proof = stx.toProof().toByteString()
         val reply = HostProto.CreateHostResponse.newBuilder()
                 .setProof(proof)
