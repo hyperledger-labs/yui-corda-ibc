@@ -28,13 +28,15 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Host struct {
-	Participants           []*Party  `protobuf:"bytes,1,rep,name=participants,proto3" json:"participants,omitempty"`
-	BaseId                 *StateRef `protobuf:"bytes,2,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
-	Notary                 *Party    `protobuf:"bytes,3,opt,name=notary,proto3" json:"notary,omitempty"`
-	NextClientSequence     uint64    `protobuf:"varint,4,opt,name=nextClientSequence,proto3" json:"nextClientSequence,omitempty"`
-	NextConnectionSequence uint64    `protobuf:"varint,5,opt,name=nextConnectionSequence,proto3" json:"nextConnectionSequence,omitempty"`
-	NextChannelSequence    uint64    `protobuf:"varint,6,opt,name=nextChannelSequence,proto3" json:"nextChannelSequence,omitempty"`
-	BankIds                []string  `protobuf:"bytes,7,rep,name=bank_ids,json=bankIds,proto3" json:"bank_ids,omitempty"`
+	Participants            []*Party          `protobuf:"bytes,1,rep,name=participants,proto3" json:"participants,omitempty"`
+	BaseId                  *StateRef         `protobuf:"bytes,2,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+	Notary                  *Party            `protobuf:"bytes,3,opt,name=notary,proto3" json:"notary,omitempty"`
+	NextClientSequence      uint64            `protobuf:"varint,4,opt,name=next_client_sequence,json=nextClientSequence,proto3" json:"next_client_sequence,omitempty"`
+	NextConnectionSequence  uint64            `protobuf:"varint,5,opt,name=next_connection_sequence,json=nextConnectionSequence,proto3" json:"next_connection_sequence,omitempty"`
+	NextChannelSequence     uint64            `protobuf:"varint,6,opt,name=next_channel_sequence,json=nextChannelSequence,proto3" json:"next_channel_sequence,omitempty"`
+	ModuleNames             map[string]string `protobuf:"bytes,7,rep,name=module_names,json=moduleNames,proto3" json:"module_names,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	ClientStateFactoryNames map[string]string `protobuf:"bytes,8,rep,name=client_state_factory_names,json=clientStateFactoryNames,proto3" json:"client_state_factory_names,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	BankIds                 []string          `protobuf:"bytes,9,rep,name=bank_ids,json=bankIds,proto3" json:"bank_ids,omitempty"`
 }
 
 func (m *Host) Reset()         { *m = Host{} }
@@ -112,6 +114,20 @@ func (m *Host) GetNextChannelSequence() uint64 {
 	return 0
 }
 
+func (m *Host) GetModuleNames() map[string]string {
+	if m != nil {
+		return m.ModuleNames
+	}
+	return nil
+}
+
+func (m *Host) GetClientStateFactoryNames() map[string]string {
+	if m != nil {
+		return m.ClientStateFactoryNames
+	}
+	return nil
+}
+
 func (m *Host) GetBankIds() []string {
 	if m != nil {
 		return m.BankIds
@@ -120,7 +136,9 @@ func (m *Host) GetBankIds() []string {
 }
 
 type CreateHostRequest struct {
-	BaseId *StateRef `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+	BaseId                  *StateRef         `protobuf:"bytes,1,opt,name=base_id,json=baseId,proto3" json:"base_id,omitempty"`
+	ModuleNames             map[string]string `protobuf:"bytes,2,rep,name=module_names,json=moduleNames,proto3" json:"module_names,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	ClientStateFactoryNames map[string]string `protobuf:"bytes,3,rep,name=client_state_factory_names,json=clientStateFactoryNames,proto3" json:"client_state_factory_names,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *CreateHostRequest) Reset()         { *m = CreateHostRequest{} }
@@ -159,6 +177,20 @@ var xxx_messageInfo_CreateHostRequest proto.InternalMessageInfo
 func (m *CreateHostRequest) GetBaseId() *StateRef {
 	if m != nil {
 		return m.BaseId
+	}
+	return nil
+}
+
+func (m *CreateHostRequest) GetModuleNames() map[string]string {
+	if m != nil {
+		return m.ModuleNames
+	}
+	return nil
+}
+
+func (m *CreateHostRequest) GetClientStateFactoryNames() map[string]string {
+	if m != nil {
+		return m.ClientStateFactoryNames
 	}
 	return nil
 }
@@ -297,7 +329,11 @@ func (m *QueryHostResponse) GetHost() *Host {
 
 func init() {
 	proto.RegisterType((*Host)(nil), "ibc.lightclients.corda.v1.Host")
+	proto.RegisterMapType((map[string]string)(nil), "ibc.lightclients.corda.v1.Host.ClientStateFactoryNamesEntry")
+	proto.RegisterMapType((map[string]string)(nil), "ibc.lightclients.corda.v1.Host.ModuleNamesEntry")
 	proto.RegisterType((*CreateHostRequest)(nil), "ibc.lightclients.corda.v1.CreateHostRequest")
+	proto.RegisterMapType((map[string]string)(nil), "ibc.lightclients.corda.v1.CreateHostRequest.ClientStateFactoryNamesEntry")
+	proto.RegisterMapType((map[string]string)(nil), "ibc.lightclients.corda.v1.CreateHostRequest.ModuleNamesEntry")
 	proto.RegisterType((*CreateHostResponse)(nil), "ibc.lightclients.corda.v1.CreateHostResponse")
 	proto.RegisterType((*QueryHostRequest)(nil), "ibc.lightclients.corda.v1.QueryHostRequest")
 	proto.RegisterType((*QueryHostResponse)(nil), "ibc.lightclients.corda.v1.QueryHostResponse")
@@ -308,38 +344,48 @@ func init() {
 }
 
 var fileDescriptor_49a17a943ca31e48 = []byte{
-	// 488 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0xc7, 0xeb, 0x26, 0x4d, 0xc8, 0x4b, 0x07, 0x7a, 0x20, 0xe4, 0x66, 0x30, 0x56, 0x60, 0x88,
-	0x68, 0x6d, 0xd3, 0x54, 0x42, 0x0c, 0x4c, 0x2d, 0x43, 0x3b, 0x91, 0x3a, 0x1b, 0x4b, 0x75, 0xb6,
-	0x5f, 0xe2, 0x13, 0xe6, 0xce, 0xdc, 0x5d, 0xa2, 0xf8, 0x5b, 0xf0, 0xb1, 0x18, 0x3b, 0x32, 0x56,
-	0xc9, 0xa7, 0x60, 0x43, 0x3e, 0x87, 0x10, 0xa0, 0x09, 0x45, 0x62, 0xf3, 0xf3, 0xfb, 0xff, 0xfe,
-	0xcf, 0xf7, 0x7c, 0x7f, 0x78, 0xce, 0xa2, 0x38, 0xc8, 0xd8, 0x38, 0xd5, 0x71, 0xc6, 0x90, 0x6b,
-	0x15, 0xc4, 0x42, 0x26, 0x34, 0x98, 0x9e, 0x04, 0xa9, 0x50, 0xda, 0xcf, 0xa5, 0xd0, 0x82, 0x1c,
-	0xb2, 0x28, 0xf6, 0xd7, 0x55, 0xbe, 0x51, 0xf9, 0xd3, 0x93, 0xce, 0xd1, 0x66, 0x03, 0xf3, 0xe0,
-	0xe9, 0x22, 0x47, 0x55, 0xf9, 0x74, 0xbf, 0xed, 0x42, 0xfd, 0x42, 0x28, 0x4d, 0xde, 0xc2, 0x7e,
-	0x4e, 0xa5, 0x66, 0x31, 0xcb, 0x29, 0xd7, 0xca, 0xb6, 0xdc, 0x5a, 0xaf, 0xdd, 0x77, 0xfd, 0x8d,
-	0x73, 0xfc, 0x01, 0x95, 0xba, 0x08, 0x7f, 0xa1, 0xc8, 0x1b, 0x68, 0x46, 0x54, 0xe1, 0x35, 0x4b,
-	0xec, 0x5d, 0xd7, 0xea, 0xb5, 0xfb, 0xcf, 0xb6, 0x18, 0x0c, 0x35, 0xd5, 0x18, 0xe2, 0x28, 0x6c,
-	0x94, 0xcc, 0x65, 0x42, 0x5e, 0x43, 0x83, 0x0b, 0x4d, 0x65, 0x61, 0xd7, 0x0c, 0xfc, 0xf7, 0xe9,
-	0x4b, 0x3d, 0xf1, 0x81, 0x70, 0x9c, 0xe9, 0x73, 0xa3, 0x1a, 0xe2, 0xa7, 0x09, 0xf2, 0x18, 0xed,
-	0xba, 0x6b, 0xf5, 0xea, 0xe1, 0x1d, 0x1d, 0xf2, 0x0a, 0x9e, 0x98, 0xb7, 0x82, 0x73, 0x8c, 0x35,
-	0x13, 0x7c, 0xc5, 0xec, 0x19, 0x66, 0x43, 0x97, 0xbc, 0x84, 0x47, 0xa6, 0x93, 0x52, 0xce, 0x31,
-	0x5b, 0x41, 0x0d, 0x03, 0xdd, 0xd5, 0x22, 0x87, 0xf0, 0x20, 0xa2, 0xfc, 0xc3, 0x35, 0x4b, 0x94,
-	0xdd, 0x74, 0x6b, 0xbd, 0x56, 0xd8, 0x2c, 0xeb, 0xcb, 0x44, 0x75, 0xaf, 0xe0, 0xe0, 0x5c, 0x22,
-	0xd5, 0x58, 0xfe, 0x80, 0xb0, 0x04, 0x94, 0x5e, 0xdf, 0xa0, 0xf5, 0xcf, 0x1b, 0xec, 0xbe, 0x00,
-	0xb2, 0x6e, 0xa9, 0x72, 0xc1, 0x15, 0x92, 0xc7, 0xb0, 0x97, 0x4b, 0x21, 0x46, 0xc6, 0x71, 0x3f,
-	0xac, 0x8a, 0xee, 0x00, 0x1e, 0x5e, 0x4d, 0x50, 0x16, 0xff, 0x6f, 0xfa, 0x05, 0x1c, 0xac, 0x39,
-	0x2e, 0x87, 0x9f, 0x42, 0xbd, 0xbc, 0xb7, 0x4b, 0xbf, 0xa7, 0x5b, 0xfc, 0x0c, 0x66, 0xc4, 0xfd,
-	0x5b, 0x0b, 0xda, 0x65, 0x39, 0x44, 0x39, 0x65, 0x31, 0x12, 0x06, 0xf0, 0xf3, 0x5c, 0xe4, 0x78,
-	0x8b, 0xc9, 0x1f, 0x1b, 0xed, 0x78, 0xf7, 0x54, 0x2f, 0xbf, 0x77, 0x04, 0xad, 0xd5, 0x21, 0xc8,
-	0xd1, 0x16, 0xf6, 0xf7, 0xe5, 0x75, 0x8e, 0xef, 0x27, 0xae, 0xe6, 0x9c, 0xe9, 0x2f, 0x73, 0xc7,
-	0xba, 0x99, 0x3b, 0xd6, 0xed, 0xdc, 0xb1, 0x3e, 0x2f, 0x9c, 0x9d, 0x9b, 0x85, 0xb3, 0xf3, 0x75,
-	0xe1, 0xec, 0x9c, 0xb5, 0x4a, 0xdd, 0xa0, 0x8c, 0xe7, 0xfb, 0x77, 0x63, 0xa6, 0xd3, 0x49, 0xe4,
-	0xc7, 0xe2, 0x63, 0x90, 0x16, 0x39, 0xca, 0x0c, 0x93, 0x31, 0x4a, 0x2f, 0xa3, 0x91, 0x0a, 0x8a,
-	0x09, 0xf3, 0xaa, 0x44, 0x97, 0x89, 0x1f, 0x8b, 0x60, 0x16, 0xac, 0xa2, 0xef, 0xfd, 0xc8, 0xfe,
-	0x6c, 0x56, 0x69, 0x02, 0x93, 0xfa, 0xa8, 0x61, 0x62, 0x7f, 0xfa, 0x3d, 0x00, 0x00, 0xff, 0xff,
-	0xba, 0xd3, 0x11, 0x7f, 0x66, 0x04, 0x00, 0x00,
+	// 650 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0x4f, 0x53, 0x13, 0x31,
+	0x14, 0x27, 0xb4, 0x14, 0x9a, 0x72, 0x80, 0x88, 0xba, 0x74, 0x9c, 0xda, 0xa9, 0x1e, 0x3a, 0x42,
+	0x77, 0xa1, 0x5c, 0x18, 0x07, 0x3d, 0x80, 0x3a, 0xe0, 0x8c, 0x8a, 0xdb, 0x9b, 0x97, 0x9a, 0xdd,
+	0x4d, 0xdb, 0x0c, 0xdb, 0x64, 0x4d, 0xd2, 0x4e, 0xf7, 0x0b, 0x78, 0xf6, 0x63, 0x71, 0xe4, 0xe8,
+	0x8c, 0x17, 0x06, 0xbe, 0x88, 0x93, 0xec, 0xd2, 0xd6, 0x2a, 0x2d, 0x75, 0x3c, 0x78, 0xdb, 0xf0,
+	0x7e, 0x7f, 0xf2, 0xde, 0x2f, 0xf4, 0xc1, 0xa7, 0xd4, 0xf3, 0x9d, 0x90, 0xb6, 0x3b, 0xca, 0x0f,
+	0x29, 0x61, 0x4a, 0x3a, 0x3e, 0x17, 0x01, 0x76, 0xfa, 0xbb, 0x4e, 0x87, 0x4b, 0x65, 0x47, 0x82,
+	0x2b, 0x8e, 0x36, 0xa9, 0xe7, 0xdb, 0xe3, 0x28, 0xdb, 0xa0, 0xec, 0xfe, 0x6e, 0x71, 0xeb, 0x76,
+	0x01, 0xf3, 0x51, 0x53, 0x71, 0x44, 0x64, 0xa2, 0x53, 0xf9, 0xb1, 0x04, 0xb3, 0xc7, 0x5c, 0x2a,
+	0xf4, 0x0a, 0xae, 0x46, 0x58, 0x28, 0xea, 0xd3, 0x08, 0x33, 0x25, 0x2d, 0x50, 0xce, 0x54, 0x0b,
+	0xf5, 0xb2, 0x7d, 0xab, 0x8f, 0x7d, 0x8a, 0x85, 0x8a, 0xdd, 0x5f, 0x58, 0xe8, 0x00, 0x2e, 0x7b,
+	0x58, 0x92, 0x26, 0x0d, 0xac, 0xc5, 0x32, 0xa8, 0x16, 0xea, 0x4f, 0xa6, 0x08, 0x34, 0x14, 0x56,
+	0xc4, 0x25, 0x2d, 0x37, 0xa7, 0x39, 0x27, 0x01, 0xda, 0x87, 0x39, 0xc6, 0x15, 0x16, 0xb1, 0x95,
+	0x31, 0xe4, 0xd9, 0xee, 0x29, 0x1e, 0xed, 0xc0, 0x0d, 0x46, 0x06, 0xaa, 0x99, 0xc0, 0x9a, 0x92,
+	0x7c, 0xe9, 0x11, 0xe6, 0x13, 0x2b, 0x5b, 0x06, 0xd5, 0xac, 0x8b, 0x74, 0xed, 0xc8, 0x94, 0x1a,
+	0x69, 0x05, 0xed, 0x43, 0x2b, 0x61, 0x70, 0xc6, 0x88, 0xaf, 0x28, 0x67, 0x23, 0xd6, 0x92, 0x61,
+	0x3d, 0x30, 0xac, 0x61, 0x79, 0xc8, 0xac, 0xc3, 0xfb, 0x09, 0xb3, 0x83, 0x19, 0x23, 0xe1, 0x88,
+	0x96, 0x33, 0xb4, 0x7b, 0x86, 0x96, 0xd4, 0x86, 0x9c, 0x06, 0x5c, 0xed, 0xf2, 0xa0, 0x17, 0x92,
+	0x26, 0xc3, 0x5d, 0x22, 0xad, 0x65, 0x33, 0xdd, 0x9d, 0x29, 0xfd, 0xe9, 0x50, 0xec, 0x77, 0x86,
+	0xf3, 0x5e, 0x53, 0x5e, 0x33, 0x25, 0x62, 0xb7, 0xd0, 0x1d, 0xfd, 0x05, 0xc5, 0xb0, 0x78, 0xd3,
+	0xaf, 0x9e, 0x64, 0xb3, 0x85, 0x7d, 0xc5, 0x45, 0x9c, 0x5a, 0xac, 0x18, 0x8b, 0x83, 0x59, 0x16,
+	0xe9, 0x58, 0xb4, 0xc0, 0x9b, 0x84, 0x3f, 0x66, 0xf7, 0xd0, 0xff, 0x73, 0x15, 0x6d, 0xc2, 0x15,
+	0x0f, 0xb3, 0xb3, 0x26, 0x0d, 0xa4, 0x95, 0x2f, 0x67, 0xaa, 0x79, 0x77, 0x59, 0x9f, 0x4f, 0x02,
+	0x59, 0x7c, 0x09, 0xd7, 0x26, 0xaf, 0x8d, 0xd6, 0x60, 0xe6, 0x8c, 0xc4, 0x16, 0x28, 0x83, 0x6a,
+	0xde, 0xd5, 0x9f, 0x68, 0x03, 0x2e, 0xf5, 0x71, 0xd8, 0x23, 0xe6, 0x99, 0xe4, 0xdd, 0xe4, 0xf0,
+	0x7c, 0x71, 0x1f, 0x14, 0xdf, 0xc2, 0x47, 0xd3, 0xee, 0x34, 0x8f, 0x56, 0xe5, 0x3c, 0x03, 0xd7,
+	0x8f, 0x04, 0xc1, 0x8a, 0xe8, 0x5e, 0x5d, 0x9d, 0x86, 0x54, 0xe3, 0x8f, 0x14, 0xcc, 0xff, 0x48,
+	0x3f, 0x4f, 0x44, 0xb9, 0x68, 0xe6, 0xfc, 0x62, 0x8a, 0xc4, 0x6f, 0x37, 0x98, 0x91, 0xeb, 0x57,
+	0x30, 0x35, 0xd8, 0x8c, 0x31, 0x3c, 0x99, 0xcb, 0xf0, 0xaf, 0x52, 0xfe, 0xaf, 0xa2, 0x7c, 0x06,
+	0xd1, 0x78, 0x5b, 0x32, 0xe2, 0x4c, 0x12, 0x8d, 0x8f, 0x04, 0xe7, 0x2d, 0xa3, 0xb1, 0xea, 0x26,
+	0x87, 0xca, 0x29, 0x5c, 0xfb, 0xd8, 0x23, 0x22, 0xfe, 0x67, 0xa1, 0x57, 0x8e, 0xe1, 0xfa, 0x98,
+	0x62, 0x6a, 0xbe, 0x07, 0xb3, 0xfa, 0x17, 0x39, 0xd5, 0x7b, 0x3c, 0xe3, 0x3f, 0xcd, 0x35, 0xe0,
+	0xfa, 0x25, 0x80, 0x05, 0x7d, 0x6c, 0x10, 0xd1, 0xa7, 0x3e, 0x41, 0x14, 0xc2, 0x51, 0x5f, 0x68,
+	0x7b, 0x9e, 0x54, 0x8b, 0xb5, 0x3b, 0xa2, 0xd3, 0xfb, 0xb6, 0x60, 0x7e, 0xd8, 0x04, 0xda, 0x9a,
+	0xc2, 0x9d, 0x1c, 0x5e, 0x71, 0xfb, 0x6e, 0xe0, 0xc4, 0xe7, 0x50, 0x9d, 0x5f, 0x95, 0xc0, 0xc5,
+	0x55, 0x09, 0x5c, 0x5e, 0x95, 0xc0, 0xb7, 0xeb, 0xd2, 0xc2, 0xc5, 0x75, 0x69, 0xe1, 0xfb, 0x75,
+	0x69, 0xe1, 0x30, 0xaf, 0x71, 0xa7, 0x7a, 0xf1, 0x7c, 0xfa, 0xd0, 0xa6, 0xaa, 0xd3, 0xf3, 0x6c,
+	0x9f, 0x77, 0x9d, 0x4e, 0x1c, 0x11, 0x11, 0x92, 0xa0, 0x4d, 0x44, 0x2d, 0xc4, 0x9e, 0x74, 0xe2,
+	0x1e, 0xad, 0x25, 0xbb, 0x4a, 0xef, 0xb2, 0x36, 0x77, 0x06, 0xce, 0x70, 0xa9, 0xd5, 0x6e, 0xb6,
+	0xda, 0x60, 0x90, 0x60, 0x1c, 0xb3, 0xcf, 0xbc, 0x9c, 0x59, 0x68, 0x7b, 0x3f, 0x03, 0x00, 0x00,
+	0xff, 0xff, 0xe8, 0x03, 0x7c, 0xc5, 0x40, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -488,6 +534,44 @@ func (m *Host) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			copy(dAtA[i:], m.BankIds[iNdEx])
 			i = encodeVarintHost(dAtA, i, uint64(len(m.BankIds[iNdEx])))
 			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if len(m.ClientStateFactoryNames) > 0 {
+		for k := range m.ClientStateFactoryNames {
+			v := m.ClientStateFactoryNames[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintHost(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintHost(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintHost(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.ModuleNames) > 0 {
+		for k := range m.ModuleNames {
+			v := m.ModuleNames[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintHost(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintHost(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintHost(dAtA, i, uint64(baseI-i))
+			i--
 			dAtA[i] = 0x3a
 		}
 	}
@@ -567,6 +651,44 @@ func (m *CreateHostRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.ClientStateFactoryNames) > 0 {
+		for k := range m.ClientStateFactoryNames {
+			v := m.ClientStateFactoryNames[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintHost(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintHost(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintHost(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.ModuleNames) > 0 {
+		for k := range m.ModuleNames {
+			v := m.ModuleNames[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintHost(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintHost(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintHost(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	if m.BaseId != nil {
 		{
 			size, err := m.BaseId.MarshalToSizedBuffer(dAtA[:i])
@@ -722,6 +844,22 @@ func (m *Host) Size() (n int) {
 	if m.NextChannelSequence != 0 {
 		n += 1 + sovHost(uint64(m.NextChannelSequence))
 	}
+	if len(m.ModuleNames) > 0 {
+		for k, v := range m.ModuleNames {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovHost(uint64(len(k))) + 1 + len(v) + sovHost(uint64(len(v)))
+			n += mapEntrySize + 1 + sovHost(uint64(mapEntrySize))
+		}
+	}
+	if len(m.ClientStateFactoryNames) > 0 {
+		for k, v := range m.ClientStateFactoryNames {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovHost(uint64(len(k))) + 1 + len(v) + sovHost(uint64(len(v)))
+			n += mapEntrySize + 1 + sovHost(uint64(mapEntrySize))
+		}
+	}
 	if len(m.BankIds) > 0 {
 		for _, s := range m.BankIds {
 			l = len(s)
@@ -740,6 +878,22 @@ func (m *CreateHostRequest) Size() (n int) {
 	if m.BaseId != nil {
 		l = m.BaseId.Size()
 		n += 1 + l + sovHost(uint64(l))
+	}
+	if len(m.ModuleNames) > 0 {
+		for k, v := range m.ModuleNames {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovHost(uint64(len(k))) + 1 + len(v) + sovHost(uint64(len(v)))
+			n += mapEntrySize + 1 + sovHost(uint64(mapEntrySize))
+		}
+	}
+	if len(m.ClientStateFactoryNames) > 0 {
+		for k, v := range m.ClientStateFactoryNames {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovHost(uint64(len(k))) + 1 + len(v) + sovHost(uint64(len(v)))
+			n += mapEntrySize + 1 + sovHost(uint64(mapEntrySize))
+		}
 	}
 	return n
 }
@@ -983,6 +1137,260 @@ func (m *Host) Unmarshal(dAtA []byte) error {
 			}
 		case 7:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleNames", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ModuleNames == nil {
+				m.ModuleNames = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowHost
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipHost(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthHost
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.ModuleNames[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientStateFactoryNames", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClientStateFactoryNames == nil {
+				m.ClientStateFactoryNames = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowHost
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipHost(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthHost
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.ClientStateFactoryNames[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BankIds", wireType)
 			}
 			var stringLen uint64
@@ -1098,6 +1506,260 @@ func (m *CreateHostRequest) Unmarshal(dAtA []byte) error {
 			if err := m.BaseId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleNames", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ModuleNames == nil {
+				m.ModuleNames = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowHost
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipHost(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthHost
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.ModuleNames[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClientStateFactoryNames", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowHost
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthHost
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthHost
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClientStateFactoryNames == nil {
+				m.ClientStateFactoryNames = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowHost
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowHost
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthHost
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipHost(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthHost
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.ClientStateFactoryNames[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
