@@ -155,3 +155,7 @@ dumpInfos:
 	$(CLIENT) client query-consensus-state -c corda-ibc-0 -n 0 -h 1 -o consensus.dat
 	$(CLIENT) connection query-connection -c connection-0 -o connection.dat
 	$(CLIENT) channel query-channel -c channel-0 -o channel.dat
+
+.PHONY: proto-gen-go
+proto-gen-go:
+	docker run -v $(PWD):/workspace -w /workspace tendermintdev/sdk-proto-gen:v0.3 sh protogen.sh
